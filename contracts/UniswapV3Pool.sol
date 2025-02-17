@@ -280,12 +280,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
                 
-                // Update position fee growth for all positions
-                for (int24 tick = TickMath.MIN_TICK; tick <= TickMath.MAX_TICK; tick += tickSpacing) {
-                    Tick.Info storage tickInfo = ticks[tick];
-                    if (tickInfo.initialized) {
-                        tickInfo.feeGrowthOutside0X128 = feeGrowthGlobal0X128;
-                    }
+                // Update fee growth for current tick
+                Tick.Info storage currentTickInfo = ticks[tick];
+                if (currentTickInfo.initialized) {
+                    currentTickInfo.feeGrowthOutside0X128 = feeGrowthGlobal0X128;
                 }
             }
         } else {

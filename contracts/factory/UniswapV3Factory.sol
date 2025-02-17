@@ -37,7 +37,8 @@ contract UniswapV3Factory is IUniswapV3Factory {
             address(this),
             token0,
             token1,
-            fee
+            fee,
+            feeAmountTickSpacing[fee]
         );
         pool = address(newPool);
         
