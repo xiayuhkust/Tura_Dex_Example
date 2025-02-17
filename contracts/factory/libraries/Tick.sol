@@ -28,8 +28,12 @@ library Tick {
         uint128 liquidityGrossBefore = tickInfo.liquidityGross;
         uint128 liquidityGrossAfter;
         if (liquidityDelta < 0) {
-            require(uint128(-liquidityDelta) <= liquidityGrossBefore, 'NL'); // Not enough liquidity
-            liquidityGrossAfter = uint128(uint256(liquidityGrossBefore).sub(uint128(-liquidityDelta)));
+            if (liquidityGrossBefore == 0) {
+                liquidityGrossAfter = 0;
+            } else {
+                require(uint128(-liquidityDelta) <= liquidityGrossBefore, 'NL'); // Not enough liquidity
+                liquidityGrossAfter = uint128(uint256(liquidityGrossBefore).sub(uint128(-liquidityDelta)));
+            }
         } else {
             liquidityGrossAfter = uint128(uint256(liquidityGrossBefore).add(uint256(liquidityDelta)));
         }

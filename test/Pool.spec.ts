@@ -84,7 +84,12 @@ describe('UniswapV3Pool', () => {
     describe('swapping', () => {
         beforeEach(async () => {
             // Add initial liquidity
-            await pool.mint(owner.address, MIN_TICK, MAX_TICK, 10000);
+            // Add initial liquidity
+            await token0.mint(owner.address, ethers.utils.parseEther('100'));
+            await token1.mint(owner.address, ethers.utils.parseEther('100'));
+            await token0.approve(pool.address, ethers.utils.parseEther('100'));
+            await token1.approve(pool.address, ethers.utils.parseEther('100'));
+            await pool.mint(owner.address, MIN_TICK, MAX_TICK, ethers.utils.parseEther('1'));
             await token0.mint(owner.address, ethers.utils.parseEther('100'));
             await token1.mint(owner.address, ethers.utils.parseEther('100'));
         });
