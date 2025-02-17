@@ -286,11 +286,29 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 
                 // Update position fee growth for current tick range
                 // Find all positions in the current tick range and update their fees
-                mapping(bytes32 => IPosition.Info) storage allPositions = positions;
-                bytes32 positionKey = keccak256(abi.encodePacked(factory, MIN_TICK, MAX_TICK));
-                IPosition.Info storage position = allPositions[positionKey];
+                mapping(int24 => Tick.Info) storage tickMap = ticks;
+                Tick.Info storage lowerTick = tickMap[MIN_TICK];
+                Tick.Info storage upperTick = tickMap[MAX_TICK];
+                
+                // Calculate fee growth inside the position's range
+                uint256 feeGrowthInside0X128 = feeGrowthGlobal0X128;
+                if (lowerTick.initialized) {
+                    feeGrowthInside0X128 = feeGrowthInside0X128.sub(lowerTick.feeGrowthOutside0X128);
+                }
+                if (upperTick.initialized) {
+                    feeGrowthInside0X128 = feeGrowthInside0X128.sub(upperTick.feeGrowthOutside0X128);
+                }
+                
+                // Update position fees
+                IPosition.Info storage position = positions.get(state.recipient, MIN_TICK, MAX_TICK);
                 if (position.liquidity > 0) {
-                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
+                    uint256 feesEarned = FullMath.mulDiv(
+                        position.liquidity,
+                        feeGrowthInside0X128.sub(position.feeGrowthInside0LastX128),
+                        Q128
+                    );
+                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feesEarned));
+                    position.feeGrowthInside0LastX128 = feeGrowthInside0X128;
                 }
                 
                 // Calculate swap amounts
@@ -319,11 +337,29 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 
                 // Update position fee growth for the current position
                 // Find all positions in the current tick range and update their fees
-                mapping(bytes32 => IPosition.Info) storage allPositions = positions;
-                bytes32 positionKey = keccak256(abi.encodePacked(factory, MIN_TICK, MAX_TICK));
-                IPosition.Info storage currentPosition = allPositions[positionKey];
+                mapping(int24 => Tick.Info) storage tickMap = ticks;
+                Tick.Info storage lowerTick = tickMap[MIN_TICK];
+                Tick.Info storage upperTick = tickMap[MAX_TICK];
+                
+                // Calculate fee growth inside the position's range
+                uint256 feeGrowthInside1X128 = feeGrowthGlobal1X128;
+                if (lowerTick.initialized) {
+                    feeGrowthInside1X128 = feeGrowthInside1X128.sub(lowerTick.feeGrowthOutside1X128);
+                }
+                if (upperTick.initialized) {
+                    feeGrowthInside1X128 = feeGrowthInside1X128.sub(upperTick.feeGrowthOutside1X128);
+                }
+                
+                // Update position fees
+                IPosition.Info storage currentPosition = positions.get(state.recipient, MIN_TICK, MAX_TICK);
                 if (currentPosition.liquidity > 0) {
-                    currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(state.feeAmount));
+                    uint256 feesEarned = FullMath.mulDiv(
+                        currentPosition.liquidity,
+                        feeGrowthInside1X128.sub(currentPosition.feeGrowthInside1LastX128),
+                        Q128
+                    );
+                    currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(feesEarned));
+                    currentPosition.feeGrowthInside1LastX128 = feeGrowthInside1X128;
                 }
                 
                 // Calculate swap amounts
