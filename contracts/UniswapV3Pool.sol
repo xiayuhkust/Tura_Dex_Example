@@ -281,12 +281,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
                 
-                // Update fee growth for current tick
-                Tick.Info storage currentTickInfo = ticks[state.nextTick];
-                if (currentTickInfo.initialized) {
-                    currentTickInfo.feeGrowthOutside0X128 = feeGrowthGlobal0X128;
-                }
-                
                 // Update position fee growth
                 IPosition.Info storage position = positions.get(recipient, TickMath.MIN_TICK, TickMath.MAX_TICK);
                 if (position.liquidity > 0) {
@@ -308,7 +302,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
             if (state.currentLiquidity > 0) {
                 uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
-                feeGrowthGlobal1X128 = uint256(feeGrowthGlobal1X128).add(feePerLiquidity);
+                feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(feePerLiquidity);
+                
+                // Update position fee growth
+                IPosition.Info storage position = positions.get(recipient, TickMath.MIN_TICK, TickMath.MAX_TICK);
+                if (position.liquidity > 0) {
+                    position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
+                }
             }
         }
     }
