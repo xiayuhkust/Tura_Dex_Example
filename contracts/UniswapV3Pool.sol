@@ -57,7 +57,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         
         int24 tick = TickMath.getTickAtSqrtRatio(sqrtPriceX96);
         
-        slot0 = Slot0({
+        _slot0 = Slot0({
             sqrtPriceX96: sqrtPriceX96,
             tick: tick,
             observationIndex: 0,
@@ -121,7 +121,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
 
         // Update pool liquidity if position is in range
-        if (_slot0.tick >= tickLower && slot0.tick < tickUpper) {
+        if (_slot0.tick >= tickLower && _slot0.tick < tickUpper) {
             liquidity = uint128(uint256(liquidity).add(uint256(amount)));
         }
 
