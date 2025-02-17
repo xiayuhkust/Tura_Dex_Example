@@ -256,6 +256,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         uint128 currentLiquidity;
         uint160 nextPrice;
         int24 nextTick;
+        address recipient;
     }
 
     function _handleSwap(
@@ -281,9 +282,15 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
                 
                 // Update fee growth for current tick
-                Tick.Info storage currentTickInfo = ticks[tick];
+                Tick.Info storage currentTickInfo = ticks[state.nextTick];
                 if (currentTickInfo.initialized) {
                     currentTickInfo.feeGrowthOutside0X128 = feeGrowthGlobal0X128;
+                }
+                
+                // Update position fee growth
+                IPosition.Info storage position = positions.get(recipient, TickMath.MIN_TICK, TickMath.MAX_TICK);
+                if (position.liquidity > 0) {
+                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
                 }
             }
         } else {
@@ -339,6 +346,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         swapState.feeAmount = (amountSpecified * uint256(fee)) / 1000000;
         swapState.amountAfterFee = amountSpecified - swapState.feeAmount;
         swapState.currentLiquidity = currentLiquidity;
+        swapState.recipient = recipient;
 
         // Calculate next price
         swapState.nextPrice = zeroForOne
