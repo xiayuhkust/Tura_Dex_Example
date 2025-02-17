@@ -219,38 +219,44 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         emit Collect(recipient, tickLower, tickUpper, amount0, amount1);
     }
 
+    struct SwapState {
+        uint256 amountSpecified;
+        uint256 feeAmount;
+        uint256 amountAfterFee;
+        uint128 currentLiquidity;
+        uint160 nextPrice;
+        int24 nextTick;
+    }
+
     function _handleSwap(
         bool zeroForOne,
-        uint256 amountSpecified,
-        uint256 feeAmount,
-        uint256 amountAfterFee,
-        address recipient,
-        uint128 currentLiquidity
+        SwapState memory state,
+        address recipient
     ) private returns (int256 amount0, int256 amount1) {
         if (zeroForOne) {
-            amount0 = int256(amountSpecified);
-            amount1 = -int256(amountAfterFee);
+            amount0 = int256(state.amountSpecified);
+            amount1 = -int256(state.amountAfterFee);
             
-            require(IERC20(token0).transferFrom(msg.sender, address(this), amountSpecified), 'T0');
-            protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
-            if (amountAfterFee > 0) require(IERC20(token1).transfer(recipient, amountAfterFee), 'T1');
+            require(IERC20(token0).transferFrom(msg.sender, address(this), state.amountSpecified), 'T0');
+            protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
+            if (state.amountAfterFee > 0) require(IERC20(token1).transfer(recipient, state.amountAfterFee), 'T1');
 
-            if (currentLiquidity > 0) {
+            if (state.currentLiquidity > 0) {
                 feeGrowthGlobal0X128 = uint256(feeGrowthGlobal0X128).add(
-                    uint256(feeAmount).mul(Q128).div(currentLiquidity)
+                    uint256(state.feeAmount).mul(Q128).div(state.currentLiquidity)
                 );
             }
         } else {
-            amount0 = -int256(amountAfterFee);
-            amount1 = int256(amountSpecified);
+            amount0 = -int256(state.amountAfterFee);
+            amount1 = int256(state.amountSpecified);
             
-            require(IERC20(token1).transferFrom(msg.sender, address(this), amountSpecified), 'T1');
-            protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
-            if (amountAfterFee > 0) require(IERC20(token0).transfer(recipient, amountAfterFee), 'T0');
+            require(IERC20(token1).transferFrom(msg.sender, address(this), state.amountSpecified), 'T1');
+            protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
+            if (state.amountAfterFee > 0) require(IERC20(token0).transfer(recipient, state.amountAfterFee), 'T0');
 
-            if (currentLiquidity > 0) {
+            if (state.currentLiquidity > 0) {
                 feeGrowthGlobal1X128 = uint256(feeGrowthGlobal1X128).add(
-                    uint256(feeAmount).mul(Q128).div(currentLiquidity)
+                    uint256(state.feeAmount).mul(Q128).div(state.currentLiquidity)
                 );
             }
         }
@@ -283,49 +289,56 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             ? TickMath.MIN_SQRT_RATIO + 1
             : TickMath.MAX_SQRT_RATIO - 1;
 
+        // Initialize swap state
+        SwapState memory swapState;
+        swapState.amountSpecified = amountSpecified;
+        swapState.feeAmount = (amountSpecified * uint256(fee)) / 1000000;
+        swapState.amountAfterFee = amountSpecified - swapState.feeAmount;
+        swapState.currentLiquidity = currentLiquidity;
+
         // Calculate next price
-        uint160 nextPrice = zeroForOne
+        swapState.nextPrice = zeroForOne
             ? SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
                 sqrtPriceX96,
                 currentLiquidity,
-                amountSpecified,
+                swapState.amountAfterFee,
                 true
             )
             : SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
                 sqrtPriceX96,
                 currentLiquidity,
-                amountSpecified,
+                swapState.amountAfterFee,
                 true
             );
 
         // Verify price is within limits
         if (zeroForOne) {
-            require(nextPrice >= sqrtPriceLimitX96 && nextPrice < sqrtPriceX96, 'SPL');
+            require(swapState.nextPrice >= sqrtPriceLimitX96 && swapState.nextPrice < sqrtPriceX96, 'SPL');
         } else {
-            require(nextPrice <= sqrtPriceLimitX96 && nextPrice > sqrtPriceX96, 'SPL');
+            require(swapState.nextPrice <= sqrtPriceLimitX96 && swapState.nextPrice > sqrtPriceX96, 'SPL');
         }
 
         // Calculate next tick and update liquidity
-        int24 nextTick = TickMath.getTickAtSqrtRatio(nextPrice);
-        if (tick != nextTick) {
+        swapState.nextTick = TickMath.getTickAtSqrtRatio(swapState.nextPrice);
+        if (tick != swapState.nextTick) {
             int128 liquidityNet = ticks.cross(
-                nextTick,
+                swapState.nextTick,
                 feeGrowthGlobal0X128,
                 feeGrowthGlobal1X128
             );
             if (zeroForOne) liquidityNet = -liquidityNet;
-            currentLiquidity = liquidityNet < 0
-                ? uint128(uint256(currentLiquidity).sub(uint256(-liquidityNet)))
-                : uint128(uint256(currentLiquidity).add(uint256(liquidityNet)));
+            swapState.currentLiquidity = liquidityNet < 0
+                ? uint128(uint256(swapState.currentLiquidity).sub(uint256(-liquidityNet)))
+                : uint128(uint256(swapState.currentLiquidity).add(uint256(liquidityNet)));
         }
 
         // Execute swap
-        (amount0, amount1) = _handleSwap(zeroForOne, amountSpecified, feeAmount, amountAfterFee, recipient, currentLiquidity);
+        (amount0, amount1) = _handleSwap(zeroForOne, swapState, recipient);
 
         // Update pool state
-        liquidity = currentLiquidity;
-        state.sqrtPriceX96 = nextPrice;
-        state.tick = nextTick;
+        liquidity = swapState.currentLiquidity;
+        state.sqrtPriceX96 = swapState.nextPrice;
+        state.tick = swapState.nextTick;
         state.unlocked = true;
         _slot0 = state;
 
