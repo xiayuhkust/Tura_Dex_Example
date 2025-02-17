@@ -287,33 +287,36 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         liquidity = currentLiquidity;
 
         // Calculate token amounts and execute transfers
-        uint256 inAmount = uint256(amountSpecified);
-        uint256 outAmount = uint256(amountAfterFee);
-        
         if (zeroForOne) {
-            amount0 = int256(inAmount);
-            amount1 = -int256(outAmount);
+            amount0 = int256(amountSpecified);
+            amount1 = -int256(amountAfterFee);
             
             // Transfer tokens
-            require(IERC20(token0).transferFrom(msg.sender, address(this), inAmount), 'T0');
+            require(IERC20(token0).transferFrom(msg.sender, address(this), amountSpecified), 'T0');
             protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
-            if (outAmount > 0) require(IERC20(token1).transfer(recipient, outAmount), 'T1');
+            if (amountAfterFee > 0) require(IERC20(token1).transfer(recipient, amountAfterFee), 'T1');
+
+            // Update fee growth
+            if (currentLiquidity > 0) {
+                feeGrowthGlobal0X128 = uint256(feeGrowthGlobal0X128).add(
+                    uint256(feeAmount).mul(Q128).div(currentLiquidity)
+                );
+            }
         } else {
-            amount0 = -int256(outAmount);
-            amount1 = int256(inAmount);
+            amount0 = -int256(amountAfterFee);
+            amount1 = int256(amountSpecified);
             
             // Transfer tokens
-            require(IERC20(token1).transferFrom(msg.sender, address(this), inAmount), 'T1');
+            require(IERC20(token1).transferFrom(msg.sender, address(this), amountSpecified), 'T1');
             protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
-            if (outAmount > 0) require(IERC20(token0).transfer(recipient, outAmount), 'T0');
-        }
-        }
+            if (amountAfterFee > 0) require(IERC20(token0).transfer(recipient, amountAfterFee), 'T0');
 
-        // Update fee growth and unlock pool
-        if (currentLiquidity > 0) {
-            feeGrowthGlobal0X128 = uint256(feeGrowthGlobal0X128).add(
-                uint256(feeAmount).mul(Q128).div(currentLiquidity)
-            );
+            // Update fee growth
+            if (currentLiquidity > 0) {
+                feeGrowthGlobal1X128 = uint256(feeGrowthGlobal1X128).add(
+                    uint256(feeAmount).mul(Q128).div(currentLiquidity)
+                );
+            }
         }
 
         // Update state and emit event
