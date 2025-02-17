@@ -237,26 +237,34 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount0 = int256(state.amountSpecified);
             amount1 = -int256(state.amountAfterFee);
             
+            // Transfer tokens
             require(IERC20(token0).transferFrom(msg.sender, address(this), state.amountSpecified), 'T0');
-            protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
-            if (state.amountAfterFee > 0) require(IERC20(token1).transfer(recipient, state.amountAfterFee), 'T1');
+            if (state.amountAfterFee > 0) {
+                require(IERC20(token1).transfer(recipient, state.amountAfterFee), 'T1');
+            }
 
+            // Update protocol fees and fee growth
+            protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
             if (state.currentLiquidity > 0) {
-                feeGrowthGlobal0X128 = uint256(feeGrowthGlobal0X128).add(
-                    uint256(state.feeAmount).mul(Q128).div(state.currentLiquidity)
+                feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(
+                    FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity)
                 );
             }
         } else {
             amount0 = -int256(state.amountAfterFee);
             amount1 = int256(state.amountSpecified);
             
+            // Transfer tokens
             require(IERC20(token1).transferFrom(msg.sender, address(this), state.amountSpecified), 'T1');
-            protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
-            if (state.amountAfterFee > 0) require(IERC20(token0).transfer(recipient, state.amountAfterFee), 'T0');
+            if (state.amountAfterFee > 0) {
+                require(IERC20(token0).transfer(recipient, state.amountAfterFee), 'T0');
+            }
 
+            // Update protocol fees and fee growth
+            protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
             if (state.currentLiquidity > 0) {
-                feeGrowthGlobal1X128 = uint256(feeGrowthGlobal1X128).add(
-                    uint256(state.feeAmount).mul(Q128).div(state.currentLiquidity)
+                feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(
+                    FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity)
                 );
             }
         }
