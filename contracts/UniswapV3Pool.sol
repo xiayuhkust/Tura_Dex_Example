@@ -299,14 +299,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                     feeGrowthInside0X128 = feeGrowthInside0X128.sub(upperTick.feeGrowthOutside0X128);
                 }
                 
-                // Update position fees
-                IPosition.Info storage position = positions.get(state.recipient, MIN_TICK, MAX_TICK);
+                // Update position fees for all LPs in range
+                bytes32 positionKey = keccak256(abi.encodePacked(msg.sender, MIN_TICK, MAX_TICK));
+                IPosition.Info storage position = positions[positionKey];
                 if (position.liquidity > 0) {
-                    uint256 feesEarned = FullMath.mulDiv(
-                        position.liquidity,
-                        feeGrowthInside0X128.sub(position.feeGrowthInside0LastX128),
-                        Q128
-                    );
                     position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
                     position.feeGrowthInside0LastX128 = feeGrowthInside0X128;
                 }
@@ -350,14 +346,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                     feeGrowthInside1X128 = feeGrowthInside1X128.sub(upperTick.feeGrowthOutside1X128);
                 }
                 
-                // Update position fees
-                IPosition.Info storage currentPosition = positions.get(state.recipient, MIN_TICK, MAX_TICK);
+                // Update position fees for all LPs in range
+                bytes32 positionKey = keccak256(abi.encodePacked(msg.sender, MIN_TICK, MAX_TICK));
+                IPosition.Info storage currentPosition = positions[positionKey];
                 if (currentPosition.liquidity > 0) {
-                    uint256 feesEarned = FullMath.mulDiv(
-                        currentPosition.liquidity,
-                        feeGrowthInside1X128.sub(currentPosition.feeGrowthInside1LastX128),
-                        Q128
-                    );
                     currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(state.feeAmount));
                     currentPosition.feeGrowthInside1LastX128 = feeGrowthInside1X128;
                 }
