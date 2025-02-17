@@ -25,7 +25,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     address public immutable override token1;
     uint24 public immutable override fee;
 
-    Slot0 public override slot0;
+    Slot0 private _slot0;
+    function slot0() external view override returns (Slot0 memory) {
+        return _slot0;
+    }
     mapping(bytes32 => IPosition.Info) public positions;
     mapping(int24 => Tick.Info) public ticks;
     uint128 public override liquidity;

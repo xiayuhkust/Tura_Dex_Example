@@ -24,7 +24,8 @@ library SqrtPriceMath {
                     return uint160(FullMath.mulDivRoundingUp(numerator1, sqrtPX96, denominator));
             }
 
-            return uint160(FullMath.divRoundingUp(numerator1, (numerator1 / sqrtPX96).add(amount)));
+            uint256 denominator = (numerator1 / sqrtPX96).add(amount);
+            return uint160((numerator1 + denominator - 1) / denominator);
         } else {
             uint256 product;
             require((product = amount * sqrtPX96) / amount == sqrtPX96);
