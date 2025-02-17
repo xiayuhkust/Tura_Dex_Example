@@ -270,9 +270,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount1 = -int256(state.amountAfterFee);
             
             // Transfer tokens
-            require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(amount0)), 'T0');
-            if (-amount1 > 0) {
-                require(IERC20(token1).transfer(recipient, uint256(-amount1)), 'T1');
+            require(IERC20(token0).transferFrom(msg.sender, address(this), state.amountSpecified), 'T0');
+            if (state.amountAfterFee > 0) {
+                require(IERC20(token1).transfer(recipient, state.amountAfterFee), 'T1');
             }
 
             // Update protocol fees and fee growth
@@ -293,9 +293,15 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount1 = int256(state.amountSpecified);
             
             // Transfer tokens
-            require(IERC20(token1).transferFrom(msg.sender, address(this), uint256(state.amountSpecified)), 'T1');
+            require(IERC20(token1).transferFrom(msg.sender, address(this), state.amountSpecified), 'T1');
             if (state.amountAfterFee > 0) {
                 require(IERC20(token0).transfer(recipient, state.amountAfterFee), 'T0');
+            }
+            
+            // Update position fee growth for current tick range
+            IPosition.Info storage position = positions.get(msg.sender, MIN_TICK, MAX_TICK);
+            if (position.liquidity > 0) {
+                position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
             }
 
             // Update protocol fees and fee growth
@@ -341,14 +347,16 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             : TickMath.MAX_SQRT_RATIO - 1;
 
         // Initialize swap state
-        SwapState memory swapState;
-        swapState.amountSpecified = amountSpecified;
-        swapState.feeAmount = (amountSpecified * uint256(fee)) / 1000000;
+        SwapState memory swapState = SwapState({
+            amountSpecified: amountSpecified,
+            feeAmount: (amountSpecified * uint256(fee)) / 1000000,
+            amountAfterFee: 0,
+            currentLiquidity: liquidity,
+            recipient: recipient,
+            nextTick: tick,
+            nextPrice: sqrtPriceX96
+        });
         swapState.amountAfterFee = amountSpecified - swapState.feeAmount;
-        swapState.currentLiquidity = liquidity;
-        swapState.recipient = recipient;
-        swapState.nextTick = tick;
-        swapState.nextPrice = sqrtPriceX96;
 
         // Calculate next price
         swapState.nextPrice = zeroForOne
