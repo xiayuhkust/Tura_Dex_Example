@@ -315,10 +315,14 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 }
                 
                 // Calculate swap amounts
-                amount0 = int256(state.amountAfterFee);
+                amount0 = int256(state.amountSpecified);
                 amount1 = -int256(state.amountAfterFee);
                 protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(FullMath.mulDiv(feeAmount, Q128, liquidity));
+                
+                // Update token balances
+                IERC20(token0).transferFrom(msg.sender, address(this), uint256(amount0));
+                IERC20(token1).transfer(state.recipient, uint256(-amount1));
             }
         } else {
             // Calculate amounts
@@ -366,9 +370,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 
                 // Calculate swap amounts
                 amount0 = -int256(state.amountAfterFee);
-                amount1 = int256(state.amountAfterFee);
+                amount1 = int256(state.amountSpecified);
                 protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
                 feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(FullMath.mulDiv(feeAmount, Q128, liquidity));
+                
+                // Update token balances
+                IERC20(token1).transferFrom(msg.sender, address(this), uint256(amount1));
+                IERC20(token0).transfer(state.recipient, uint256(-amount0));
             }
         }
     }
