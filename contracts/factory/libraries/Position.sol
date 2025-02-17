@@ -6,6 +6,7 @@ import '@openzeppelin/contracts/math/SafeMath.sol';
 library Position {
     using SafeMath for uint256;
 
+    // Info struct for position details
     struct Info {
         uint128 liquidity;
         uint256 feeGrowthInside0LastX128;

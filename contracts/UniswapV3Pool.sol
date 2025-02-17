@@ -33,9 +33,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     uint256 public override feeGrowthGlobal0X128;
     uint256 public override feeGrowthGlobal1X128;
 
-    // Track the current tick and liquidity
+    // Track the current tick
     int24 public currentTick;
-    uint128 public currentLiquidity;
 
     constructor(
         address _factory,
