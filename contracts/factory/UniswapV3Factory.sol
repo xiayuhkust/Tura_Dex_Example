@@ -29,49 +29,21 @@ contract UniswapV3Factory is IUniswapV3Factory {
         require(tickSpacing != 0, "Invalid fee");
         require(getPool[token0][token1][fee] == address(0), "Pool exists");
         
-        // Create pool with deterministic address
-        bytes memory bytecode = type(UniswapV3Pool).creationCode;
-        bytes memory constructorArgs = abi.encode(address(this), token0, token1, fee);
-        bytes32 salt = keccak256(abi.encodePacked(token0, token1, fee));
-        
-        // Calculate expected address
-        bytes32 hash = keccak256(
-            abi.encodePacked(
-                bytes1(0xff),
-                address(this),
-                salt,
-                keccak256(abi.encodePacked(bytecode, constructorArgs))
-            )
-        );
-        pool = address(uint160(uint256(hash)));
-        
         // Deploy pool
-        UniswapV3Pool newPool = new UniswapV3Pool{salt: salt}(
-            address(this),
-            token0,
-            token1,
-            fee
-        );
-        
-        require(address(newPool) == pool, 'Pool address mismatch');
-        
-        // Initialize pool with 1:1 price
-        newPool.initialize(uint160(1 << 96)); // 1.0 in Q96
-        
-        // Store pool address
-        getPool[token0][token1][fee] = pool;
-        getPool[token1][token0][fee] = pool; // populate reverse mapping
-        
-        emit PoolCreated(token0, token1, fee, tickSpacing, pool);
-        
         pool = address(new UniswapV3Pool(
             address(this),
             token0,
             token1,
             fee
         ));
+        
+        // Initialize pool with 1:1 price
+        UniswapV3Pool(pool).initialize(uint160(1 << 96)); // 1.0 in Q96
+        
+        // Store pool address
         getPool[token0][token1][fee] = pool;
-        getPool[token1][token0][fee] = pool;
+        getPool[token1][token0][fee] = pool; // populate reverse mapping
+        
         emit PoolCreated(token0, token1, fee, tickSpacing, pool);
     }
 

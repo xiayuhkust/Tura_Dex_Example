@@ -134,12 +134,16 @@ describe('UniswapV3Pool', () => {
             const finalPoolBalance1 = await token1.balanceOf(pool.address);
             
             // Verify token0 was taken from user
-            expect(finalBalance0).to.equal(initialBalance0.sub(swapAmount));
+            expect(initialBalance0.sub(finalBalance0)).to.equal(swapAmount, "User token0 balance incorrect");
             // Verify token1 was given to user
-            expect(finalBalance1).to.equal(initialBalance1.add(amountAfterFee));
+            expect(finalBalance1.sub(initialBalance1)).to.equal(amountAfterFee, "User token1 balance incorrect");
             // Verify pool balances changed correctly
-            expect(finalPoolBalance0).to.equal(initialPoolBalance0.add(swapAmount));
-            expect(finalPoolBalance1).to.equal(initialPoolBalance1.sub(amountAfterFee));
+            expect(finalPoolBalance0.sub(initialPoolBalance0)).to.equal(swapAmount, "Pool token0 balance incorrect");
+            expect(initialPoolBalance1.sub(finalPoolBalance1)).to.equal(amountAfterFee, "Pool token1 balance incorrect");
+            
+            // Verify fee growth
+            const position = await pool.getPosition(owner.address, MIN_TICK, MAX_TICK);
+            expect(position.tokensOwed0).to.equal(feeAmount, "Fee growth incorrect");
             
             // Verify protocol fees
             expect(await pool.protocolFees0()).to.equal(feeAmount);
@@ -187,8 +191,11 @@ describe('UniswapV3Pool', () => {
             // Approve tokens for swap
             await token0.connect(other).approve(pool.address, swapAmount);
             
-            // Execute multiple swaps to accumulate fees
+            // Execute swap to accumulate fees
             await pool.connect(other).swap(true, swapAmount, other.address);
+            
+            // Approve more tokens for second swap
+            await token0.connect(other).approve(pool.address, swapAmount);
             await pool.connect(other).swap(true, swapAmount, other.address);
             
             // Calculate expected fee
