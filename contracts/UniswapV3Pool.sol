@@ -361,13 +361,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         swapState.nextPrice = zeroForOne
             ? SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
                 sqrtPriceX96,
-                currentLiquidity,
+                swapState.currentLiquidity,
                 swapState.amountAfterFee,
                 true
             )
             : SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
                 sqrtPriceX96,
-                currentLiquidity,
+                swapState.currentLiquidity,
                 swapState.amountAfterFee,
                 true
             );
