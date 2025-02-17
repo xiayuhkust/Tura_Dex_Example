@@ -343,10 +343,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         uint256 amountAfterFee = amountSpecified - feeAmount;
 
         // Calculate price limits
-        uint160 sqrtPriceLimitX96 = zeroForOne
-            ? TickMath.MIN_SQRT_RATIO + 1
-            : TickMath.MAX_SQRT_RATIO - 1;
-
         // Calculate price limits
         uint160 sqrtPriceLimitX96 = zeroForOne
             ? TickMath.MIN_SQRT_RATIO + 1
