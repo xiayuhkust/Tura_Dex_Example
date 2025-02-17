@@ -2,6 +2,8 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
+import './IPosition.sol';
+
 interface IUniswapV3Pool {
     struct Slot0 {
         uint160 sqrtPriceX96;
@@ -13,13 +15,7 @@ interface IUniswapV3Pool {
         bool unlocked;
     }
 
-    struct Position {
-        uint128 liquidity;
-        uint256 feeGrowthInside0LastX128;
-        uint256 feeGrowthInside1LastX128;
-        uint128 tokensOwed0;
-        uint128 tokensOwed1;
-    }
+    // Use IPosition.Info instead of redefining Position struct
 
     event Initialize(uint160 sqrtPriceX96, int24 tick);
     event Mint(
@@ -76,4 +72,9 @@ interface IUniswapV3Pool {
     function protocolFees1() external view returns (uint128);
     function feeGrowthGlobal0X128() external view returns (uint256);
     function feeGrowthGlobal1X128() external view returns (uint256);
+    function getPosition(
+        address owner,
+        int24 tickLower,
+        int24 tickUpper
+    ) external view returns (IPosition.Info memory);
 }
