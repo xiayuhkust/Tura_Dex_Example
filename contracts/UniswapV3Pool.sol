@@ -5,10 +5,10 @@ pragma abicoder v2;
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
-import './interfaces/IUniswapV3Pool.sol';
-import './libraries/TickMath.sol';
-import './libraries/Position.sol';
-import './libraries/SqrtPriceMath.sol';
+import './factory/interfaces/IUniswapV3Pool.sol';
+import './factory/libraries/TickMath.sol';
+import './factory/libraries/Position.sol';
+import './factory/libraries/SqrtPriceMath.sol';
 import './libraries/Tick.sol';
 
 contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
@@ -16,6 +16,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     using SafeMath for uint256;
     using Position for mapping(bytes32 => Position.Info);
     using TickMath for int24;
+
+    uint256 constant Q128 = 2**128;
 
     address public immutable override factory;
     address public immutable override token0;
@@ -224,10 +226,62 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
         slot0.unlocked = false;
 
+        // Cache the pool state
+        uint160 sqrtPriceX96 = slot0.sqrtPriceX96;
+        int24 tick = slot0.tick;
+        uint128 currentLiquidity = liquidity;
+
+        // Calculate price limits
+        uint160 sqrtPriceLimitX96 = zeroForOne
+            ? TickMath.MIN_SQRT_RATIO + 1
+            : TickMath.MAX_SQRT_RATIO - 1;
+
         // Calculate fees (fee is in hundredths of a bip, so multiply by 10^-6)
         uint256 feeAmount = (amountSpecified * uint256(fee)) / 1000000;
         uint256 amountAfterFee = amountSpecified - feeAmount;
 
+        // Calculate next sqrt price
+        uint160 nextSqrtPriceX96;
+        if (zeroForOne) {
+            nextSqrtPriceX96 = SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
+                sqrtPriceX96,
+                currentLiquidity,
+                amountAfterFee,
+                true
+            );
+            require(nextSqrtPriceX96 >= sqrtPriceLimitX96 && nextSqrtPriceX96 < sqrtPriceX96, 'SPL');
+        } else {
+            nextSqrtPriceX96 = SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
+                sqrtPriceX96,
+                currentLiquidity,
+                amountAfterFee,
+                true
+            );
+            require(nextSqrtPriceX96 <= sqrtPriceLimitX96 && nextSqrtPriceX96 > sqrtPriceX96, 'SPL');
+        }
+
+        // Update tick
+        int24 nextTick = TickMath.getTickAtSqrtRatio(nextSqrtPriceX96);
+
+        // Update liquidity if we crossed any initialized ticks
+        if (tick != nextTick) {
+            int128 liquidityNet = ticks.cross(
+                nextTick,
+                feeGrowthGlobal0X128,
+                feeGrowthGlobal1X128
+            );
+            if (zeroForOne) liquidityNet = -liquidityNet;
+            currentLiquidity = liquidityNet < 0
+                ? uint128(uint256(currentLiquidity).sub(uint256(-liquidityNet)))
+                : uint128(uint256(currentLiquidity).add(uint256(liquidityNet)));
+        }
+
+        // Update pool state
+        slot0.sqrtPriceX96 = nextSqrtPriceX96;
+        slot0.tick = nextTick;
+        liquidity = currentLiquidity;
+
+        // Calculate token amounts
         if (zeroForOne) {
             amount0 = -int256(amountSpecified);
             amount1 = int256(amountAfterFee);
@@ -250,8 +304,15 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             require(IERC20(token0).transfer(recipient, uint256(amount0)), 'T0');
         }
 
+        // Update fee growth
+        if (currentLiquidity > 0) {
+            feeGrowthGlobal0X128 = uint256(feeGrowthGlobal0X128).add(
+                uint256(feeAmount).mul(Q128).div(currentLiquidity)
+            );
+        }
+
         slot0.unlocked = true;
 
-        emit Swap(msg.sender, recipient, amount0, amount1, slot0.sqrtPriceX96, liquidity, slot0.tick);
+        emit Swap(msg.sender, recipient, amount0, amount1, nextSqrtPriceX96, currentLiquidity, nextTick);
     }
 }
