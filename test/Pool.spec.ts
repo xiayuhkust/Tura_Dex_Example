@@ -111,6 +111,9 @@ describe('UniswapV3Pool', () => {
         it('executes swap zero for one', async () => {
             const swapAmount = ethers.utils.parseEther('1');
             
+            // Approve tokens first
+            await token0.connect(other).approve(pool.address, swapAmount);
+            
             // Get initial balances
             const initialBalance0 = await token0.balanceOf(other.address);
             const initialBalance1 = await token1.balanceOf(other.address);
@@ -120,15 +123,15 @@ describe('UniswapV3Pool', () => {
             // Execute swap
             await pool.connect(other).swap(true, swapAmount, other.address);
             
+            // Calculate expected amounts
+            const feeAmount = swapAmount.mul(3).div(1000); // 0.3% fee
+            const amountAfterFee = swapAmount.sub(feeAmount);
+            
             // Verify balances changed correctly
             const finalBalance0 = await token0.balanceOf(other.address);
             const finalBalance1 = await token1.balanceOf(other.address);
             const finalPoolBalance0 = await token0.balanceOf(pool.address);
             const finalPoolBalance1 = await token1.balanceOf(pool.address);
-            
-            // Calculate expected amounts
-            const feeAmount = swapAmount.mul(3).div(1000); // 0.3% fee
-            const amountAfterFee = swapAmount.sub(feeAmount);
             
             // Verify token0 was taken from user
             expect(initialBalance0.sub(finalBalance0)).to.equal(swapAmount);
@@ -140,10 +143,17 @@ describe('UniswapV3Pool', () => {
             
             // Verify protocol fees
             expect(await pool.protocolFees0()).to.equal(feeAmount);
+            
+            // Verify fee growth
+            const position = await pool.getPosition(owner.address, MIN_TICK, MAX_TICK);
+            expect(position.tokensOwed0).to.equal(feeAmount);
         });
 
         it('executes swap one for zero', async () => {
             const swapAmount = ethers.utils.parseEther('1');
+            // Approve tokens first
+            await token1.connect(other).approve(pool.address, swapAmount);
+            
             // Get initial balances
             const initialBalance0 = await token0.balanceOf(other.address);
             const initialBalance1 = await token1.balanceOf(other.address);
@@ -177,10 +187,24 @@ describe('UniswapV3Pool', () => {
 
         it('collects fees', async () => {
             const swapAmount = ethers.utils.parseEther('1');
-            await pool.swap(true, swapAmount, owner.address);
-
-            const position = await pool.getPosition(owner.address, MIN_TICK, MAX_TICK);
-            expect(position.tokensOwed0).to.be.gt(0);
+            
+            // Approve tokens for swap
+            await token0.connect(other).approve(pool.address, swapAmount);
+            
+            // Execute swap
+            await pool.connect(other).swap(true, swapAmount, other.address);
+            
+            // Calculate expected fee
+            const feeAmount = swapAmount.mul(3).div(1000); // 0.3% fee
+            
+            // Collect fees
+            const beforeCollect = await pool.getPosition(owner.address, MIN_TICK, MAX_TICK);
+            await pool.collect(owner.address, MIN_TICK, MAX_TICK);
+            const afterCollect = await pool.getPosition(owner.address, MIN_TICK, MAX_TICK);
+            
+            // Verify fees were collected
+            expect(beforeCollect.tokensOwed0).to.equal(feeAmount);
+            expect(afterCollect.tokensOwed0).to.equal(0);
         });
     });
 });
