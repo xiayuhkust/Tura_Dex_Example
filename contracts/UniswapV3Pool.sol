@@ -15,7 +15,7 @@ import './factory/libraries/Tick.sol';
 contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     using Tick for mapping(int24 => Tick.Info);
     using SafeMath for uint256;
-    using Position for mapping(bytes32 => Position.Info);
+    using Position for mapping(bytes32 => IPosition.Info);
     using TickMath for int24;
 
     uint256 constant Q128 = 2**128;

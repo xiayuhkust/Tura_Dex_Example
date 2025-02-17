@@ -2,21 +2,13 @@
 pragma solidity =0.7.6;
 
 import '@openzeppelin/contracts/math/SafeMath.sol';
+import '../interfaces/IPosition.sol';
 
 library Position {
     using SafeMath for uint256;
 
-    // Info struct for position details
-    struct Info {
-        uint128 liquidity;
-        uint256 feeGrowthInside0LastX128;
-        uint256 feeGrowthInside1LastX128;
-        uint128 tokensOwed0;
-        uint128 tokensOwed1;
-    }
-
     function get(
-        mapping(bytes32 => Info) storage self,
+        mapping(bytes32 => IPosition.Info) storage self,
         address owner,
         int24 tickLower,
         int24 tickUpper
