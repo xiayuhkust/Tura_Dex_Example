@@ -343,7 +343,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         uint256 amountAfterFee = amountSpecified - feeAmount;
 
         // Calculate price limits
-        // Calculate price limits
         uint160 sqrtPriceLimitX96 = zeroForOne
             ? TickMath.MIN_SQRT_RATIO + 1
             : TickMath.MAX_SQRT_RATIO - 1;
@@ -392,6 +391,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         if (tick != swapState.nextTick) {
             int128 liquidityNet = ticks.cross(
                 swapState.nextTick,
+                feeGrowthGlobal0X128,
+                feeGrowthGlobal1X128
+            );
+            liquidity = zeroForOne
+                ? uint128(int128(liquidity) - liquidityNet)
+                : uint128(int128(liquidity) + liquidityNet);
+        }
                 feeGrowthGlobal0X128,
                 feeGrowthGlobal1X128
             );
