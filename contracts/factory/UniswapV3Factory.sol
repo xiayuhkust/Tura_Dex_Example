@@ -31,14 +31,16 @@ contract UniswapV3Factory is IUniswapV3Factory {
         
         // Create new pool with deterministic address
         bytes32 salt = keccak256(abi.encodePacked(token0, token1, fee));
-        pool = address(new UniswapV3Pool{salt: salt}());
+        pool = address(new UniswapV3Pool(token0, token1, fee, tickSpacing));
         
-        // Initialize pool state
-        IUniswapV3Pool(pool).initialize(token0, token1, fee, tickSpacing);
+        // Initialize pool with 1:1 price
+        IUniswapV3Pool(pool).initialize(uint160(1 << 96)); // 1.0 in Q96
         
         // Store pool address
         getPool[token0][token1][fee] = pool;
         getPool[token1][token0][fee] = pool; // populate reverse mapping
+        
+        emit PoolCreated(token0, token1, fee, tickSpacing, pool);
         
         pool = address(new UniswapV3Pool(
             address(this),
