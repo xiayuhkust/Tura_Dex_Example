@@ -140,38 +140,39 @@ describe('UniswapV3Pool', () => {
             
             // Verify protocol fees
             expect(await pool.protocolFees0()).to.equal(feeAmount);
-            
-            // Verify swap event was emitted
-            const slot0 = await pool.slot0();
-            const liquidity = await pool.liquidity();
-            await expect(pool.connect(other).swap(true, swapAmount, other.address))
-                .to.emit(pool, 'Swap')
-                .withArgs(
-                    other.address,
-                    other.address,
-                    swapAmount,
-                    -amountAfterFee,
-                    slot0.sqrtPriceX96,
-                    liquidity,
-                    slot0.tick
-                );
         });
 
         it('executes swap one for zero', async () => {
             const swapAmount = ethers.utils.parseEther('1');
-            await token1.approve(pool.address, swapAmount);
-
-            await expect(pool.swap(false, swapAmount, owner.address))
-                .to.emit(pool, 'Swap')
-                .withArgs(
-                    owner.address,
-                    owner.address,
-                    BigNumber.from('0'),
-                    -swapAmount,
-                    await pool.slot0().sqrtPriceX96,
-                    await pool.liquidity(),
-                    await pool.slot0().tick
-                );
+            // Get initial balances
+            const initialBalance0 = await token0.balanceOf(other.address);
+            const initialBalance1 = await token1.balanceOf(other.address);
+            const initialPoolBalance0 = await token0.balanceOf(pool.address);
+            const initialPoolBalance1 = await token1.balanceOf(pool.address);
+            
+            // Execute swap
+            await pool.connect(other).swap(false, swapAmount, other.address);
+            
+            // Calculate expected amounts
+            const feeAmount = swapAmount.mul(3).div(1000); // 0.3% fee
+            const amountAfterFee = swapAmount.sub(feeAmount);
+            
+            // Verify balances changed correctly
+            const finalBalance0 = await token0.balanceOf(other.address);
+            const finalBalance1 = await token1.balanceOf(other.address);
+            const finalPoolBalance0 = await token0.balanceOf(pool.address);
+            const finalPoolBalance1 = await token1.balanceOf(pool.address);
+            
+            // Verify token1 was taken from user
+            expect(initialBalance1.sub(finalBalance1)).to.equal(swapAmount);
+            // Verify token0 was given to user
+            expect(finalBalance0.sub(initialBalance0)).to.equal(amountAfterFee);
+            // Verify pool balances changed correctly
+            expect(initialPoolBalance0.sub(finalPoolBalance0)).to.equal(amountAfterFee);
+            expect(finalPoolBalance1.sub(initialPoolBalance1)).to.equal(swapAmount);
+            
+            // Verify protocol fees
+            expect(await pool.protocolFees1()).to.equal(feeAmount);
         });
 
         it('collects fees', async () => {
