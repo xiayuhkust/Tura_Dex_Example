@@ -309,15 +309,17 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         }
         }
 
-        // Update fee growth
+        // Update fee growth and unlock pool
         if (currentLiquidity > 0) {
             feeGrowthGlobal0X128 = uint256(feeGrowthGlobal0X128).add(
                 uint256(feeAmount).mul(Q128).div(currentLiquidity)
             );
         }
 
-        // Unlock the pool
+        // Update state and emit event
         _slot0_.unlocked = true;
+        _slot0_.sqrtPriceX96 = nextSqrtPriceX96;
+        _slot0_.tick = nextTick;
         _slot0 = _slot0_;
 
         emit Swap(msg.sender, recipient, amount0, amount1, nextSqrtPriceX96, currentLiquidity, nextTick);
