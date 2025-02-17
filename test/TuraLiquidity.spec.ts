@@ -1,6 +1,7 @@
 import { ethers, waffle } from 'hardhat';
 import { expect } from 'chai';
-import { Contract, BigNumber } from '@ethersproject/contracts';
+import { Contract } from '@ethersproject/contracts';
+import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 describe('TuraLiquidity', () => {
