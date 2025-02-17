@@ -41,6 +41,9 @@ contract UniswapV3Factory is IUniswapV3Factory {
         );
         pool = address(newPool);
         
+        // Initialize pool with 1:1 price
+        newPool.initialize(uint160(1 << 96)); // 1.0 in Q96
+        
         // Store pool address
         getPool[token0][token1][fee] = pool;
         getPool[token1][token0][fee] = pool; // populate reverse mapping

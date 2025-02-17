@@ -227,7 +227,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         require(amountSpecified > 0, 'AS'); // Amount Specified
         require(_slot0.unlocked, 'LOK'); // Locked
 
-        _slot0.unlocked = false;
+        // Lock the pool
+        Slot0 memory slot0_ = _slot0;
+        slot0_.unlocked = false;
+        _slot0 = slot0_;
 
         // Cache the pool state
         uint160 sqrtPriceX96 = _slot0.sqrtPriceX96;
@@ -322,7 +325,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             );
         }
 
-        _slot0.unlocked = true;
+        // Unlock the pool
+        Slot0 memory slot0_ = _slot0;
+        slot0_.unlocked = true;
+        _slot0 = slot0_;
 
         emit Swap(msg.sender, recipient, amount0, amount1, nextSqrtPriceX96, currentLiquidity, nextTick);
     }
