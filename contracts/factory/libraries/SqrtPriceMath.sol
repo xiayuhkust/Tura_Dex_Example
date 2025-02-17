@@ -19,9 +19,9 @@ library SqrtPriceMath {
         if (add) {
             uint256 product;
             if ((product = amount * sqrtPX96) / amount == sqrtPX96) {
-                uint256 denominator = numerator1 + product;
-                if (denominator >= numerator1)
-                    return uint160(FullMath.mulDivRoundingUp(numerator1, sqrtPX96, denominator));
+                uint256 denom = numerator1 + product;
+                if (denom >= numerator1)
+                    return uint160(FullMath.mulDivRoundingUp(numerator1, sqrtPX96, denom));
             }
 
             uint256 denominator = (numerator1 / sqrtPX96).add(amount);

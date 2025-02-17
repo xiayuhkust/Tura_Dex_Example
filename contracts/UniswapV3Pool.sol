@@ -53,7 +53,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     }
 
     function initialize(uint160 sqrtPriceX96) external override {
-        require(slot0.sqrtPriceX96 == 0, 'AI'); // Already initialized
+        require(_slot0.sqrtPriceX96 == 0, 'AI'); // Already initialized
         
         int24 tick = TickMath.getTickAtSqrtRatio(sqrtPriceX96);
         
@@ -99,7 +99,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         // Update ticks and track liquidity changes
         bool flippedLower = ticks.update(
             tickLower,
-            slot0.tick,
+            _slot0.tick,
             int128(amount),
             feeGrowthGlobal0X128,
             feeGrowthGlobal1X128,
@@ -107,7 +107,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         );
         bool flippedUpper = ticks.update(
             tickUpper,
-            slot0.tick,
+            _slot0.tick,
             int128(-amount),
             feeGrowthGlobal0X128,
             feeGrowthGlobal1X128,
@@ -121,14 +121,14 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
 
         // Update pool liquidity if position is in range
-        if (slot0.tick >= tickLower && slot0.tick < tickUpper) {
+        if (_slot0.tick >= tickLower && slot0.tick < tickUpper) {
             liquidity = uint128(uint256(liquidity).add(uint256(amount)));
         }
 
         // Calculate token amounts based on price range
         uint160 sqrtPriceLowerX96 = TickMath.getSqrtRatioAtTick(tickLower);
         uint160 sqrtPriceUpperX96 = TickMath.getSqrtRatioAtTick(tickUpper);
-        uint160 sqrtPriceCurrentX96 = slot0.sqrtPriceX96;
+        uint160 sqrtPriceCurrentX96 = _slot0.sqrtPriceX96;
 
         // Calculate amounts of token0 and token1 needed
         if (sqrtPriceCurrentX96 <= sqrtPriceLowerX96) {
@@ -179,10 +179,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             Tick.Info storage lower = ticks[tickLower];
             Tick.Info storage upper = ticks[tickUpper];
             
-            uint256 feeGrowthBelow0X128 = tickLower <= slot0.tick ? lower.feeGrowthOutside0X128 : feeGrowthGlobal0X128 - lower.feeGrowthOutside0X128;
-            uint256 feeGrowthBelow1X128 = tickLower <= slot0.tick ? lower.feeGrowthOutside1X128 : feeGrowthGlobal1X128 - lower.feeGrowthOutside1X128;
-            uint256 feeGrowthAbove0X128 = tickUpper <= slot0.tick ? upper.feeGrowthOutside0X128 : feeGrowthGlobal0X128 - upper.feeGrowthOutside0X128;
-            uint256 feeGrowthAbove1X128 = tickUpper <= slot0.tick ? upper.feeGrowthOutside1X128 : feeGrowthGlobal1X128 - upper.feeGrowthOutside1X128;
+            uint256 feeGrowthBelow0X128 = tickLower <= _slot0.tick ? lower.feeGrowthOutside0X128 : feeGrowthGlobal0X128 - lower.feeGrowthOutside0X128;
+            uint256 feeGrowthBelow1X128 = tickLower <= _slot0.tick ? lower.feeGrowthOutside1X128 : feeGrowthGlobal1X128 - lower.feeGrowthOutside1X128;
+            uint256 feeGrowthAbove0X128 = tickUpper <= _slot0.tick ? upper.feeGrowthOutside0X128 : feeGrowthGlobal0X128 - upper.feeGrowthOutside0X128;
+            uint256 feeGrowthAbove1X128 = tickUpper <= _slot0.tick ? upper.feeGrowthOutside1X128 : feeGrowthGlobal1X128 - upper.feeGrowthOutside1X128;
             
             feeGrowthInside0X128 = feeGrowthGlobal0X128 - feeGrowthBelow0X128 - feeGrowthAbove0X128;
             feeGrowthInside1X128 = feeGrowthGlobal1X128 - feeGrowthBelow1X128 - feeGrowthAbove1X128;
@@ -225,13 +225,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         address recipient
     ) external override returns (int256 amount0, int256 amount1) {
         require(amountSpecified > 0, 'AS'); // Amount Specified
-        require(slot0.unlocked, 'LOK'); // Locked
+        require(_slot0.unlocked, 'LOK'); // Locked
 
-        slot0.unlocked = false;
+        _slot0.unlocked = false;
 
         // Cache the pool state
-        uint160 sqrtPriceX96 = slot0.sqrtPriceX96;
-        int24 tick = slot0.tick;
+        uint160 sqrtPriceX96 = _slot0.sqrtPriceX96;
+        int24 tick = _slot0.tick;
         uint128 currentLiquidity = liquidity;
 
         // Calculate price limits
@@ -280,8 +280,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         }
 
         // Update pool state
-        slot0.sqrtPriceX96 = nextSqrtPriceX96;
-        slot0.tick = nextTick;
+        _slot0.sqrtPriceX96 = nextSqrtPriceX96;
+        _slot0.tick = nextTick;
         liquidity = currentLiquidity;
 
         // Calculate token amounts
@@ -314,7 +314,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             );
         }
 
-        slot0.unlocked = true;
+        _slot0.unlocked = true;
 
         emit Swap(msg.sender, recipient, amount0, amount1, nextSqrtPriceX96, currentLiquidity, nextTick);
     }
