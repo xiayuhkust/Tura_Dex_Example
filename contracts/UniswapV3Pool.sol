@@ -270,9 +270,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount1 = -int256(state.amountAfterFee);
             
             // Transfer tokens
-            require(IERC20(token0).transferFrom(msg.sender, address(this), state.amountSpecified), 'T0');
-            if (state.amountAfterFee > 0) {
-                require(IERC20(token1).transfer(recipient, state.amountAfterFee), 'T1');
+            require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(amount0)), 'T0');
+            if (-amount1 > 0) {
+                require(IERC20(token1).transfer(recipient, uint256(-amount1)), 'T1');
             }
 
             // Update protocol fees and fee growth
@@ -293,9 +293,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount1 = int256(state.amountSpecified);
             
             // Transfer tokens
-            require(IERC20(token1).transferFrom(msg.sender, address(this), state.amountSpecified), 'T1');
-            if (state.amountAfterFee > 0) {
-                require(IERC20(token0).transfer(recipient, state.amountAfterFee), 'T0');
+            require(IERC20(token1).transferFrom(msg.sender, address(this), uint256(amount1)), 'T1');
+            if (-amount0 > 0) {
+                require(IERC20(token0).transfer(recipient, uint256(-amount0)), 'T0');
             }
             
             // Update protocol fees and fee growth
@@ -341,10 +341,11 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             : TickMath.MAX_SQRT_RATIO - 1;
 
         // Initialize swap state
+        uint256 feeAmount = (amountSpecified * uint256(fee)) / 1000000;
         SwapState memory swapState = SwapState({
             amountSpecified: amountSpecified,
-            feeAmount: (amountSpecified * uint256(fee)) / 1000000,
-            amountAfterFee: amountSpecified - ((amountSpecified * uint256(fee)) / 1000000),
+            feeAmount: feeAmount,
+            amountAfterFee: amountSpecified - feeAmount,
             currentLiquidity: liquidity,
             recipient: recipient,
             nextTick: tick,
