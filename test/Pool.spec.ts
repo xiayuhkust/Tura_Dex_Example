@@ -137,6 +137,9 @@ describe('UniswapV3Pool', () => {
             // Verify pool balances changed correctly
             expect(finalPoolBalance0.sub(initialPoolBalance0)).to.equal(swapAmount);
             expect(initialPoolBalance1.sub(finalPoolBalance1)).to.equal(amountAfterFee);
+            
+            // Verify protocol fees
+            expect(await pool.protocolFees0()).to.equal(feeAmount);
         });
 
         it('executes swap one for zero', async () => {
