@@ -38,8 +38,8 @@ library Tick {
 
         tickInfo.liquidityGross = liquidityGrossAfter;
         tickInfo.liquidityNet = upper
-            ? int128(int256(tickInfo.liquidityNet).sub(liquidityDelta))
-            : int128(int256(tickInfo.liquidityNet).add(liquidityDelta));
+            ? int128(int256(tickInfo.liquidityNet) - int256(liquidityDelta))
+            : int128(int256(tickInfo.liquidityNet) + int256(liquidityDelta));
 
         if (tick <= currentTick) {
             tickInfo.feeGrowthOutside0X128 = feeGrowthGlobal0X128;
