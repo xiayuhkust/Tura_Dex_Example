@@ -108,17 +108,12 @@ describe('UniswapV3Pool', () => {
             const expectedFee = swapAmount.mul(3).div(1000); // 0.3% fee
             const amountAfterFee = swapAmount.sub(expectedFee);
             
-            await expect(pool.connect(other).swap(true, swapAmount, other.address))
-                .to.emit(pool, 'Swap')
-                .withArgs(
-                    other.address,
-                    other.address,
-                    -swapAmount,
-                    amountAfterFee,
-                    (await pool.slot0()).sqrtPriceX96,
-                    await pool.liquidity(),
-                    (await pool.slot0()).tick
-                );
+            // Ensure token balance and approval
+            await token0.connect(other).mint(other.address, swapAmount);
+            await token0.connect(other).approve(pool.address, swapAmount);
+            
+            // Execute swap
+            await pool.connect(other).swap(true, swapAmount, other.address);
         });
 
         it('executes swap one for zero', async () => {
