@@ -269,68 +269,48 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.unlocked = false;
         _slot0 = state;
 
+        // Cache state variables
         uint160 sqrtPriceX96 = state.sqrtPriceX96;
         int24 tick = state.tick;
         uint128 currentLiquidity = liquidity;
+
+        // Calculate fees (fee is in hundredths of a bip, so multiply by 10^-6)
+        uint256 feeAmount = (amountSpecified * uint256(fee)) / 1000000;
+        uint256 amountAfterFee = amountSpecified - feeAmount;
 
         // Calculate price limits
         uint160 sqrtPriceLimitX96 = zeroForOne
             ? TickMath.MIN_SQRT_RATIO + 1
             : TickMath.MAX_SQRT_RATIO - 1;
 
+        // Calculate fees (fee is in hundredths of a bip, so multiply by 10^-6)
+        uint256 feeAmount = (amountSpecified * uint256(fee)) / 1000000;
+        uint256 amountAfterFee = amountSpecified - feeAmount;
+
         // Calculate next price
-        uint160 nextSqrtPriceX96 = zeroForOne
+        uint160 nextPrice = zeroForOne
             ? SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
                 sqrtPriceX96,
                 currentLiquidity,
-                amountSpecified,
+                amountAfterFee,
                 true
             )
             : SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
                 sqrtPriceX96,
                 currentLiquidity,
-                amountSpecified,
+                amountAfterFee,
                 true
             );
 
         // Verify price is within limits
         if (zeroForOne) {
-            require(nextSqrtPriceX96 >= sqrtPriceLimitX96 && nextSqrtPriceX96 < sqrtPriceX96, 'SPL');
+            require(nextPrice >= sqrtPriceLimitX96 && nextPrice < sqrtPriceX96, 'SPL');
         } else {
-            require(nextSqrtPriceX96 <= sqrtPriceLimitX96 && nextSqrtPriceX96 > sqrtPriceX96, 'SPL');
+            require(nextPrice <= sqrtPriceLimitX96 && nextPrice > sqrtPriceX96, 'SPL');
         }
 
-        // Calculate next tick
-        int24 nextTick = TickMath.getTickAtSqrtRatio(nextSqrtPriceX96);
-
-        // Calculate fees (fee is in hundredths of a bip, so multiply by 10^-6)
-        uint256 feeAmount = (amountSpecified * uint256(fee)) / 1000000;
-        uint256 amountAfterFee = amountSpecified - feeAmount;
-
-        // Calculate next sqrt price
-        uint160 nextSqrtPriceX96;
-        if (zeroForOne) {
-            nextSqrtPriceX96 = SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
-                sqrtPriceX96,
-                currentLiquidity,
-                amountAfterFee,
-                true
-            );
-            require(nextSqrtPriceX96 >= sqrtPriceLimitX96 && nextSqrtPriceX96 < sqrtPriceX96, 'SPL');
-        } else {
-            nextSqrtPriceX96 = SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
-                sqrtPriceX96,
-                currentLiquidity,
-                amountAfterFee,
-                true
-            );
-            require(nextSqrtPriceX96 <= sqrtPriceLimitX96 && nextSqrtPriceX96 > sqrtPriceX96, 'SPL');
-        }
-
-        // Update tick
-        int24 nextTick = TickMath.getTickAtSqrtRatio(nextSqrtPriceX96);
-
-        // Update liquidity if we crossed any initialized ticks
+        // Calculate next tick and update liquidity
+        int24 nextTick = TickMath.getTickAtSqrtRatio(nextPrice);
         if (tick != nextTick) {
             int128 liquidityNet = ticks.cross(
                 nextTick,
@@ -342,31 +322,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 ? uint128(uint256(currentLiquidity).sub(uint256(-liquidityNet)))
                 : uint128(uint256(currentLiquidity).add(uint256(liquidityNet)));
         }
-
-        // Update pool state
-        _slot0.sqrtPriceX96 = nextSqrtPriceX96;
-        _slot0.tick = nextTick;
-        liquidity = currentLiquidity;
 
         // Execute swap
         (amount0, amount1) = _handleSwap(zeroForOne, amountSpecified, feeAmount, amountAfterFee, recipient, currentLiquidity);
 
-        // Update liquidity if we crossed any initialized ticks
-        if (tick != nextTick) {
-            int128 liquidityNet = ticks.cross(
-                nextTick,
-                feeGrowthGlobal0X128,
-                feeGrowthGlobal1X128
-            );
-            if (zeroForOne) liquidityNet = -liquidityNet;
-            currentLiquidity = liquidityNet < 0
-                ? uint128(uint256(currentLiquidity).sub(uint256(-liquidityNet)))
-                : uint128(uint256(currentLiquidity).add(uint256(liquidityNet)));
-        }
-
         // Update pool state
         liquidity = currentLiquidity;
-        state.sqrtPriceX96 = nextSqrtPriceX96;
+        state.sqrtPriceX96 = nextPrice;
         state.tick = nextTick;
         state.unlocked = true;
         _slot0 = state;
