@@ -300,9 +300,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount1 = int256(state.amountSpecified);
             
             // Transfer tokens
-            require(IERC20(token1).transferFrom(msg.sender, address(this), state.amountSpecified), 'T1');
-            if (state.amountAfterFee > 0) {
-                require(IERC20(token0).transfer(recipient, state.amountAfterFee), 'T0');
+            require(IERC20(token1).transferFrom(msg.sender, address(this), uint256(amount1)), 'T1');
+            if (-amount0 > 0) {
+                require(IERC20(token0).transfer(recipient, uint256(-amount0)), 'T0');
             }
 
             // Update protocol fees and fee growth
@@ -311,8 +311,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
                 feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(feePerLiquidity);
                 
-                // Update position fee growth
-                IPosition.Info storage position = positions.get(recipient, TickMath.MIN_TICK, TickMath.MAX_TICK);
+                // Update position fee growth for the current position
+                IPosition.Info storage position = positions.get(state.recipient, _slot0.tick, _slot0.tick + tickSpacing);
                 if (position.liquidity > 0) {
                     position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
                 }
@@ -352,8 +352,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         swapState.amountSpecified = amountSpecified;
         swapState.feeAmount = (amountSpecified * uint256(fee)) / 1000000;
         swapState.amountAfterFee = amountSpecified - swapState.feeAmount;
-        swapState.currentLiquidity = currentLiquidity;
+        swapState.currentLiquidity = liquidity;
         swapState.recipient = recipient;
+        swapState.nextTick = tick;
 
         // Calculate next price
         swapState.nextPrice = zeroForOne
