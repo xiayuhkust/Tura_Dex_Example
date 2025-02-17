@@ -1,0 +1,53 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma solidity =0.7.6;
+
+import '@openzeppelin/contracts/math/SafeMath.sol';
+import './FullMath.sol';
+
+library SqrtPriceMath {
+    using SafeMath for uint256;
+
+    function getNextSqrtPriceFromAmount0RoundingUp(
+        uint160 sqrtPX96,
+        uint128 liquidity,
+        uint256 amount,
+        bool add
+    ) internal pure returns (uint160) {
+        if (amount == 0) return sqrtPX96;
+        uint256 numerator1 = uint256(liquidity) << 96;
+
+        if (add) {
+            uint256 product;
+            if ((product = amount * sqrtPX96) / amount == sqrtPX96) {
+                uint256 denominator = numerator1 + product;
+                if (denominator >= numerator1)
+                    return uint160(FullMath.mulDivRoundingUp(numerator1, sqrtPX96, denominator));
+            }
+
+            return uint160(FullMath.divRoundingUp(numerator1, (numerator1 / sqrtPX96).add(amount)));
+        } else {
+            uint256 product;
+            require((product = amount * sqrtPX96) / amount == sqrtPX96);
+
+            require(numerator1 > product);
+            uint256 denominator = numerator1 - product;
+            return uint160(FullMath.mulDivRoundingUp(numerator1, sqrtPX96, denominator));
+        }
+    }
+
+    function getNextSqrtPriceFromAmount1RoundingDown(
+        uint160 sqrtPX96,
+        uint128 liquidity,
+        uint256 amount,
+        bool add
+    ) internal pure returns (uint160) {
+        if (add) {
+            uint256 quotient = (amount << 96) / liquidity;
+            return uint160(uint256(sqrtPX96).add(quotient));
+        } else {
+            uint256 quotient = FullMath.mulDivRoundingUp(amount, uint256(1 << 96), liquidity);
+            require(sqrtPX96 > quotient);
+            return uint160(uint256(sqrtPX96).sub(quotient));
+        }
+    }
+}
