@@ -357,20 +357,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         swapState.nextTick = tick;
         swapState.nextPrice = sqrtPriceX96;
 
-        // Calculate next price
-        swapState.nextPrice = zeroForOne
-            ? SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
-                sqrtPriceX96,
-                swapState.currentLiquidity,
-                swapState.amountAfterFee,
-                true
-            )
-            : SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
-                sqrtPriceX96,
-                swapState.currentLiquidity,
-                swapState.amountAfterFee,
-                true
-            );
+        // Execute swap
+        (amount0, amount1) = _handleSwap(zeroForOne, swapState, recipient);
+
+        // Update pool state
+        _slot0.tick = swapState.nextTick;
+        _slot0.sqrtPriceX96 = swapState.nextPrice;
+        _slot0.unlocked = true;
 
         // Verify price is within limits
         if (zeroForOne) {
