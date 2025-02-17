@@ -31,10 +31,15 @@ contract UniswapV3Factory is IUniswapV3Factory {
         
         // Create new pool
         bytes32 salt = keccak256(abi.encodePacked(token0, token1, fee));
-        UniswapV3Pool newPool = new UniswapV3Pool{salt: salt}();
+        UniswapV3Pool newPool = new UniswapV3Pool(
+            address(this),
+            token0,
+            token1,
+            fee
+        );
         pool = address(newPool);
         
-        // Initialize pool
+        // Initialize pool with 1:1 price
         newPool.initialize(uint160(1 << 96)); // 1.0 in Q96
         
         // Store pool address
