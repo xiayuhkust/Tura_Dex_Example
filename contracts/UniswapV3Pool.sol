@@ -9,8 +9,10 @@ import './interfaces/IUniswapV3Pool.sol';
 import './libraries/TickMath.sol';
 import './libraries/Position.sol';
 import './libraries/SqrtPriceMath.sol';
+import './libraries/Tick.sol';
 
 contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
+    using Tick for mapping(int24 => Tick.Info);
     using SafeMath for uint256;
     using Position for mapping(bytes32 => Position.Info);
     using TickMath for int24;
@@ -22,11 +24,16 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
     Slot0 public override slot0;
     mapping(bytes32 => Position.Info) public positions;
+    mapping(int24 => Tick.Info) public ticks;
     uint128 public override liquidity;
     uint128 public override protocolFees0;
     uint128 public override protocolFees1;
     uint256 public override feeGrowthGlobal0X128;
     uint256 public override feeGrowthGlobal1X128;
+
+    // Track the current tick and liquidity
+    int24 public currentTick;
+    uint128 public currentLiquidity;
 
     constructor(
         address _factory,
@@ -84,9 +91,69 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         require(tickLower >= TickMath.MIN_TICK, 'TLM'); // Tick Lower too low
         require(tickUpper <= TickMath.MAX_TICK, 'TUM'); // Tick Upper too high
 
+        // Update ticks and track liquidity changes
+        bool flippedLower = ticks.update(
+            tickLower,
+            slot0.tick,
+            int128(amount),
+            feeGrowthGlobal0X128,
+            feeGrowthGlobal1X128,
+            false
+        );
+        bool flippedUpper = ticks.update(
+            tickUpper,
+            slot0.tick,
+            int128(-amount),
+            feeGrowthGlobal0X128,
+            feeGrowthGlobal1X128,
+            true
+        );
+
+        // Update position
         Position.Info storage position = positions.get(recipient, tickLower, tickUpper);
         position.liquidity = uint128(uint256(position.liquidity).add(uint256(amount)));
-        liquidity = uint128(uint256(liquidity).add(uint256(amount)));
+        position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
+        position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
+
+        // Update pool liquidity if position is in range
+        if (slot0.tick >= tickLower && slot0.tick < tickUpper) {
+            liquidity = uint128(uint256(liquidity).add(uint256(amount)));
+        }
+
+        // Calculate token amounts based on price range
+        uint160 sqrtPriceLowerX96 = TickMath.getSqrtRatioAtTick(tickLower);
+        uint160 sqrtPriceUpperX96 = TickMath.getSqrtRatioAtTick(tickUpper);
+        uint160 sqrtPriceCurrentX96 = slot0.sqrtPriceX96;
+
+        // Calculate amounts of token0 and token1 needed
+        if (sqrtPriceCurrentX96 <= sqrtPriceLowerX96) {
+            amount0 = SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
+                sqrtPriceLowerX96,
+                amount,
+                uint256(amount),
+                true
+            );
+        } else if (sqrtPriceCurrentX96 < sqrtPriceUpperX96) {
+            amount0 = SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
+                sqrtPriceCurrentX96,
+                amount,
+                uint256(amount),
+                true
+            );
+            amount1 = SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
+                sqrtPriceCurrentX96,
+                amount,
+                uint256(amount),
+                true
+            );
+        } else {
+            amount1 = SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
+                sqrtPriceUpperX96,
+                amount,
+                uint256(amount),
+                true
+            );
+        }
 
         emit Mint(msg.sender, recipient, tickLower, tickUpper, amount, amount0, amount1);
     }
@@ -98,6 +165,41 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     ) external override returns (uint128 amount0, uint128 amount1) {
         Position.Info storage position = positions.get(recipient, tickLower, tickUpper);
         
+        // Calculate fees earned
+        uint256 feeGrowthInside0X128;
+        uint256 feeGrowthInside1X128;
+        
+        // Calculate fee growth inside the position's range
+        {
+            Tick.Info storage lower = ticks[tickLower];
+            Tick.Info storage upper = ticks[tickUpper];
+            
+            uint256 feeGrowthBelow0X128 = tickLower <= slot0.tick ? lower.feeGrowthOutside0X128 : feeGrowthGlobal0X128 - lower.feeGrowthOutside0X128;
+            uint256 feeGrowthBelow1X128 = tickLower <= slot0.tick ? lower.feeGrowthOutside1X128 : feeGrowthGlobal1X128 - lower.feeGrowthOutside1X128;
+            uint256 feeGrowthAbove0X128 = tickUpper <= slot0.tick ? upper.feeGrowthOutside0X128 : feeGrowthGlobal0X128 - upper.feeGrowthOutside0X128;
+            uint256 feeGrowthAbove1X128 = tickUpper <= slot0.tick ? upper.feeGrowthOutside1X128 : feeGrowthGlobal1X128 - upper.feeGrowthOutside1X128;
+            
+            feeGrowthInside0X128 = feeGrowthGlobal0X128 - feeGrowthBelow0X128 - feeGrowthAbove0X128;
+            feeGrowthInside1X128 = feeGrowthGlobal1X128 - feeGrowthBelow1X128 - feeGrowthAbove1X128;
+        }
+        
+        // Calculate fees earned by the position
+        uint256 feesEarned0 = uint256(position.liquidity).mul(
+            feeGrowthInside0X128.sub(position.feeGrowthInside0LastX128)
+        ) >> 128;
+        uint256 feesEarned1 = uint256(position.liquidity).mul(
+            feeGrowthInside1X128.sub(position.feeGrowthInside1LastX128)
+        ) >> 128;
+        
+        // Update position's fee tracking
+        position.feeGrowthInside0LastX128 = feeGrowthInside0X128;
+        position.feeGrowthInside1LastX128 = feeGrowthInside1X128;
+        
+        // Add earned fees to tokens owed
+        position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feesEarned0));
+        position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(feesEarned1));
+        
+        // Collect tokens owed
         amount0 = position.tokensOwed0;
         amount1 = position.tokensOwed1;
 
