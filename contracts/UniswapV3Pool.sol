@@ -277,29 +277,30 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             ? TickMath.MIN_SQRT_RATIO + 1
             : TickMath.MAX_SQRT_RATIO - 1;
 
-        // Calculate next price and tick
-        uint160 nextSqrtPriceX96;
-        int24 nextTick;
+        // Calculate next price
+        uint160 nextSqrtPriceX96 = zeroForOne
+            ? SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
+                sqrtPriceX96,
+                currentLiquidity,
+                amountSpecified,
+                true
+            )
+            : SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
+                sqrtPriceX96,
+                currentLiquidity,
+                amountSpecified,
+                true
+            );
 
+        // Verify price is within limits
         if (zeroForOne) {
-            nextSqrtPriceX96 = SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
-                sqrtPriceX96,
-                currentLiquidity,
-                amountSpecified,
-                true
-            );
             require(nextSqrtPriceX96 >= sqrtPriceLimitX96 && nextSqrtPriceX96 < sqrtPriceX96, 'SPL');
-            nextTick = TickMath.getTickAtSqrtRatio(nextSqrtPriceX96);
         } else {
-            nextSqrtPriceX96 = SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
-                sqrtPriceX96,
-                currentLiquidity,
-                amountSpecified,
-                true
-            );
             require(nextSqrtPriceX96 <= sqrtPriceLimitX96 && nextSqrtPriceX96 > sqrtPriceX96, 'SPL');
-            nextTick = TickMath.getTickAtSqrtRatio(nextSqrtPriceX96);
         }
+
+        // Calculate next tick
+        int24 nextTick = TickMath.getTickAtSqrtRatio(nextSqrtPriceX96);
 
         // Calculate fees (fee is in hundredths of a bip, so multiply by 10^-6)
         uint256 feeAmount = (amountSpecified * uint256(fee)) / 1000000;
