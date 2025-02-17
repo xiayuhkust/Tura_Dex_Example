@@ -19,6 +19,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     using TickMath for int24;
 
     uint256 constant Q128 = 2**128;
+    int24 constant MIN_TICK = -887272;
+    int24 constant MAX_TICK = 887272;
 
     address public immutable override factory;
     address public immutable override token0;
@@ -282,7 +284,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
                 
                 // Update position fee growth for current tick range
-                IPosition.Info storage position = positions.get(owner.address, MIN_TICK, MAX_TICK);
+                IPosition.Info storage position = positions.get(recipient, MIN_TICK, MAX_TICK);
                 if (position.liquidity > 0) {
                     uint256 positionFee = FullMath.mulDiv(state.feeAmount, position.liquidity, state.currentLiquidity);
                     position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(positionFee));
@@ -306,7 +308,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(feePerLiquidity);
                 
                 // Update position fee growth for the current position
-                IPosition.Info storage currentPosition = positions.get(owner.address, MIN_TICK, MAX_TICK);
+                IPosition.Info storage currentPosition = positions.get(recipient, MIN_TICK, MAX_TICK);
                 if (currentPosition.liquidity > 0) {
                     uint256 positionFee = FullMath.mulDiv(state.feeAmount, currentPosition.liquidity, state.currentLiquidity);
                     currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(positionFee));
