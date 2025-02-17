@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { Contract } from '@ethersproject/contracts';
 import { BigNumber } from '@ethersproject/bignumber';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { keccak256, defaultAbiCoder } from 'ethers/lib/utils';
 
 describe('TuraLiquidity', () => {
   let owner: SignerWithAddress;
@@ -56,7 +57,8 @@ describe('TuraLiquidity', () => {
         INITIAL_LIQUIDITY
       );
 
-      const position = await pool.getPosition(owner.address, lower, upper);
+      const positionKey = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [owner.address, lower, upper]));
+      const position = await pool.positions(positionKey);
       expect(position.liquidity).to.equal(INITIAL_LIQUIDITY);
     });
 
@@ -72,7 +74,8 @@ describe('TuraLiquidity', () => {
           INITIAL_LIQUIDITY
         );
 
-        const position = await pool.getPosition(owner.address, range.lower, range.upper);
+        const positionKey = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [owner.address, range.lower, range.upper]));
+        const position = await pool.positions(positionKey);
         expect(position.liquidity).to.equal(INITIAL_LIQUIDITY);
       }
     });
@@ -94,8 +97,10 @@ describe('TuraLiquidity', () => {
       await token1.connect(user2).approve(pool.address, INITIAL_LIQUIDITY);
       await pool.connect(user2).mint(user2.address, lower, upper, INITIAL_LIQUIDITY);
 
-      const position1 = await pool.getPosition(user1.address, lower, upper);
-      const position2 = await pool.getPosition(user2.address, lower, upper);
+      const position1Key = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [user1.address, lower, upper]));
+      const position2Key = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [user2.address, lower, upper]));
+      const position1 = await pool.positions(position1Key);
+      const position2 = await pool.positions(position2Key);
       expect(position1.liquidity).to.equal(INITIAL_LIQUIDITY);
       expect(position2.liquidity).to.equal(INITIAL_LIQUIDITY);
     });
@@ -119,7 +124,8 @@ describe('TuraLiquidity', () => {
 
       // Collect fees
       await pool.collect(owner.address, lower, upper);
-      const position = await pool.getPosition(owner.address, lower, upper);
+      const positionKey = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [owner.address, lower, upper]));
+      const position = await pool.positions(positionKey);
       expect(position.tokensOwed0.add(position.tokensOwed1)).to.be.gt(0);
     });
   });
