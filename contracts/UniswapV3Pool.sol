@@ -284,27 +284,35 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         _slot0.tick = nextTick;
         liquidity = currentLiquidity;
 
-        // Calculate token amounts
+        // Calculate token amounts and execute transfers
         if (zeroForOne) {
             amount0 = -int256(amountSpecified);
             amount1 = int256(amountAfterFee);
             
+            // Transfer tokens first
+            require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(amountSpecified)), 'T0');
+            
             // Update protocol fees
             protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
             
-            // Transfer tokens
-            require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(amountSpecified)), 'T0');
-            require(IERC20(token1).transfer(recipient, uint256(amountAfterFee)), 'T1');
+            // Transfer output tokens
+            if (amountAfterFee > 0) {
+                require(IERC20(token1).transfer(recipient, uint256(amountAfterFee)), 'T1');
+            }
         } else {
             amount0 = int256(amountAfterFee);
             amount1 = -int256(amountSpecified);
             
+            // Transfer tokens first
+            require(IERC20(token1).transferFrom(msg.sender, address(this), uint256(amountSpecified)), 'T1');
+            
             // Update protocol fees
             protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
             
-            // Transfer tokens
-            require(IERC20(token1).transferFrom(msg.sender, address(this), uint256(amountSpecified)), 'T1');
-            require(IERC20(token0).transfer(recipient, uint256(amountAfterFee)), 'T0');
+            // Transfer output tokens
+            if (amountAfterFee > 0) {
+                require(IERC20(token0).transfer(recipient, uint256(amountAfterFee)), 'T0');
+            }
         }
 
         // Update fee growth
