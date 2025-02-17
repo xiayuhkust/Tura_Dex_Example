@@ -287,12 +287,12 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 IPosition.Info storage position = positions.get(recipient, MIN_TICK, MAX_TICK);
                 if (position.liquidity > 0) {
                     position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
-                    protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
                 }
+                protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
                 
                 // Calculate swap amounts
-                amount0 = int256(state.amountSpecified);
-                amount1 = -int256(state.amountAfterFee);
+                amount0 = int256(state.amountAfterFee);
+                amount1 = -int256(FullMath.mulDiv(state.amountAfterFee, uint256(_slot0.sqrtPriceX96), Q128));
             }
         } else {
             // Calculate amounts
@@ -315,12 +315,12 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 IPosition.Info storage currentPosition = positions.get(recipient, MIN_TICK, MAX_TICK);
                 if (currentPosition.liquidity > 0) {
                     currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(state.feeAmount));
-                    protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
                 }
+                protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
                 
                 // Calculate swap amounts
-                amount0 = -int256(state.amountAfterFee);
-                amount1 = int256(state.amountSpecified);
+                amount0 = -int256(FullMath.mulDiv(state.amountAfterFee, Q128, uint256(_slot0.sqrtPriceX96)));
+                amount1 = int256(state.amountAfterFee);
             }
         }
     }
