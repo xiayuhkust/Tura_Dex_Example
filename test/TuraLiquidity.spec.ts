@@ -1,6 +1,6 @@
-import hre from 'hardhat';
+import { ethers } from '@nomiclabs/hardhat-ethers';
 import { expect } from 'chai';
-import { Contract } from '@ethersproject/contracts';
+import { Contract, BigNumber } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 describe('TuraLiquidity', () => {
@@ -23,21 +23,21 @@ describe('TuraLiquidity', () => {
   ];
 
   beforeEach(async () => {
-    [owner, user1, user2] = await hre.ethers.getSigners();
+    [owner, user1, user2] = await ethers.getSigners();
 
     // Deploy test tokens
-    const TestToken = await hre.ethers.getContractFactory('TestToken');
+    const TestToken = await ethers.getContractFactory('TestToken');
     token0 = await TestToken.deploy('Test Token 0', 'TT0');
     token1 = await TestToken.deploy('Test Token 1', 'TT1');
 
     // Deploy factory
-    const TuraFactory = await hre.ethers.getContractFactory('TuraFactory');
+    const TuraFactory = await ethers.getContractFactory('TuraFactory');
     factory = await TuraFactory.deploy();
 
     // Create pool with 0.3% fee
     await factory.createPool(token0.address, token1.address, FEE_AMOUNTS[0]);
     const poolAddress = await factory.getPool(token0.address, token1.address, FEE_AMOUNTS[0]);
-    pool = await hre.ethers.getContractAt('TuraPool', poolAddress);
+    pool = await ethers.getContractAt('TuraPool', poolAddress);
     await pool.initialize(INITIAL_PRICE);
   });
 
@@ -112,7 +112,7 @@ describe('TuraLiquidity', () => {
       await token0.connect(user1).approve(pool.address, INITIAL_LIQUIDITY);
       await pool.connect(user1).swap(
         true,
-        hre.ethers.BigNumber.from(INITIAL_LIQUIDITY).div(2),
+        BigNumber.from(INITIAL_LIQUIDITY).div(2),
         owner.address
       );
 
