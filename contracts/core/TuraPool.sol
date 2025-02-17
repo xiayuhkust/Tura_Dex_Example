@@ -155,13 +155,16 @@ contract TuraPool is ReentrancyGuard {
         require(amount > 0, 'IL'); // Invalid liquidity
         
         // Update position
-        bytes32 positionKey = getPositionKey(recipient, tickLower, tickUpper);
-        positions[positionKey].liquidity = positions[positionKey].liquidity + amount;
-        liquidity = liquidity + amount;
+        bytes32 positionKey = keccak256(abi.encode(recipient, tickLower, tickUpper));
+        Position storage position = positions[positionKey];
+        position.liquidity = uint128(uint256(position.liquidity) + uint256(amount));
+        liquidity = uint128(uint256(liquidity) + uint256(amount));
 
         // For now, return placeholder values
         amount0 = 0;
         amount1 = 0;
+
+        emit Mint(msg.sender, recipient, tickLower, tickUpper, amount, amount0, amount1);
     }
 
     function collect(
@@ -189,16 +192,18 @@ contract TuraPool is ReentrancyGuard {
         uint256 amountAfterFee = amountSpecified - feeAmount;
 
         // Update fees for all positions
-        bytes32 positionKey = getPositionKey(msg.sender, -887272, 887272);
+        bytes32 positionKey = keccak256(abi.encode(recipient, -887272, 887272));
         Position storage position = positions[positionKey];
         if (zeroForOne) {
-            position.tokensOwed1 += uint128(feeAmount);
+            position.tokensOwed1 = uint128(uint256(position.tokensOwed1) + feeAmount);
             amount0 = -int256(amountSpecified);
             amount1 = int256(amountAfterFee);
         } else {
-            position.tokensOwed0 += uint128(feeAmount);
+            position.tokensOwed0 = uint128(uint256(position.tokensOwed0) + feeAmount);
             amount0 = int256(amountAfterFee);
             amount1 = -int256(amountSpecified);
         }
+
+        emit Swap(msg.sender, recipient, amount0, amount1, slot0.sqrtPriceX96, liquidity, slot0.tick);
     }
 }
