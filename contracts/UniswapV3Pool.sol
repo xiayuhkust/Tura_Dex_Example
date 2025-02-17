@@ -179,22 +179,44 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             Tick.Info storage lower = ticks[tickLower];
             Tick.Info storage upper = ticks[tickUpper];
             
-            uint256 feeGrowthBelow0X128 = tickLower <= _slot0.tick ? lower.feeGrowthOutside0X128 : feeGrowthGlobal0X128 - lower.feeGrowthOutside0X128;
-            uint256 feeGrowthBelow1X128 = tickLower <= _slot0.tick ? lower.feeGrowthOutside1X128 : feeGrowthGlobal1X128 - lower.feeGrowthOutside1X128;
-            uint256 feeGrowthAbove0X128 = tickUpper <= _slot0.tick ? upper.feeGrowthOutside0X128 : feeGrowthGlobal0X128 - upper.feeGrowthOutside0X128;
-            uint256 feeGrowthAbove1X128 = tickUpper <= _slot0.tick ? upper.feeGrowthOutside1X128 : feeGrowthGlobal1X128 - upper.feeGrowthOutside1X128;
+            uint256 feeGrowthBelow0X128;
+            uint256 feeGrowthBelow1X128;
+            uint256 feeGrowthAbove0X128;
+            uint256 feeGrowthAbove1X128;
+
+            // Calculate fee growth below
+            if (tickLower <= _slot0.tick) {
+                feeGrowthBelow0X128 = lower.feeGrowthOutside0X128;
+                feeGrowthBelow1X128 = lower.feeGrowthOutside1X128;
+            } else {
+                feeGrowthBelow0X128 = feeGrowthGlobal0X128 - lower.feeGrowthOutside0X128;
+                feeGrowthBelow1X128 = feeGrowthGlobal1X128 - lower.feeGrowthOutside1X128;
+            }
+
+            // Calculate fee growth above
+            if (tickUpper <= _slot0.tick) {
+                feeGrowthAbove0X128 = upper.feeGrowthOutside0X128;
+                feeGrowthAbove1X128 = upper.feeGrowthOutside1X128;
+            } else {
+                feeGrowthAbove0X128 = feeGrowthGlobal0X128 - upper.feeGrowthOutside0X128;
+                feeGrowthAbove1X128 = feeGrowthGlobal1X128 - upper.feeGrowthOutside1X128;
+            }
             
             feeGrowthInside0X128 = feeGrowthGlobal0X128 - feeGrowthBelow0X128 - feeGrowthAbove0X128;
             feeGrowthInside1X128 = feeGrowthGlobal1X128 - feeGrowthBelow1X128 - feeGrowthAbove1X128;
         }
         
         // Calculate fees earned by the position
-        uint256 feesEarned0 = uint256(position.liquidity).mul(
-            feeGrowthInside0X128.sub(position.feeGrowthInside0LastX128)
-        ) >> 128;
-        uint256 feesEarned1 = uint256(position.liquidity).mul(
-            feeGrowthInside1X128.sub(position.feeGrowthInside1LastX128)
-        ) >> 128;
+        uint256 feesEarned0 = FullMath.mulDiv(
+            uint256(position.liquidity),
+            feeGrowthInside0X128 - position.feeGrowthInside0LastX128,
+            Q128
+        );
+        uint256 feesEarned1 = FullMath.mulDiv(
+            uint256(position.liquidity),
+            feeGrowthInside1X128 - position.feeGrowthInside1LastX128,
+            Q128
+        );
         
         // Update position's fee tracking
         position.feeGrowthInside0LastX128 = feeGrowthInside0X128;
@@ -234,38 +256,38 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         address recipient
     ) private returns (int256 amount0, int256 amount1) {
         if (zeroForOne) {
+            // Calculate amounts
             amount0 = int256(state.amountSpecified);
             amount1 = -int256(state.amountAfterFee);
             
             // Transfer tokens
-            require(IERC20(token0).transferFrom(msg.sender, address(this), state.amountSpecified), 'T0');
-            if (state.amountAfterFee > 0) {
-                require(IERC20(token1).transfer(recipient, state.amountAfterFee), 'T1');
+            require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(amount0)), 'T0');
+            if (-amount1 > 0) {
+                require(IERC20(token1).transfer(recipient, uint256(-amount1)), 'T1');
             }
 
             // Update protocol fees and fee growth
             protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
             if (state.currentLiquidity > 0) {
-                feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(
-                    FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity)
-                );
+                uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
+                feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
             }
         } else {
+            // Calculate amounts
             amount0 = -int256(state.amountAfterFee);
             amount1 = int256(state.amountSpecified);
             
             // Transfer tokens
-            require(IERC20(token1).transferFrom(msg.sender, address(this), state.amountSpecified), 'T1');
-            if (state.amountAfterFee > 0) {
-                require(IERC20(token0).transfer(recipient, state.amountAfterFee), 'T0');
+            require(IERC20(token1).transferFrom(msg.sender, address(this), uint256(amount1)), 'T1');
+            if (-amount0 > 0) {
+                require(IERC20(token0).transfer(recipient, uint256(-amount0)), 'T0');
             }
 
             // Update protocol fees and fee growth
             protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
             if (state.currentLiquidity > 0) {
-                feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(
-                    FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity)
-                );
+                uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
+                feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(feePerLiquidity);
             }
         }
     }
