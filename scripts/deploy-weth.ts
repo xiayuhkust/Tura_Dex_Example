@@ -5,9 +5,9 @@ async function main() {
 
   const WETH9 = await ethers.getContractFactory("WETH9");
   const weth = await WETH9.deploy();
-  await weth.waitForDeployment();
+  await weth.deployed();
 
-  const wethAddress = await weth.getAddress();
+  const wethAddress = weth.address;
   console.log("WETH9 deployed to:", wethAddress);
 }
 
