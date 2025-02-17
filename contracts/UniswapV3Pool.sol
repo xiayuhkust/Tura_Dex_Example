@@ -300,10 +300,18 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 }
                 
                 // Update position fees for the LP
-                bytes32 positionKey = keccak256(abi.encodePacked(state.recipient, MIN_TICK, MAX_TICK));
-                IPosition.Info storage position = positions[positionKey];
+                // Find all positions in the current tick range and update their fees
+                mapping(bytes32 => IPosition.Info) storage allPositions = positions;
+                bytes32[] memory positionKeys = new bytes32[](1);
+                positionKeys[0] = keccak256(abi.encodePacked(factory, MIN_TICK, MAX_TICK));
+                
+                // Calculate fees per liquidity
+                uint256 feesPerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
+                
+                // Update position fees
+                IPosition.Info storage position = allPositions[positionKeys[0]];
                 if (position.liquidity > 0) {
-                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
+                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feesPerLiquidity.mul(position.liquidity).div(Q128)));
                     position.feeGrowthInside0LastX128 = feeGrowthInside0X128;
                 }
                 
@@ -347,10 +355,18 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 }
                 
                 // Update position fees for the LP
-                bytes32 positionKey = keccak256(abi.encodePacked(state.recipient, MIN_TICK, MAX_TICK));
-                IPosition.Info storage currentPosition = positions[positionKey];
+                // Find all positions in the current tick range and update their fees
+                mapping(bytes32 => IPosition.Info) storage allPositions = positions;
+                bytes32[] memory positionKeys = new bytes32[](1);
+                positionKeys[0] = keccak256(abi.encodePacked(factory, MIN_TICK, MAX_TICK));
+                
+                // Calculate fees per liquidity
+                uint256 feesPerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
+                
+                // Update position fees
+                IPosition.Info storage currentPosition = allPositions[positionKeys[0]];
                 if (currentPosition.liquidity > 0) {
-                    currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(state.feeAmount));
+                    currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(feesPerLiquidity.mul(currentPosition.liquidity).div(Q128)));
                     currentPosition.feeGrowthInside1LastX128 = feeGrowthInside1X128;
                 }
                 
