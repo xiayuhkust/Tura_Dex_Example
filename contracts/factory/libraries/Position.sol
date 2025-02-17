@@ -12,12 +12,12 @@ library Position {
         address owner,
         int24 tickLower,
         int24 tickUpper
-    ) internal view returns (Position.Info storage position) {
+    ) internal view returns (IPosition.Info storage position) {
         position = self[keccak256(abi.encodePacked(owner, tickLower, tickUpper))];
     }
 
     function update(
-        mapping(bytes32 => Info) storage self,
+        mapping(bytes32 => IPosition.Info) storage self,
         address owner,
         int24 tickLower,
         int24 tickUpper,
