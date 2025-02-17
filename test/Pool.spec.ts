@@ -84,33 +84,24 @@ describe('UniswapV3Pool', () => {
     describe('swapping', () => {
         beforeEach(async () => {
             // Add initial liquidity
-            // Mint initial liquidity tokens
-            const initialAmount = ethers.utils.parseEther('100');
-            await token0.mint(owner.address, initialAmount);
-            await token1.mint(owner.address, initialAmount);
-            await token0.approve(pool.address, initialAmount);
-            await token1.approve(pool.address, initialAmount);
+            // Setup initial amounts
+            const userAmount = ethers.utils.parseEther('100');
+            const lpAmount = ethers.utils.parseEther('10');
+            
+            // Mint and approve tokens for liquidity provider
+            await token0.mint(owner.address, userAmount);
+            await token1.mint(owner.address, userAmount);
+            await token0.approve(pool.address, userAmount);
+            await token1.approve(pool.address, userAmount);
             
             // Add initial liquidity
-            const liquidityAmount = ethers.utils.parseEther('1');
-            await pool.mint(owner.address, MIN_TICK, MAX_TICK, liquidityAmount);
+            await pool.mint(owner.address, MIN_TICK, MAX_TICK, lpAmount);
             
-            // Mint initial tokens for both users
-            const initialAmount = ethers.utils.parseEther('100');
-            await token0.mint(owner.address, initialAmount);
-            await token1.mint(owner.address, initialAmount);
-            await token0.approve(pool.address, initialAmount);
-            await token1.approve(pool.address, initialAmount);
-            
-            // Add initial liquidity
-            const liquidityAmount = ethers.utils.parseEther('10');
-            await pool.mint(owner.address, MIN_TICK, MAX_TICK, liquidityAmount);
-            
-            // Mint tokens for swapping
-            await token0.mint(other.address, initialAmount);
-            await token1.mint(other.address, initialAmount);
-            await token0.connect(other).approve(pool.address, initialAmount);
-            await token1.connect(other).approve(pool.address, initialAmount);
+            // Mint and approve tokens for trader
+            await token0.mint(other.address, userAmount);
+            await token1.mint(other.address, userAmount);
+            await token0.connect(other).approve(pool.address, userAmount);
+            await token1.connect(other).approve(pool.address, userAmount);
         });
 
         it('executes swap zero for one', async () => {
