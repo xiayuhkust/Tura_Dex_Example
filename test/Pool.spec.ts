@@ -140,6 +140,21 @@ describe('UniswapV3Pool', () => {
             
             // Verify protocol fees
             expect(await pool.protocolFees0()).to.equal(feeAmount);
+            
+            // Verify swap event was emitted
+            const slot0 = await pool.slot0();
+            const liquidity = await pool.liquidity();
+            await expect(pool.connect(other).swap(true, swapAmount, other.address))
+                .to.emit(pool, 'Swap')
+                .withArgs(
+                    other.address,
+                    other.address,
+                    swapAmount,
+                    -amountAfterFee,
+                    slot0.sqrtPriceX96,
+                    liquidity,
+                    slot0.tick
+                );
         });
 
         it('executes swap one for zero', async () => {
