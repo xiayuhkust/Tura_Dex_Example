@@ -300,18 +300,11 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 }
                 
                 // Update position fees for the LP
-                // Find all positions in the current tick range and update their fees
-                for (int24 tick = MIN_TICK; tick <= MAX_TICK; tick += tickSpacing) {
-                    Tick.Info storage currentTick = ticks[tick];
-                    if (currentTick.initialized) {
-                        // Get all positions at this tick
-                        bytes32 positionKey = keccak256(abi.encodePacked(factory, tick, tick + tickSpacing));
-                        IPosition.Info storage position = positions[positionKey];
-                        if (position.liquidity > 0) {
-                            position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
-                            position.feeGrowthInside0LastX128 = feeGrowthInside0X128;
-                        }
-                    }
+                bytes32 positionKey = keccak256(abi.encodePacked(state.recipient, MIN_TICK, MAX_TICK));
+                IPosition.Info storage position = positions[positionKey];
+                if (position.liquidity > 0) {
+                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
+                    position.feeGrowthInside0LastX128 = feeGrowthInside0X128;
                 }
                 
                 // Calculate swap amounts
@@ -354,18 +347,11 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 }
                 
                 // Update position fees for the LP
-                // Find all positions in the current tick range and update their fees
-                for (int24 tick = MIN_TICK; tick <= MAX_TICK; tick += tickSpacing) {
-                    Tick.Info storage currentTick = ticks[tick];
-                    if (currentTick.initialized) {
-                        // Get all positions at this tick
-                        bytes32 positionKey = keccak256(abi.encodePacked(factory, tick, tick + tickSpacing));
-                        IPosition.Info storage currentPosition = positions[positionKey];
-                        if (currentPosition.liquidity > 0) {
-                            currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(state.feeAmount));
-                            currentPosition.feeGrowthInside1LastX128 = feeGrowthInside1X128;
-                        }
-                    }
+                bytes32 positionKey = keccak256(abi.encodePacked(state.recipient, MIN_TICK, MAX_TICK));
+                IPosition.Info storage currentPosition = positions[positionKey];
+                if (currentPosition.liquidity > 0) {
+                    currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(state.feeAmount));
+                    currentPosition.feeGrowthInside1LastX128 = feeGrowthInside1X128;
                 }
                 
                 // Calculate swap amounts
