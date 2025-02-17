@@ -282,11 +282,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
                 
                 // Update position fee growth for current tick range
-                IPosition.Info storage position = positions.get(recipient, _slot0.tick, _slot0.tick + tickSpacing);
+                IPosition.Info storage position = positions.get(msg.sender, _slot0.tick, _slot0.tick + tickSpacing);
                 if (position.liquidity > 0) {
-                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(
-                        FullMath.mulDiv(state.feeAmount, position.liquidity, state.currentLiquidity)
-                    ));
+                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
                 }
             }
         } else {
@@ -357,13 +355,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 sqrtPriceX96,
                 swapState.currentLiquidity,
                 swapState.amountAfterFee,
-                true
+                false
             )
             : SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
                 sqrtPriceX96,
                 swapState.currentLiquidity,
                 swapState.amountAfterFee,
-                true
+                false
             );
 
         // Verify price is within limits
