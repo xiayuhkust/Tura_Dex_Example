@@ -40,8 +40,9 @@ contract TuraFactory is Ownable {
 
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
 
-        bytes memory poolInitCode = type(TuraPool).creationCode;
+        bytes memory bytecode = type(TuraPool).creationCode;
         bytes memory constructorArgs = abi.encode(address(this), token0, token1, fee);
+        bytes memory poolInitCode = bytes.concat(bytecode, constructorArgs);
         bytes32 salt = keccak256(abi.encodePacked(token0, token1, fee));
         
         assembly {
