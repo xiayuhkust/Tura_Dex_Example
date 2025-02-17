@@ -85,14 +85,14 @@ describe('UniswapV3Pool', () => {
         beforeEach(async () => {
             // Add initial liquidity
             // Setup initial amounts
-            const userAmount = ethers.utils.parseEther('100');
-            const lpAmount = ethers.utils.parseEther('10');
+            const userAmount = ethers.utils.parseEther('1000');
+            const lpAmount = ethers.utils.parseEther('100');
             
             // Mint and approve tokens for liquidity provider
-            await token0.mint(owner.address, userAmount);
-            await token1.mint(owner.address, userAmount);
-            await token0.approve(pool.address, userAmount);
-            await token1.approve(pool.address, userAmount);
+            await token0.mint(owner.address, userAmount.mul(2));
+            await token1.mint(owner.address, userAmount.mul(2));
+            await token0.approve(pool.address, userAmount.mul(2));
+            await token1.approve(pool.address, userAmount.mul(2));
             
             // Add initial liquidity
             await pool.mint(owner.address, MIN_TICK, MAX_TICK, lpAmount);
@@ -102,25 +102,37 @@ describe('UniswapV3Pool', () => {
             await token1.mint(other.address, userAmount);
             await token0.connect(other).approve(pool.address, userAmount);
             await token1.connect(other).approve(pool.address, userAmount);
+            
+            // Ensure pool has enough liquidity
+            await token0.mint(pool.address, lpAmount);
+            await token1.mint(pool.address, lpAmount);
         });
 
         it('executes swap zero for one', async () => {
-            const swapAmount = ethers.utils.parseEther('0.1');
+            const swapAmount = ethers.utils.parseEther('1');
             
             // Get initial balances
             const initialBalance0 = await token0.balanceOf(other.address);
             const initialBalance1 = await token1.balanceOf(other.address);
+            const initialPoolBalance0 = await token0.balanceOf(pool.address);
+            const initialPoolBalance1 = await token1.balanceOf(pool.address);
             
             // Execute swap
-            const tx = await pool.connect(other).swap(true, swapAmount, other.address);
-            await tx.wait();
+            await pool.connect(other).swap(true, swapAmount, other.address);
             
             // Verify balances changed correctly
             const finalBalance0 = await token0.balanceOf(other.address);
             const finalBalance1 = await token1.balanceOf(other.address);
+            const finalPoolBalance0 = await token0.balanceOf(pool.address);
+            const finalPoolBalance1 = await token1.balanceOf(pool.address);
             
+            // Verify token0 was taken from user
             expect(initialBalance0.sub(finalBalance0)).to.equal(swapAmount);
+            // Verify token1 was given to user
             expect(finalBalance1.sub(initialBalance1)).to.be.gt(0);
+            // Verify pool balances changed correctly
+            expect(finalPoolBalance0.sub(initialPoolBalance0)).to.equal(swapAmount);
+            expect(initialPoolBalance1.sub(finalPoolBalance1)).to.be.gt(0);
         });
 
         it('executes swap one for zero', async () => {
