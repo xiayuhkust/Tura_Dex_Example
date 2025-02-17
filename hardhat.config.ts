@@ -20,7 +20,7 @@ const config: HardhatUserConfig = {
     tura: {
       url: "http://43.135.26.222:8000",
       chainId: 1337,
-      accounts: [process.env.TURA_PRIVATE_KEY || ""]
+      accounts: ["ad6fb1ceb0b9dc598641ac1cef545a7882b52f5a12d7204d6074762d96a8a474"]
     }
   },
   paths: {
