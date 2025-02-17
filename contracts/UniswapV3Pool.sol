@@ -264,9 +264,42 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         require(_slot0.unlocked, 'LOK'); // Locked
 
         // Lock the pool and cache state
-        Slot0 memory slot0 = _slot0;
-        slot0.unlocked = false;
-        _slot0 = slot0;
+        Slot0 memory state = _slot0;
+        state.unlocked = false;
+        _slot0 = state;
+
+        uint160 sqrtPriceX96 = state.sqrtPriceX96;
+        int24 tick = state.tick;
+        uint128 currentLiquidity = liquidity;
+
+        // Calculate price limits
+        uint160 sqrtPriceLimitX96 = zeroForOne
+            ? TickMath.MIN_SQRT_RATIO + 1
+            : TickMath.MAX_SQRT_RATIO - 1;
+
+        // Calculate next price and tick
+        uint160 nextSqrtPriceX96;
+        int24 nextTick;
+
+        if (zeroForOne) {
+            nextSqrtPriceX96 = SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
+                sqrtPriceX96,
+                currentLiquidity,
+                amountSpecified,
+                true
+            );
+            require(nextSqrtPriceX96 >= sqrtPriceLimitX96 && nextSqrtPriceX96 < sqrtPriceX96, 'SPL');
+            nextTick = TickMath.getTickAtSqrtRatio(nextSqrtPriceX96);
+        } else {
+            nextSqrtPriceX96 = SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
+                sqrtPriceX96,
+                currentLiquidity,
+                amountSpecified,
+                true
+            );
+            require(nextSqrtPriceX96 <= sqrtPriceLimitX96 && nextSqrtPriceX96 > sqrtPriceX96, 'SPL');
+            nextTick = TickMath.getTickAtSqrtRatio(nextSqrtPriceX96);
+        }
 
         // Calculate fees (fee is in hundredths of a bip, so multiply by 10^-6)
         uint256 feeAmount = (amountSpecified * uint256(fee)) / 1000000;
@@ -316,12 +349,26 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         // Execute swap
         (amount0, amount1) = _handleSwap(zeroForOne, amountSpecified, feeAmount, amountAfterFee, recipient);
 
-        // Update price and unlock
-        slot0.sqrtPriceX96 = zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1;
-        slot0.tick = zeroForOne ? TickMath.MIN_TICK + 1 : TickMath.MAX_TICK - 1;
-        slot0.unlocked = true;
-        _slot0 = slot0;
+        // Update liquidity if we crossed any initialized ticks
+        if (tick != nextTick) {
+            int128 liquidityNet = ticks.cross(
+                nextTick,
+                feeGrowthGlobal0X128,
+                feeGrowthGlobal1X128
+            );
+            if (zeroForOne) liquidityNet = -liquidityNet;
+            currentLiquidity = liquidityNet < 0
+                ? uint128(uint256(currentLiquidity).sub(uint256(-liquidityNet)))
+                : uint128(uint256(currentLiquidity).add(uint256(liquidityNet)));
+        }
 
-        emit Swap(msg.sender, recipient, amount0, amount1, slot0.sqrtPriceX96, liquidity, slot0.tick);
+        // Update pool state
+        liquidity = currentLiquidity;
+        state.sqrtPriceX96 = nextSqrtPriceX96;
+        state.tick = nextTick;
+        state.unlocked = true;
+        _slot0 = state;
+
+        emit Swap(msg.sender, recipient, amount0, amount1, nextSqrtPriceX96, currentLiquidity, nextTick);
     }
 }
