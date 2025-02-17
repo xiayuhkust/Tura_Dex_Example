@@ -120,6 +120,10 @@ describe('UniswapV3Pool', () => {
             const initialPoolBalance0 = await token0.balanceOf(pool.address);
             const initialPoolBalance1 = await token1.balanceOf(pool.address);
             
+            // Calculate expected amounts
+            const feeAmount = swapAmount.mul(3).div(1000); // 0.3% fee
+            const amountAfterFee = swapAmount.sub(feeAmount);
+            
             // Execute swap and verify event
             await expect(pool.connect(other).swap(true, swapAmount, other.address))
                 .to.emit(pool, 'Swap')
@@ -132,10 +136,6 @@ describe('UniswapV3Pool', () => {
                     await pool.liquidity(),
                     (await pool.slot0()).tick
                 );
-            
-            // Calculate expected amounts
-            const feeAmount = swapAmount.mul(3).div(1000); // 0.3% fee
-            const amountAfterFee = swapAmount.sub(feeAmount);
             
             // Verify balances changed correctly
             const finalBalance0 = await token0.balanceOf(other.address);
