@@ -24,6 +24,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     address public immutable override token0;
     address public immutable override token1;
     uint24 public immutable override fee;
+    int24 public immutable tickSpacing;
 
     Slot0 private _slot0;
     function slot0() external view override returns (Slot0 memory) {
@@ -44,12 +45,14 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         address _factory,
         address _token0,
         address _token1,
-        uint24 _fee
+        uint24 _fee,
+        int24 _tickSpacing
     ) {
         factory = _factory;
         token0 = _token0;
         token1 = _token1;
         fee = _fee;
+        tickSpacing = _tickSpacing;
     }
 
     function initialize(uint160 sqrtPriceX96) external override {
@@ -277,9 +280,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
                 
-                // Update position fee growth
-                IPosition.Info storage position = positions.get(msg.sender, MIN_TICK, MAX_TICK);
-                position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
+                // Update position fee growth for all positions
+                for (int24 tick = TickMath.MIN_TICK; tick <= TickMath.MAX_TICK; tick += tickSpacing) {
+                    Tick.Info storage tickInfo = ticks[tick];
+                    if (tickInfo.initialized) {
+                        tickInfo.feeGrowthOutside0X128 = feeGrowthGlobal0X128;
+                    }
+                }
             }
         } else {
             // Calculate amounts

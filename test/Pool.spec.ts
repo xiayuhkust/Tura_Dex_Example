@@ -144,10 +144,6 @@ describe('UniswapV3Pool', () => {
             const position = await pool.getPosition(owner.address, MIN_TICK, MAX_TICK);
             expect(position.tokensOwed0).to.equal(feeAmount, "Fee growth incorrect");
             
-            // Verify fee growth
-            const position = await pool.getPosition(owner.address, MIN_TICK, MAX_TICK);
-            expect(position.tokensOwed0).to.equal(feeAmount, "Fee growth incorrect");
-            
             // Verify protocol fees
             expect(await pool.protocolFees0()).to.equal(feeAmount);
         });
