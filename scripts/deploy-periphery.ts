@@ -5,12 +5,12 @@ async function main() {
 
   console.log("Deploying peripheral contracts with account:", await deployer.getAddress());
 
-  const factoryAddress = "0x511CE2380a70bE66FAf44a5baaBf11E92D654905";
-  const weth9Address = "0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be";
+  const factoryAddress = "0x680AcAc3e49F959E0c20e6dcd3E653E83Db44aE3";
+  const weth9Address = "0xD1BD923c4a999E25Bd73e6689476f18214ae76f4";
 
   // Deploy SwapRouter
   console.log("Deploying SwapRouter...");
-  const SwapRouter = await ethers.getContractFactory("SwapRouter");
+  const SwapRouter = await ethers.getContractFactory("contracts/backup/periphery/SwapRouter.sol:SwapRouter");
   const router = await SwapRouter.deploy(factoryAddress, weth9Address);
   await router.deployed();
   const routerAddress = router.address;
@@ -18,7 +18,7 @@ async function main() {
 
   // Deploy NonfungiblePositionManager
   console.log("Deploying NonfungiblePositionManager...");
-  const NonfungiblePositionManager = await ethers.getContractFactory("NonfungiblePositionManager");
+  const NonfungiblePositionManager = await ethers.getContractFactory("contracts/backup/periphery/NonfungiblePositionManager.sol:NonfungiblePositionManager");
   const nftManager = await NonfungiblePositionManager.deploy(factoryAddress, weth9Address);
   await nftManager.deployed();
   const nftManagerAddress = nftManager.address;
