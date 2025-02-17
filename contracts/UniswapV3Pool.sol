@@ -284,15 +284,17 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
                 
                 // Update position fee growth for current tick range
-                IPosition.Info storage position = positions.get(factory, MIN_TICK, MAX_TICK);
+                IPosition.Info storage position = positions.get(msg.sender, MIN_TICK, MAX_TICK);
                 if (position.liquidity > 0) {
                     position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
                 }
-                protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
                 
                 // Calculate swap amounts
                 amount0 = int256(state.amountSpecified);
                 amount1 = -int256(state.amountAfterFee);
+                
+                // Update protocol fees
+                protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
             }
         } else {
             // Calculate amounts
@@ -312,15 +314,17 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(feePerLiquidity);
                 
                 // Update position fee growth for the current position
-                IPosition.Info storage currentPosition = positions.get(factory, MIN_TICK, MAX_TICK);
+                IPosition.Info storage currentPosition = positions.get(msg.sender, MIN_TICK, MAX_TICK);
                 if (currentPosition.liquidity > 0) {
                     currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(state.feeAmount));
                 }
-                protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
                 
                 // Calculate swap amounts
                 amount0 = -int256(state.amountAfterFee);
                 amount1 = int256(state.amountSpecified);
+                
+                // Update protocol fees
+                protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
             }
         }
     }
