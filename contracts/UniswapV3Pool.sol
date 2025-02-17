@@ -307,7 +307,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 state.amountAfterFee = state.amountSpecified.sub(feeAmount);
 
                 // Update position fees for the LP
-                bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
+                bytes32 positionKey = keccak256(abi.encodePacked(state.recipient, MIN_TICK, MAX_TICK));
                 IPosition.Info storage position = positions[positionKey];
                 if (position.liquidity > 0) {
                     position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
@@ -315,7 +315,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 }
                 
                 // Calculate swap amounts
-                amount0 = int256(state.amountAfterFee);
+                amount0 = int256(state.amountSpecified);
+                amount1 = -int256(state.amountAfterFee);
                 protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
                 protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
                 amount1 = -int256(state.amountAfterFee);
@@ -360,7 +361,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 state.amountAfterFee = state.amountSpecified.sub(feeAmount);
 
                 // Update position fees for the LP
-                bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
+                bytes32 positionKey = keccak256(abi.encodePacked(state.recipient, MIN_TICK, MAX_TICK));
                 IPosition.Info storage currentPosition = positions[positionKey];
                 if (currentPosition.liquidity > 0) {
                     currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(feeAmount));
@@ -369,6 +370,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 
                 // Calculate swap amounts
                 amount0 = -int256(state.amountAfterFee);
+                amount1 = int256(state.amountSpecified);
                 protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
                 protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
                 amount1 = int256(state.amountSpecified);
