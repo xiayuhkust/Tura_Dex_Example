@@ -26,7 +26,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     uint24 public immutable override fee;
 
     Slot0 public override slot0;
-    mapping(bytes32 => Position.Info) public positions;
+    mapping(bytes32 => IPosition.Info) public positions;
     mapping(int24 => Tick.Info) public ticks;
     uint128 public override liquidity;
     uint128 public override protocolFees0;
@@ -112,7 +112,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         );
 
         // Update position
-        Position.Info storage position = positions.get(recipient, tickLower, tickUpper);
+        IPosition.Info storage position = positions.get(recipient, tickLower, tickUpper);
         position.liquidity = uint128(uint256(position.liquidity).add(uint256(amount)));
         position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
         position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
@@ -165,7 +165,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         int24 tickLower,
         int24 tickUpper
     ) external override returns (uint128 amount0, uint128 amount1) {
-        Position.Info storage position = positions.get(recipient, tickLower, tickUpper);
+        IPosition.Info storage position = positions.get(recipient, tickLower, tickUpper);
         
         // Calculate fees earned
         uint256 feeGrowthInside0X128;
