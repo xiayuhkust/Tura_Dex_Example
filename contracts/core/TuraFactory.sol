@@ -3,6 +3,7 @@ pragma solidity ^0.7.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/EnumerableSet.sol";
+import "./TuraPool.sol";
 
 contract TuraFactory is Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -39,8 +40,14 @@ contract TuraFactory is Ownable {
 
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
 
-        // Pool contract deployment will be implemented in next phase
-        pool = address(0);
+        bytes memory poolInitCode = type(TuraPool).creationCode;
+        bytes memory constructorArgs = abi.encode(address(this), token0, token1, fee);
+        bytes32 salt = keccak256(abi.encodePacked(token0, token1, fee));
+        
+        assembly {
+            pool := create2(0, add(poolInitCode, 0x20), mload(poolInitCode), salt)
+        }
+        
         require(pool != address(0), "TF: POOL_CREATION_FAILED");
 
         getPool[token0][token1][fee] = pool;
