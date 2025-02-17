@@ -133,12 +133,12 @@ describe('UniswapV3Pool', () => {
             const finalPoolBalance1 = await token1.balanceOf(pool.address);
             
             // Verify token0 was taken from user
-            expect(finalBalance0).to.equal(initialBalance0.sub(swapAmount), "User token0 balance incorrect");
+            expect(initialBalance0.sub(finalBalance0)).to.equal(swapAmount, "User token0 balance incorrect");
             // Verify token1 was given to user
-            expect(finalBalance1).to.equal(initialBalance1.add(amountAfterFee), "User token1 balance incorrect");
+            expect(finalBalance1.sub(initialBalance1)).to.equal(amountAfterFee, "User token1 balance incorrect");
             // Verify pool balances changed correctly
-            expect(finalPoolBalance0).to.equal(initialPoolBalance0.add(swapAmount), "Pool token0 balance incorrect");
-            expect(finalPoolBalance1).to.equal(initialPoolBalance1.sub(amountAfterFee), "Pool token1 balance incorrect");
+            expect(finalPoolBalance0.sub(initialPoolBalance0)).to.equal(swapAmount, "Pool token0 balance incorrect");
+            expect(initialPoolBalance1.sub(finalPoolBalance1)).to.equal(amountAfterFee, "Pool token1 balance incorrect");
             
             // Verify fee growth
             const position = await pool.getPosition(owner.address, MIN_TICK, MAX_TICK);
@@ -173,12 +173,12 @@ describe('UniswapV3Pool', () => {
             const finalPoolBalance1 = await token1.balanceOf(pool.address);
             
             // Verify token1 was taken from user
-            expect(initialBalance1.sub(finalBalance1)).to.equal(swapAmount);
+            expect(initialBalance1.sub(finalBalance1)).to.equal(swapAmount, "User token1 balance incorrect");
             // Verify token0 was given to user
-            expect(finalBalance0.sub(initialBalance0)).to.equal(amountAfterFee);
+            expect(finalBalance0.sub(initialBalance0)).to.equal(amountAfterFee, "User token0 balance incorrect");
             // Verify pool balances changed correctly
-            expect(initialPoolBalance0.sub(finalPoolBalance0)).to.equal(amountAfterFee);
-            expect(finalPoolBalance1.sub(initialPoolBalance1)).to.equal(swapAmount);
+            expect(initialPoolBalance0.sub(finalPoolBalance0)).to.equal(amountAfterFee, "Pool token0 balance incorrect");
+            expect(finalPoolBalance1.sub(initialPoolBalance1)).to.equal(swapAmount, "Pool token1 balance incorrect");
             
             // Verify protocol fees
             expect(await pool.protocolFees1()).to.equal(feeAmount);
@@ -197,8 +197,8 @@ describe('UniswapV3Pool', () => {
             await token0.connect(other).approve(pool.address, swapAmount);
             await pool.connect(other).swap(true, swapAmount, other.address);
             
-            // Calculate expected fee
-            const feeAmount = swapAmount.mul(3).div(1000).mul(2); // 0.3% fee * 2 swaps
+            // Calculate expected fee for two swaps
+            const expectedFees = swapAmount.mul(3).div(1000).mul(2); // 0.3% fee * 2 swaps
             
             // Get initial balances
             const initialBalance0 = await token0.balanceOf(owner.address);
@@ -210,8 +210,7 @@ describe('UniswapV3Pool', () => {
             const finalBalance0 = await token0.balanceOf(owner.address);
             
             // Verify fees were collected
-            const expectedFees = swapAmount.mul(3).div(1000); // 0.3% fee
-            expect(finalBalance0.sub(initialBalance0)).to.equal(expectedFees);
+            expect(finalBalance0.sub(initialBalance0)).to.equal(expectedFees, "Fee collection incorrect");
         });
     });
 });
