@@ -35,7 +35,8 @@ library Position {
             if (liquidityDelta > 0) {
                 liquidityNext = uint128(uint256(position.liquidity).add(uint256(liquidityDelta)));
             } else {
-                liquidityNext = uint128(uint256(position.liquidity).sub(uint256(-liquidityDelta)));
+                require(uint128(-liquidityDelta) <= position.liquidity, 'NP'); // Not enough position liquidity
+                liquidityNext = uint128(uint256(position.liquidity).sub(uint128(-liquidityDelta)));
             }
         }
 

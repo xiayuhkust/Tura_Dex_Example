@@ -26,9 +26,13 @@ library Tick {
         Tick.Info storage tickInfo = self[tick];
 
         uint128 liquidityGrossBefore = tickInfo.liquidityGross;
-        uint128 liquidityGrossAfter = liquidityDelta < 0
-            ? uint128(uint256(liquidityGrossBefore).sub(uint256(-liquidityDelta)))
-            : uint128(uint256(liquidityGrossBefore).add(uint256(liquidityDelta)));
+        uint128 liquidityGrossAfter;
+        if (liquidityDelta < 0) {
+            require(uint128(-liquidityDelta) <= liquidityGrossBefore, 'NL'); // Not enough liquidity
+            liquidityGrossAfter = uint128(uint256(liquidityGrossBefore).sub(uint128(-liquidityDelta)));
+        } else {
+            liquidityGrossAfter = uint128(uint256(liquidityGrossBefore).add(uint256(liquidityDelta)));
+        }
 
         flipped = (liquidityGrossAfter == 0) != (liquidityGrossBefore == 0);
 
