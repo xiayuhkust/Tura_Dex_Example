@@ -3,6 +3,7 @@ import "@nomicfoundation/hardhat-ethers";
 import "@nomicfoundation/hardhat-chai-matchers";
 import "@openzeppelin/hardhat-upgrades";
 import * as dotenv from "dotenv";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 
 dotenv.config();
 
