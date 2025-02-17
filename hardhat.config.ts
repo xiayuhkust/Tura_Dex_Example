@@ -1,7 +1,10 @@
 import { HardhatUserConfig } from "hardhat/config";
-import "@nomiclabs/hardhat-waffle";
-import "@nomiclabs/hardhat-ethers";
+import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-chai-matchers";
 import "@openzeppelin/hardhat-upgrades";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -16,7 +19,8 @@ const config: HardhatUserConfig = {
   networks: {
     tura: {
       url: "http://43.135.26.222:8000",
-      chainId: 1337
+      chainId: 1337,
+      accounts: [process.env.TURA_PRIVATE_KEY || ""]
     }
   },
   paths: {
