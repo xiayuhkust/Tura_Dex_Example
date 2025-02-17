@@ -23,11 +23,22 @@ contract UniswapV3Factory is IUniswapV3Factory {
 
     function createPool(address tokenA, address tokenB, uint24 fee) external override returns (address pool) {
         require(tokenA != tokenB, "Same token");
+        require(tokenA != address(0) && tokenB != address(0), "Zero address");
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        require(token0 != address(0), "Zero address");
         int24 tickSpacing = feeAmountTickSpacing[fee];
         require(tickSpacing != 0, "Invalid fee");
         require(getPool[token0][token1][fee] == address(0), "Pool exists");
+        
+        // Create new pool with deterministic address
+        bytes32 salt = keccak256(abi.encodePacked(token0, token1, fee));
+        pool = address(new UniswapV3Pool{salt: salt}());
+        
+        // Initialize pool state
+        IUniswapV3Pool(pool).initialize(token0, token1, fee, tickSpacing);
+        
+        // Store pool address
+        getPool[token0][token1][fee] = pool;
+        getPool[token1][token0][fee] = pool; // populate reverse mapping
         
         pool = address(new UniswapV3Pool(
             address(this),

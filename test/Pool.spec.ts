@@ -84,34 +84,40 @@ describe('UniswapV3Pool', () => {
     describe('swapping', () => {
         beforeEach(async () => {
             // Add initial liquidity
-            await token0.mint(owner.address, ethers.utils.parseEther('1000'));
-            await token1.mint(owner.address, ethers.utils.parseEther('1000'));
-            await token0.approve(pool.address, ethers.utils.parseEther('1000'));
-            await token1.approve(pool.address, ethers.utils.parseEther('1000'));
-            await pool.mint(owner.address, MIN_TICK, MAX_TICK, ethers.utils.parseEther('10'));
-
+            // Mint initial liquidity tokens
+            const initialAmount = ethers.utils.parseEther('100');
+            await token0.mint(owner.address, initialAmount);
+            await token1.mint(owner.address, initialAmount);
+            await token0.approve(pool.address, initialAmount);
+            await token1.approve(pool.address, initialAmount);
+            
+            // Add initial liquidity
+            const liquidityAmount = ethers.utils.parseEther('1');
+            await pool.mint(owner.address, MIN_TICK, MAX_TICK, liquidityAmount);
+            
             // Mint tokens for swapping
-            await token0.mint(other.address, ethers.utils.parseEther('1000'));
-            await token1.mint(other.address, ethers.utils.parseEther('1000'));
-            await token0.connect(other).approve(pool.address, ethers.utils.parseEther('1000'));
-            await token1.connect(other).approve(pool.address, ethers.utils.parseEther('1000'));
+            const swapAmount = ethers.utils.parseEther('10');
+            await token0.mint(other.address, swapAmount);
+            await token1.mint(other.address, swapAmount);
+            await token0.connect(other).approve(pool.address, swapAmount);
+            await token1.connect(other).approve(pool.address, swapAmount);
         });
 
         it('executes swap zero for one', async () => {
             const swapAmount = ethers.utils.parseEther('0.1');
-            const expectedAmount0 = swapAmount;
-            const expectedAmount1 = swapAmount.mul(997).div(1000); // Account for 0.3% fee
+            const expectedFee = swapAmount.mul(3).div(1000); // 0.3% fee
+            const amountAfterFee = swapAmount.sub(expectedFee);
             
-            await expect(pool.connect(other).swap(true, expectedAmount0, other.address))
+            await expect(pool.connect(other).swap(true, swapAmount, other.address))
                 .to.emit(pool, 'Swap')
                 .withArgs(
                     other.address,
                     other.address,
-                    -expectedAmount0,
-                    expectedAmount1,
-                    await pool.slot0().sqrtPriceX96,
+                    -swapAmount,
+                    amountAfterFee,
+                    (await pool.slot0()).sqrtPriceX96,
                     await pool.liquidity(),
-                    await pool.slot0().tick
+                    (await pool.slot0()).tick
                 );
         });
 
