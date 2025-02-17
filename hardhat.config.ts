@@ -1,9 +1,8 @@
 import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-ethers";
-import "@nomicfoundation/hardhat-chai-matchers";
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
 import * as dotenv from "dotenv";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 
 dotenv.config();
 

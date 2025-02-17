@@ -14,7 +14,7 @@
   "description": "",
   "devDependencies": {
     "@nomiclabs/hardhat-waffle": "^2.0.6",
-    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-ethers": "^2.0.0",
     "@openzeppelin/contracts": "^3.4.2",
     "@openzeppelin/contracts-upgradeable": "^3.4.2",
     "@openzeppelin/hardhat-upgrades": "^1.28.0",
@@ -26,8 +26,8 @@
     "chai": "^4.3.10",
     "dotenv": "^16.4.4",
     "ethereum-waffle": "^3.4.4",
-    "ethers": "^5.7.2",
-    "hardhat": "^2.19.5",
+    "ethers": "^5.4.7",
+    "hardhat": "^2.8.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
