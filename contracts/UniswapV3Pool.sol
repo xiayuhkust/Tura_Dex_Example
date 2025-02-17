@@ -259,6 +259,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         uint160 nextPrice;
         int24 nextTick;
         address recipient;
+        address sender;
     }
 
     function _handleSwap(
@@ -362,7 +363,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             currentLiquidity: liquidity,
             recipient: recipient,
             nextTick: tick,
-            nextPrice: sqrtPriceX96
+            nextPrice: sqrtPriceX96,
+            sender: msg.sender
         });
 
         // Update protocol fees
