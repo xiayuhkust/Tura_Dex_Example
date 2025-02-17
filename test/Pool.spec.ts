@@ -84,25 +84,26 @@ describe('UniswapV3Pool', () => {
     describe('swapping', () => {
         beforeEach(async () => {
             // Add initial liquidity
-            // Add initial liquidity
-            await token0.mint(owner.address, ethers.utils.parseEther('100'));
-            await token1.mint(owner.address, ethers.utils.parseEther('100'));
-            await token0.approve(pool.address, ethers.utils.parseEther('100'));
-            await token1.approve(pool.address, ethers.utils.parseEther('100'));
-            await pool.mint(owner.address, MIN_TICK, MAX_TICK, ethers.utils.parseEther('1'));
-            await token0.mint(owner.address, ethers.utils.parseEther('100'));
-            await token1.mint(owner.address, ethers.utils.parseEther('100'));
+            await token0.mint(owner.address, ethers.utils.parseEther('1000'));
+            await token1.mint(owner.address, ethers.utils.parseEther('1000'));
+            await token0.approve(pool.address, ethers.utils.parseEther('1000'));
+            await token1.approve(pool.address, ethers.utils.parseEther('1000'));
+            await pool.mint(owner.address, MIN_TICK, MAX_TICK, ethers.utils.parseEther('10'));
+
+            // Mint tokens for swapping
+            await token0.mint(other.address, ethers.utils.parseEther('1000'));
+            await token1.mint(other.address, ethers.utils.parseEther('1000'));
+            await token0.connect(other).approve(pool.address, ethers.utils.parseEther('1000'));
+            await token1.connect(other).approve(pool.address, ethers.utils.parseEther('1000'));
         });
 
         it('executes swap zero for one', async () => {
             const swapAmount = ethers.utils.parseEther('1');
-            await token0.approve(pool.address, swapAmount);
-
-            await expect(pool.swap(true, swapAmount, owner.address))
+            await expect(pool.connect(other).swap(true, swapAmount, other.address))
                 .to.emit(pool, 'Swap')
                 .withArgs(
-                    owner.address,
-                    owner.address,
+                    other.address,
+                    other.address,
                     -swapAmount,
                     BigNumber.from('0'),
                     await pool.slot0().sqrtPriceX96,
