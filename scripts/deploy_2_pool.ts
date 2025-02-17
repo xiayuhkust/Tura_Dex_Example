@@ -1,4 +1,5 @@
 import { ethers } from "hardhat";
+import "@nomiclabs/hardhat-ethers";
 
 async function main() {
   console.log("Deploying Pool to Tura network...");
