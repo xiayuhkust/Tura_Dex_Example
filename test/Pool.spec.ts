@@ -2,6 +2,10 @@ import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { Contract, BigNumber } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import chai from 'chai';
+import { solidity } from 'ethereum-waffle';
+
+chai.use(solidity);
 
 describe('UniswapV3Pool', () => {
     let factory: Contract;
