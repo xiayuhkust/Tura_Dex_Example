@@ -283,22 +283,18 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             ? TickMath.MIN_SQRT_RATIO + 1
             : TickMath.MAX_SQRT_RATIO - 1;
 
-        // Calculate fees (fee is in hundredths of a bip, so multiply by 10^-6)
-        uint256 feeAmount = (amountSpecified * uint256(fee)) / 1000000;
-        uint256 amountAfterFee = amountSpecified - feeAmount;
-
         // Calculate next price
         uint160 nextPrice = zeroForOne
             ? SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
                 sqrtPriceX96,
                 currentLiquidity,
-                amountAfterFee,
+                amountSpecified,
                 true
             )
             : SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
                 sqrtPriceX96,
                 currentLiquidity,
-                amountAfterFee,
+                amountSpecified,
                 true
             );
 
@@ -333,6 +329,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.unlocked = true;
         _slot0 = state;
 
-        emit Swap(msg.sender, recipient, amount0, amount1, nextSqrtPriceX96, currentLiquidity, nextTick);
+        emit Swap(msg.sender, recipient, amount0, amount1, nextPrice, currentLiquidity, nextTick);
     }
 }
