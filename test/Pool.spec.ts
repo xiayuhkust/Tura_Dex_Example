@@ -38,8 +38,7 @@ describe('UniswapV3Pool', () => {
         const poolAddress = await factory.getPool(token0.address, token1.address, FEE);
         pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
 
-        // Initialize pool
-        await pool.initialize(SQRT_PRICE_X96);
+        // Pool is already initialized by factory
 
         // Approve tokens
         await token0.approve(pool.address, ethers.constants.MaxUint256);
