@@ -134,12 +134,12 @@ describe('UniswapV3Pool', () => {
             const finalPoolBalance1 = await token1.balanceOf(pool.address);
             
             // Verify token0 was taken from user
-            expect(initialBalance0.sub(finalBalance0)).to.equal(swapAmount);
+            expect(finalBalance0).to.equal(initialBalance0.sub(swapAmount));
             // Verify token1 was given to user
-            expect(finalBalance1.sub(initialBalance1)).to.equal(amountAfterFee);
+            expect(finalBalance1).to.equal(initialBalance1.add(amountAfterFee));
             // Verify pool balances changed correctly
-            expect(finalPoolBalance0.sub(initialPoolBalance0)).to.equal(swapAmount);
-            expect(initialPoolBalance1.sub(finalPoolBalance1)).to.equal(amountAfterFee);
+            expect(finalPoolBalance0).to.equal(initialPoolBalance0.add(swapAmount));
+            expect(finalPoolBalance1).to.equal(initialPoolBalance1.sub(amountAfterFee));
             
             // Verify protocol fees
             expect(await pool.protocolFees0()).to.equal(feeAmount);
@@ -187,14 +187,12 @@ describe('UniswapV3Pool', () => {
             // Approve tokens for swap
             await token0.connect(other).approve(pool.address, swapAmount);
             
-            // Execute swap
+            // Execute multiple swaps to accumulate fees
+            await pool.connect(other).swap(true, swapAmount, other.address);
             await pool.connect(other).swap(true, swapAmount, other.address);
             
             // Calculate expected fee
-            const feeAmount = swapAmount.mul(3).div(1000); // 0.3% fee
-            
-            // Wait for fee growth to be updated
-            await ethers.provider.getBlock('latest');
+            const feeAmount = swapAmount.mul(3).div(1000).mul(2); // 0.3% fee * 2 swaps
             
             // Get initial balances
             const initialBalance0 = await token0.balanceOf(owner.address);
@@ -206,7 +204,7 @@ describe('UniswapV3Pool', () => {
             const finalBalance0 = await token0.balanceOf(owner.address);
             
             // Verify fees were collected
-            expect(finalBalance0.sub(initialBalance0)).to.equal(feeAmount);
+            expect(finalBalance0).to.equal(initialBalance0.add(feeAmount));
         });
     });
 });
