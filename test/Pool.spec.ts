@@ -98,13 +98,13 @@ describe('UniswapV3Pool', () => {
         });
 
         it('executes swap zero for one', async () => {
-            const swapAmount = ethers.utils.parseEther('1');
+            const swapAmount = ethers.utils.parseEther('0.1');
             await expect(pool.connect(other).swap(true, swapAmount, other.address))
                 .to.emit(pool, 'Swap')
                 .withArgs(
                     other.address,
                     other.address,
-                    -swapAmount,
+                    -swapAmount.mul(997).div(1000), // Account for 0.3% fee
                     BigNumber.from('0'),
                     await pool.slot0().sqrtPriceX96,
                     await pool.liquidity(),
