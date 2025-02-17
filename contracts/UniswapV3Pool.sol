@@ -270,9 +270,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount1 = -int256(state.amountAfterFee);
             
             // Transfer tokens
-            require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(amount0)), 'T0');
-            if (-amount1 > 0) {
-                require(IERC20(token1).transfer(recipient, uint256(-amount1)), 'T1');
+            require(IERC20(token0).transferFrom(msg.sender, address(this), state.amountSpecified), 'T0');
+            if (state.amountAfterFee > 0) {
+                require(IERC20(token1).transfer(recipient, state.amountAfterFee), 'T1');
             }
 
             // Update protocol fees and fee growth
@@ -331,16 +331,12 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         int24 tick = state.tick;
         uint128 currentLiquidity = liquidity;
 
-        // Calculate fees (fee is in hundredths of a bip, so multiply by 10^-6)
-        uint256 feeAmount = (amountSpecified * uint256(fee)) / 1000000;
-        uint256 amountAfterFee = amountSpecified - feeAmount;
-
         // Calculate price limits
         uint160 sqrtPriceLimitX96 = zeroForOne
             ? TickMath.MIN_SQRT_RATIO + 1
             : TickMath.MAX_SQRT_RATIO - 1;
 
-        // Initialize swap state
+        // Initialize swap state and calculate fees
         uint256 feeAmount = (amountSpecified * uint256(fee)) / 1000000;
         SwapState memory swapState = SwapState({
             amountSpecified: amountSpecified,
