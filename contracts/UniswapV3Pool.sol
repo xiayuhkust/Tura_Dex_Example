@@ -7,6 +7,7 @@ import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
 import './factory/interfaces/IUniswapV3Pool.sol';
 import './factory/libraries/TickMath.sol';
+import './factory/interfaces/IPosition.sol';
 import './factory/libraries/Position.sol';
 import './factory/libraries/SqrtPriceMath.sol';
 import './factory/libraries/Tick.sol';
