@@ -3,6 +3,10 @@ import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
 import * as dotenv from "dotenv";
+import chai from "chai";
+import { solidity } from "ethereum-waffle";
+
+chai.use(solidity);
 
 dotenv.config();
 
