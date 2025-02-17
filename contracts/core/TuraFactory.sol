@@ -42,7 +42,7 @@ contract TuraFactory is Ownable {
 
         bytes memory bytecode = type(TuraPool).creationCode;
         bytes memory constructorArgs = abi.encode(address(this), token0, token1, fee);
-        bytes memory poolInitCode = bytes.concat(bytecode, constructorArgs);
+        bytes memory poolInitCode = abi.encodePacked(bytecode, constructorArgs);
         bytes32 salt = keccak256(abi.encodePacked(token0, token1, fee));
         
         assembly {
