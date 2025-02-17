@@ -347,6 +347,11 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             ? TickMath.MIN_SQRT_RATIO + 1
             : TickMath.MAX_SQRT_RATIO - 1;
 
+        // Calculate price limits
+        uint160 sqrtPriceLimitX96 = zeroForOne
+            ? TickMath.MIN_SQRT_RATIO + 1
+            : TickMath.MAX_SQRT_RATIO - 1;
+
         // Initialize swap state
         SwapState memory swapState;
         swapState.amountSpecified = amountSpecified;
@@ -355,7 +360,28 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         swapState.currentLiquidity = liquidity;
         swapState.recipient = recipient;
         swapState.nextTick = tick;
-        swapState.nextPrice = sqrtPriceX96;
+
+        // Calculate next price
+        swapState.nextPrice = zeroForOne
+            ? SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
+                sqrtPriceX96,
+                swapState.currentLiquidity,
+                swapState.amountAfterFee,
+                true
+            )
+            : SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
+                sqrtPriceX96,
+                swapState.currentLiquidity,
+                swapState.amountAfterFee,
+                true
+            );
+
+        // Verify price is within limits
+        if (zeroForOne) {
+            require(swapState.nextPrice >= sqrtPriceLimitX96 && swapState.nextPrice < sqrtPriceX96, 'SPL');
+        } else {
+            require(swapState.nextPrice <= sqrtPriceLimitX96 && swapState.nextPrice > sqrtPriceX96, 'SPL');
+        }
 
         // Execute swap
         (amount0, amount1) = _handleSwap(zeroForOne, swapState, recipient);
@@ -364,13 +390,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         _slot0.tick = swapState.nextTick;
         _slot0.sqrtPriceX96 = swapState.nextPrice;
         _slot0.unlocked = true;
-
-        // Verify price is within limits
-        if (zeroForOne) {
-            require(swapState.nextPrice >= sqrtPriceLimitX96 && swapState.nextPrice < sqrtPriceX96, 'SPL');
-        } else {
-            require(swapState.nextPrice <= sqrtPriceLimitX96 && swapState.nextPrice > sqrtPriceX96, 'SPL');
-        }
 
         // Calculate next tick and update liquidity
         swapState.nextTick = TickMath.getTickAtSqrtRatio(swapState.nextPrice);
