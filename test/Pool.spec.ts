@@ -121,7 +121,8 @@ describe('UniswapV3Pool', () => {
             const initialPoolBalance1 = await token1.balanceOf(pool.address);
             
             // Execute swap
-            await pool.connect(other).swap(true, swapAmount, other.address);
+            const tx = await pool.connect(other).swap(true, swapAmount, other.address);
+            await tx.wait(); // Wait for transaction to be mined
             
             // Calculate expected amounts
             const feeAmount = swapAmount.mul(3).div(1000); // 0.3% fee
@@ -143,6 +144,9 @@ describe('UniswapV3Pool', () => {
             
             // Verify protocol fees
             expect(await pool.protocolFees0()).to.equal(feeAmount);
+            
+            // Wait for fee growth to be updated
+            await ethers.provider.getBlock('latest');
             
             // Verify fee growth
             const position = await pool.getPosition(owner.address, MIN_TICK, MAX_TICK);
