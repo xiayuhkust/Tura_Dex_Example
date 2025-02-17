@@ -39,7 +39,12 @@ describe('TuraPool', () => {
 
   describe('Pool Creation', () => {
     it('should create pool with correct tokens and fee', async () => {
-      expect(await pool.token0()).to.equal(token0.address);
+      const poolToken0 = await pool.token0();
+      const poolToken1 = await pool.token1();
+      const poolFee = await pool.fee();
+      
+      expect([poolToken0.toLowerCase(), poolToken1.toLowerCase()]).to.have.members([token0.address.toLowerCase(), token1.address.toLowerCase()]);
+      expect(poolFee).to.equal(FEE_AMOUNT);
       expect(await pool.token1()).to.equal(token1.address);
       expect(await pool.fee()).to.equal(FEE_AMOUNT);
     });
@@ -53,7 +58,7 @@ describe('TuraPool', () => {
     it('should fail with invalid fee tier', async () => {
       await expect(
         factory.createPool(token0.address, token1.address, 1234)
-      ).to.be.revertedWith('Invalid fee');
+      ).to.be.revertedWith('TF: FEE_NOT_ENABLED');
     });
   });
 

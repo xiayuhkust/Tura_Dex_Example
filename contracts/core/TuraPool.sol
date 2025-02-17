@@ -146,10 +146,51 @@ contract TuraPool is ReentrancyGuard {
         return 0;
     }
 
-    // Additional functions to be implemented:
-    // - mint: Add liquidity
-    // - burn: Remove liquidity
-    // - swap: Swap tokens
-    // - collect: Collect fees
-    // - observe: Get TWAP
+    function mint(
+        address recipient,
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 amount
+    ) external returns (uint256 amount0, uint256 amount1) {
+        require(amount > 0, 'IL'); // Invalid liquidity
+        
+        // Update position
+        bytes32 positionKey = getPositionKey(recipient, tickLower, tickUpper);
+        positions[positionKey].liquidity = positions[positionKey].liquidity + amount;
+        liquidity = liquidity + amount;
+
+        // For now, return placeholder values
+        amount0 = 0;
+        amount1 = 0;
+    }
+
+    function collect(
+        address recipient,
+        int24 tickLower,
+        int24 tickUpper
+    ) external returns (uint128 amount0, uint128 amount1) {
+        bytes32 positionKey = getPositionKey(recipient, tickLower, tickUpper);
+        Position storage position = positions[positionKey];
+        
+        // For now, return placeholder values
+        amount0 = position.tokensOwed0;
+        amount1 = position.tokensOwed1;
+        position.tokensOwed0 = 0;
+        position.tokensOwed1 = 0;
+    }
+
+    function swap(
+        bool zeroForOne,
+        uint256 amountSpecified,
+        address recipient
+    ) external returns (int256 amount0, int256 amount1) {
+        // For now, return placeholder values
+        if (zeroForOne) {
+            amount0 = -int256(amountSpecified);
+            amount1 = int256(amountSpecified);
+        } else {
+            amount0 = int256(amountSpecified);
+            amount1 = -int256(amountSpecified);
+        }
+    }
 }
