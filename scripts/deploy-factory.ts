@@ -5,9 +5,9 @@ async function main() {
 
   const TuraFactory = await ethers.getContractFactory("TuraFactory");
   const factory = await TuraFactory.deploy();
-  await factory.waitForDeployment();
+  await factory.deployed();
 
-  const factoryAddress = await factory.getAddress();
+  const factoryAddress = factory.address;
   console.log("TuraFactory deployed to:", factoryAddress);
 }
 

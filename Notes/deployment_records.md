@@ -29,7 +29,7 @@
    - Decimals: 18
 
 ### TuraFactory
-- Address: 0x7A7bbc265b2CaD0a22ddCE2Db5539394b9843888
+- Address: 0x511CE2380a70bE66FAf44a5baaBf11E92D654905
 - Features:
   * Pool creation
   * Fee configuration
@@ -38,18 +38,23 @@
   * 0.3% (3000)
   * 0.5% (5000)
   * 1.0% (10000)
+- Math Libraries:
+  * TickMath: 0x2BCfd70627278DD03aCE47F210D3a92B98CFeBBb
+  * SqrtPriceMath: 0xa04272fE53Ec20569B4A8503115c697eF5f5B582
+  * Position: 0xB8eaDF519486e469A302b2DEDA73dAA3616d46CB
+  * FullMath: 0x685CAA8E97452AD3bC1345DD2227729fFe412b33
 
 ## Peripheral Contracts
 
 ### SwapRouter
-- Address: 0xd4b7fDCDcA7C56d630beF695bB802a719e893B77
+- Address: 0xB492Bf5FBfA79364149CC76B77b8bd78BecD1416
 - Features:
   * Single hop swaps
   * Multi-hop swaps
   * ETH/WETH handling
 
 ### NonfungiblePositionManager
-- Address: 0x5Ed64A11b7F03Eb88F50395B846c8F76D7805744
+- Address: 0x6Ba55510435288424053d8924450Bb1269fD3BD2
 - Features:
   * ERC721 compliant
   * Liquidity position management
@@ -57,5 +62,18 @@
 - Token Name: "Tura Liquidity"
 - Token Symbol: "TURA-LP"
 
-## Deployment Date
-February 17, 2025
+## Test Pools
+- WETH/TestToken1 Pool (0.3%): 0x47cC776b736B5898de24011909dDe0E91e41f88E
+
+## Deployment History
+1. Math Libraries (2025-02-17)
+   - Deployed core math libraries for price and position calculations
+2. Factory Contract (2025-02-17)
+   - Deployed TuraFactory with support for multiple fee tiers
+3. Periphery Contracts (2025-02-17)
+   - Deployed SwapRouter for token swaps
+   - Deployed NonfungiblePositionManager for LP token management
+4. Test Pool Creation (2025-02-17)
+   - Created WETH/TestToken1 pool with 0.3% fee
+   - Initialized with 1:1 price ratio
+   - Added initial liquidity across multiple ranges
