@@ -342,6 +342,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.unlocked = true;
         _slot0 = state;
 
-        emit Swap(msg.sender, recipient, amount0, amount1, nextPrice, currentLiquidity, nextTick);
+        emit Swap(msg.sender, recipient, amount0, amount1, swapState.nextPrice, swapState.currentLiquidity, swapState.nextTick);
     }
 }
