@@ -9,7 +9,7 @@ import './factory/interfaces/IUniswapV3Pool.sol';
 import './factory/libraries/TickMath.sol';
 import './factory/libraries/Position.sol';
 import './factory/libraries/SqrtPriceMath.sol';
-import './libraries/Tick.sol';
+import './factory/libraries/Tick.sol';
 
 contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     using Tick for mapping(int24 => Tick.Info);
