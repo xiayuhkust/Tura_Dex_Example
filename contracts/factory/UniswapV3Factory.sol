@@ -29,12 +29,13 @@ contract UniswapV3Factory is IUniswapV3Factory {
         require(tickSpacing != 0, "Invalid fee");
         require(getPool[token0][token1][fee] == address(0), "Pool exists");
         
-        // Create new pool with deterministic address
+        // Create new pool
         bytes32 salt = keccak256(abi.encodePacked(token0, token1, fee));
-        pool = address(new UniswapV3Pool(token0, token1, fee, tickSpacing));
+        UniswapV3Pool newPool = new UniswapV3Pool{salt: salt}();
+        pool = address(newPool);
         
-        // Initialize pool with 1:1 price
-        IUniswapV3Pool(pool).initialize(uint160(1 << 96)); // 1.0 in Q96
+        // Initialize pool
+        newPool.initialize(uint160(1 << 96)); // 1.0 in Q96
         
         // Store pool address
         getPool[token0][token1][fee] = pool;
