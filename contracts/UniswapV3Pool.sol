@@ -398,14 +398,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 ? uint128(int128(liquidity) - liquidityNet)
                 : uint128(int128(liquidity) + liquidityNet);
         }
-                feeGrowthGlobal0X128,
-                feeGrowthGlobal1X128
-            );
-            if (zeroForOne) liquidityNet = -liquidityNet;
-            swapState.currentLiquidity = liquidityNet < 0
-                ? uint128(uint256(swapState.currentLiquidity).sub(uint256(-liquidityNet)))
-                : uint128(uint256(swapState.currentLiquidity).add(uint256(liquidityNet)));
-        }
 
         // Execute swap
         (amount0, amount1) = _handleSwap(zeroForOne, swapState, recipient);
