@@ -224,7 +224,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         uint256 amountSpecified,
         uint256 feeAmount,
         uint256 amountAfterFee,
-        address recipient
+        address recipient,
+        uint128 currentLiquidity
     ) private returns (int256 amount0, int256 amount1) {
         if (zeroForOne) {
             amount0 = int256(amountSpecified);
@@ -234,9 +235,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
             if (amountAfterFee > 0) require(IERC20(token1).transfer(recipient, amountAfterFee), 'T1');
 
-            if (liquidity > 0) {
+            if (currentLiquidity > 0) {
                 feeGrowthGlobal0X128 = uint256(feeGrowthGlobal0X128).add(
-                    uint256(feeAmount).mul(Q128).div(liquidity)
+                    uint256(feeAmount).mul(Q128).div(currentLiquidity)
                 );
             }
         } else {
@@ -247,9 +248,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
             if (amountAfterFee > 0) require(IERC20(token0).transfer(recipient, amountAfterFee), 'T0');
 
-            if (liquidity > 0) {
+            if (currentLiquidity > 0) {
                 feeGrowthGlobal1X128 = uint256(feeGrowthGlobal1X128).add(
-                    uint256(feeAmount).mul(Q128).div(liquidity)
+                    uint256(feeAmount).mul(Q128).div(currentLiquidity)
                 );
             }
         }
@@ -348,7 +349,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         liquidity = currentLiquidity;
 
         // Execute swap
-        (amount0, amount1) = _handleSwap(zeroForOne, amountSpecified, feeAmount, amountAfterFee, recipient);
+        (amount0, amount1) = _handleSwap(zeroForOne, amountSpecified, feeAmount, amountAfterFee, recipient, currentLiquidity);
 
         // Update liquidity if we crossed any initialized ticks
         if (tick != nextTick) {
