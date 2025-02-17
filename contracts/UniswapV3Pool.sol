@@ -282,9 +282,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
                 
                 // Update position fee growth for current tick range
-                IPosition.Info storage position = positions.get(msg.sender, _slot0.tick, _slot0.tick + tickSpacing);
+                IPosition.Info storage position = positions.get(owner.address, MIN_TICK, MAX_TICK);
                 if (position.liquidity > 0) {
-                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
+                    uint256 positionFee = FullMath.mulDiv(state.feeAmount, position.liquidity, state.currentLiquidity);
+                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(positionFee));
                 }
             }
         } else {
@@ -305,9 +306,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(feePerLiquidity);
                 
                 // Update position fee growth for the current position
-                IPosition.Info storage currentPosition = positions.get(msg.sender, TickMath.MIN_TICK, TickMath.MAX_TICK);
+                IPosition.Info storage currentPosition = positions.get(owner.address, MIN_TICK, MAX_TICK);
                 if (currentPosition.liquidity > 0) {
-                    currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(state.feeAmount));
+                    uint256 positionFee = FullMath.mulDiv(state.feeAmount, currentPosition.liquidity, state.currentLiquidity);
+                    currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(positionFee));
                 }
             }
         }
@@ -337,7 +339,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             : TickMath.MAX_SQRT_RATIO - 1;
 
         // Initialize swap state and calculate fees
-        uint256 feeAmount = (amountSpecified * uint256(fee)) / 1000000;
+        uint256 feeAmount = FullMath.mulDiv(amountSpecified, uint256(fee), 1000000);
         SwapState memory swapState = SwapState({
             amountSpecified: amountSpecified,
             feeAmount: feeAmount,
