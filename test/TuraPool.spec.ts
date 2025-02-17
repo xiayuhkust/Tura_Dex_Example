@@ -2,6 +2,7 @@ import hre from 'hardhat';
 import { expect } from 'chai';
 import { Contract } from '@ethersproject/contracts';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { keccak256, defaultAbiCoder } from 'ethers/lib/utils';
 
 describe('TuraPool', () => {
   let owner: SignerWithAddress;
@@ -92,7 +93,8 @@ describe('TuraPool', () => {
         INITIAL_LIQUIDITY
       );
 
-      const position = await pool.positions(owner.address);
+      const positionKey = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [owner.address, -887272, 887272]));
+      const position = await pool.positions(positionKey);
       expect(position.liquidity).to.equal(INITIAL_LIQUIDITY);
     });
 
@@ -119,8 +121,9 @@ describe('TuraPool', () => {
       );
 
       // Check fees
-      const { feeGrowthGlobal0X128, feeGrowthGlobal1X128 } = await pool.slot0();
-      expect(feeGrowthGlobal0X128).to.not.equal(0);
+      const positionKey = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [owner.address, -887272, 887272]));
+      const position = await pool.positions(positionKey);
+      expect(position.tokensOwed0.add(position.tokensOwed1)).to.be.gt(0);
     });
   });
 });

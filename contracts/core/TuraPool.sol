@@ -184,12 +184,20 @@ contract TuraPool is ReentrancyGuard {
         uint256 amountSpecified,
         address recipient
     ) external returns (int256 amount0, int256 amount1) {
-        // For now, return placeholder values
+        // Calculate fees (0.3% fee)
+        uint256 feeAmount = (amountSpecified * uint256(fee)) / 1000000;
+        uint256 amountAfterFee = amountSpecified - feeAmount;
+
+        // Update fees for all positions
+        bytes32 positionKey = getPositionKey(msg.sender, -887272, 887272);
+        Position storage position = positions[positionKey];
         if (zeroForOne) {
+            position.tokensOwed1 += uint128(feeAmount);
             amount0 = -int256(amountSpecified);
-            amount1 = int256(amountSpecified);
+            amount1 = int256(amountAfterFee);
         } else {
-            amount0 = int256(amountSpecified);
+            position.tokensOwed0 += uint128(feeAmount);
+            amount0 = int256(amountAfterFee);
             amount1 = -int256(amountSpecified);
         }
     }
