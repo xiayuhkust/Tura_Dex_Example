@@ -219,6 +219,42 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         emit Collect(recipient, tickLower, tickUpper, amount0, amount1);
     }
 
+    function _handleSwap(
+        bool zeroForOne,
+        uint256 amountSpecified,
+        uint256 feeAmount,
+        uint256 amountAfterFee,
+        address recipient
+    ) private returns (int256 amount0, int256 amount1) {
+        if (zeroForOne) {
+            amount0 = int256(amountSpecified);
+            amount1 = -int256(amountAfterFee);
+            
+            require(IERC20(token0).transferFrom(msg.sender, address(this), amountSpecified), 'T0');
+            protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
+            if (amountAfterFee > 0) require(IERC20(token1).transfer(recipient, amountAfterFee), 'T1');
+
+            if (liquidity > 0) {
+                feeGrowthGlobal0X128 = uint256(feeGrowthGlobal0X128).add(
+                    uint256(feeAmount).mul(Q128).div(liquidity)
+                );
+            }
+        } else {
+            amount0 = -int256(amountAfterFee);
+            amount1 = int256(amountSpecified);
+            
+            require(IERC20(token1).transferFrom(msg.sender, address(this), amountSpecified), 'T1');
+            protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
+            if (amountAfterFee > 0) require(IERC20(token0).transfer(recipient, amountAfterFee), 'T0');
+
+            if (liquidity > 0) {
+                feeGrowthGlobal1X128 = uint256(feeGrowthGlobal1X128).add(
+                    uint256(feeAmount).mul(Q128).div(liquidity)
+                );
+            }
+        }
+    }
+
     function swap(
         bool zeroForOne,
         uint256 amountSpecified,
@@ -228,18 +264,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         require(_slot0.unlocked, 'LOK'); // Locked
 
         // Lock the pool and cache state
-        Slot0 memory _slot0_ = _slot0;
-        _slot0_.unlocked = false;
-        _slot0 = _slot0_;
-
-        uint160 sqrtPriceX96 = _slot0_.sqrtPriceX96;
-        int24 tick = _slot0_.tick;
-        uint128 currentLiquidity = liquidity;
-
-        // Calculate price limits
-        uint160 sqrtPriceLimitX96 = zeroForOne
-            ? TickMath.MIN_SQRT_RATIO + 1
-            : TickMath.MAX_SQRT_RATIO - 1;
+        Slot0 memory slot0 = _slot0;
+        slot0.unlocked = false;
+        _slot0 = slot0;
 
         // Calculate fees (fee is in hundredths of a bip, so multiply by 10^-6)
         uint256 feeAmount = (amountSpecified * uint256(fee)) / 1000000;
@@ -286,45 +313,15 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         _slot0.tick = nextTick;
         liquidity = currentLiquidity;
 
-        // Calculate token amounts and execute transfers
-        if (zeroForOne) {
-            amount0 = int256(amountSpecified);
-            amount1 = -int256(amountAfterFee);
-            
-            // Transfer tokens
-            require(IERC20(token0).transferFrom(msg.sender, address(this), amountSpecified), 'T0');
-            protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
-            if (amountAfterFee > 0) require(IERC20(token1).transfer(recipient, amountAfterFee), 'T1');
+        // Execute swap
+        (amount0, amount1) = _handleSwap(zeroForOne, amountSpecified, feeAmount, amountAfterFee, recipient);
 
-            // Update fee growth
-            if (currentLiquidity > 0) {
-                feeGrowthGlobal0X128 = uint256(feeGrowthGlobal0X128).add(
-                    uint256(feeAmount).mul(Q128).div(currentLiquidity)
-                );
-            }
-        } else {
-            amount0 = -int256(amountAfterFee);
-            amount1 = int256(amountSpecified);
-            
-            // Transfer tokens
-            require(IERC20(token1).transferFrom(msg.sender, address(this), amountSpecified), 'T1');
-            protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
-            if (amountAfterFee > 0) require(IERC20(token0).transfer(recipient, amountAfterFee), 'T0');
+        // Update price and unlock
+        slot0.sqrtPriceX96 = zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1;
+        slot0.tick = zeroForOne ? TickMath.MIN_TICK + 1 : TickMath.MAX_TICK - 1;
+        slot0.unlocked = true;
+        _slot0 = slot0;
 
-            // Update fee growth
-            if (currentLiquidity > 0) {
-                feeGrowthGlobal1X128 = uint256(feeGrowthGlobal1X128).add(
-                    uint256(feeAmount).mul(Q128).div(currentLiquidity)
-                );
-            }
-        }
-
-        // Update state and emit event
-        _slot0_.unlocked = true;
-        _slot0_.sqrtPriceX96 = nextSqrtPriceX96;
-        _slot0_.tick = nextTick;
-        _slot0 = _slot0_;
-
-        emit Swap(msg.sender, recipient, amount0, amount1, nextSqrtPriceX96, currentLiquidity, nextTick);
+        emit Swap(msg.sender, recipient, amount0, amount1, slot0.sqrtPriceX96, liquidity, slot0.tick);
     }
 }
