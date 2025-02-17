@@ -13,6 +13,10 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@ethersproject/abstract-provider": "^5.7.0",
+    "@ethersproject/abstract-signer": "^5.7.0",
+    "@ethersproject/contracts": "^5.7.0",
+    "@ethersproject/providers": "^5.7.0",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "@nomicfoundation/hardhat-verify": "^2.0.12",
