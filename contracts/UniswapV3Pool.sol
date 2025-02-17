@@ -355,20 +355,20 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 sqrtPriceX96,
                 swapState.currentLiquidity,
                 swapState.amountAfterFee,
-                false
+                true
             )
             : SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
                 sqrtPriceX96,
                 swapState.currentLiquidity,
                 swapState.amountAfterFee,
-                false
+                true
             );
 
         // Verify price is within limits
         if (zeroForOne) {
-            require(swapState.nextPrice <= sqrtPriceX96 && swapState.nextPrice > sqrtPriceLimitX96, 'SPL');
+            require(swapState.nextPrice < sqrtPriceX96 && swapState.nextPrice > sqrtPriceLimitX96, 'SPL');
         } else {
-            require(swapState.nextPrice >= sqrtPriceX96 && swapState.nextPrice < sqrtPriceLimitX96, 'SPL');
+            require(swapState.nextPrice > sqrtPriceX96 && swapState.nextPrice < sqrtPriceLimitX96, 'SPL');
         }
 
         // Execute swap
