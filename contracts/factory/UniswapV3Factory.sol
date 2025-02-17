@@ -2,6 +2,7 @@
 pragma solidity =0.7.6;
 
 import "./interfaces/IUniswapV3Factory.sol";
+import "../UniswapV3Pool.sol";
 
 contract UniswapV3Factory is IUniswapV3Factory {
     address public override owner;
@@ -28,7 +29,12 @@ contract UniswapV3Factory is IUniswapV3Factory {
         require(tickSpacing != 0, "Invalid fee");
         require(getPool[token0][token1][fee] == address(0), "Pool exists");
         
-        pool = address(1); // Placeholder for initial implementation
+        pool = address(new UniswapV3Pool(
+            address(this),
+            token0,
+            token1,
+            fee
+        ));
         getPool[token0][token1][fee] = pool;
         getPool[token1][token0][fee] = pool;
         emit PoolCreated(token0, token1, fee, tickSpacing, pool);
