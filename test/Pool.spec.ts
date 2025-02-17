@@ -178,6 +178,10 @@ describe('UniswapV3Pool', () => {
             expect(finalPoolBalance0).to.be.lt(initialPoolBalance0, "Pool token0 balance should decrease");
             expect(finalPoolBalance1).to.equal(initialPoolBalance1.add(swapAmount), "Pool token1 balance incorrect");
             
+            // Verify fee growth
+            const position = await pool.getPosition(owner.address, MIN_TICK, MAX_TICK);
+            expect(position.tokensOwed1).to.be.gt(0, "Fee growth incorrect");
+            
             // Verify protocol fees
             expect(await pool.protocolFees1()).to.equal(feeAmount);
         });
