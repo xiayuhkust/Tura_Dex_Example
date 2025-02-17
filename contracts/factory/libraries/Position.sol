@@ -25,7 +25,7 @@ library Position {
         uint256 feeGrowthInside0X128,
         uint256 feeGrowthInside1X128
     ) internal {
-        Info storage position = get(self, owner, tickLower, tickUpper);
+        IPosition.Info storage position = get(self, owner, tickLower, tickUpper);
 
         uint128 liquidityNext;
         if (liquidityDelta == 0) {

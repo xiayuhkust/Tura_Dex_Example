@@ -71,9 +71,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         address owner,
         int24 tickLower,
         int24 tickUpper
-    ) public view override returns (Position memory) {
-        Position.Info storage position = positions.get(owner, tickLower, tickUpper);
-        return Position({
+    ) public view override returns (IPosition.Info memory) {
+        IPosition.Info storage position = positions.get(owner, tickLower, tickUpper);
+        return IPosition.Info({
             liquidity: position.liquidity,
             feeGrowthInside0LastX128: position.feeGrowthInside0LastX128,
             feeGrowthInside1LastX128: position.feeGrowthInside1LastX128,
