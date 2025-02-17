@@ -207,16 +207,21 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         }
         
         // Calculate fees earned by the position
-        uint256 feesEarned0 = FullMath.mulDiv(
-            uint256(position.liquidity),
-            feeGrowthInside0X128 - position.feeGrowthInside0LastX128,
-            Q128
-        );
-        uint256 feesEarned1 = FullMath.mulDiv(
-            uint256(position.liquidity),
-            feeGrowthInside1X128 - position.feeGrowthInside1LastX128,
-            Q128
-        );
+        uint256 feesEarned0;
+        uint256 feesEarned1;
+        
+        if (position.liquidity > 0) {
+            feesEarned0 = FullMath.mulDiv(
+                uint256(position.liquidity),
+                feeGrowthInside0X128 - position.feeGrowthInside0LastX128,
+                Q128
+            );
+            feesEarned1 = FullMath.mulDiv(
+                uint256(position.liquidity),
+                feeGrowthInside1X128 - position.feeGrowthInside1LastX128,
+                Q128
+            );
+        }
         
         // Update position's fee tracking
         position.feeGrowthInside0LastX128 = feeGrowthInside0X128;
@@ -261,16 +266,16 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount1 = -int256(state.amountAfterFee);
             
             // Transfer tokens
-            require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(amount0)), 'T0');
-            if (-amount1 > 0) {
-                require(IERC20(token1).transfer(recipient, uint256(-amount1)), 'T1');
+            require(IERC20(token0).transferFrom(msg.sender, address(this), state.amountSpecified), 'T0');
+            if (state.amountAfterFee > 0) {
+                require(IERC20(token1).transfer(recipient, state.amountAfterFee), 'T1');
             }
 
             // Update protocol fees and fee growth
             protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
             if (state.currentLiquidity > 0) {
                 uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
-                feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
+                feeGrowthGlobal0X128 = uint256(feeGrowthGlobal0X128).add(feePerLiquidity);
             }
         } else {
             // Calculate amounts
@@ -278,16 +283,16 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount1 = int256(state.amountSpecified);
             
             // Transfer tokens
-            require(IERC20(token1).transferFrom(msg.sender, address(this), uint256(amount1)), 'T1');
-            if (-amount0 > 0) {
-                require(IERC20(token0).transfer(recipient, uint256(-amount0)), 'T0');
+            require(IERC20(token1).transferFrom(msg.sender, address(this), state.amountSpecified), 'T1');
+            if (state.amountAfterFee > 0) {
+                require(IERC20(token0).transfer(recipient, state.amountAfterFee), 'T0');
             }
 
             // Update protocol fees and fee growth
             protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
             if (state.currentLiquidity > 0) {
                 uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
-                feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(feePerLiquidity);
+                feeGrowthGlobal1X128 = uint256(feeGrowthGlobal1X128).add(feePerLiquidity);
             }
         }
     }
