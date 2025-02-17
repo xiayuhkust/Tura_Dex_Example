@@ -302,10 +302,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 // Calculate fee amount
                 uint256 feeAmount = state.amountSpecified.mul(3).div(1000); // 0.3% fee
                 state.amountAfterFee = state.amountSpecified.sub(feeAmount);
-                protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
 
                 // Update position fees for the LP
-                bytes32 positionKey = keccak256(abi.encodePacked(state.recipient, MIN_TICK, MAX_TICK));
+                bytes32 positionKey = keccak256(abi.encodePacked(factory, MIN_TICK, MAX_TICK));
                 IPosition.Info storage position = positions[positionKey];
                 if (position.liquidity > 0) {
                     position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
@@ -313,7 +312,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 }
                 
                 // Calculate swap amounts
-                amount0 = int256(state.amountAfterFee);
+                amount0 = int256(state.amountSpecified);
+                protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
                 amount1 = -int256(state.amountAfterFee);
                 
                 // Update protocol fees
@@ -354,10 +354,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 // Calculate fee amount
                 uint256 feeAmount = state.amountSpecified.mul(3).div(1000); // 0.3% fee
                 state.amountAfterFee = state.amountSpecified.sub(feeAmount);
-                protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
 
                 // Update position fees for the LP
-                bytes32 positionKey = keccak256(abi.encodePacked(state.recipient, MIN_TICK, MAX_TICK));
+                bytes32 positionKey = keccak256(abi.encodePacked(factory, MIN_TICK, MAX_TICK));
                 IPosition.Info storage currentPosition = positions[positionKey];
                 if (currentPosition.liquidity > 0) {
                     currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(feeAmount));
@@ -366,6 +365,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 
                 // Calculate swap amounts
                 amount0 = -int256(state.amountAfterFee);
+                protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
                 amount1 = int256(state.amountSpecified);
                 
                 // Update protocol fees
