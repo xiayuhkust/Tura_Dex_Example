@@ -302,6 +302,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 // Calculate fee amount
                 uint256 feeAmount = state.amountSpecified.mul(3).div(1000); // 0.3% fee
                 state.amountAfterFee = state.amountSpecified.sub(feeAmount);
+                protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
 
                 // Update position fees for the LP
                 bytes32 positionKey = keccak256(abi.encodePacked(state.recipient, MIN_TICK, MAX_TICK));
@@ -309,11 +310,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 if (position.liquidity > 0) {
                     position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
                     position.feeGrowthInside0LastX128 = feeGrowthInside0X128;
-                    protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
                 }
                 
                 // Calculate swap amounts
-                amount0 = int256(state.amountSpecified);
+                amount0 = int256(state.amountAfterFee);
                 amount1 = -int256(state.amountAfterFee);
                 
                 // Update protocol fees
@@ -354,6 +354,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 // Calculate fee amount
                 uint256 feeAmount = state.amountSpecified.mul(3).div(1000); // 0.3% fee
                 state.amountAfterFee = state.amountSpecified.sub(feeAmount);
+                protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
 
                 // Update position fees for the LP
                 bytes32 positionKey = keccak256(abi.encodePacked(state.recipient, MIN_TICK, MAX_TICK));
@@ -361,7 +362,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 if (currentPosition.liquidity > 0) {
                     currentPosition.tokensOwed1 = uint128(uint256(currentPosition.tokensOwed1).add(feeAmount));
                     currentPosition.feeGrowthInside1LastX128 = feeGrowthInside1X128;
-                    protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
                 }
                 
                 // Calculate swap amounts
