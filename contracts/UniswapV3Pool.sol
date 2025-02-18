@@ -175,6 +175,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             );
         }
 
+        // Transfer tokens to pool
+        if (amount0 > 0) require(IERC20(token0).transferFrom(msg.sender, address(this), amount0), 'T0');
+        if (amount1 > 0) require(IERC20(token1).transferFrom(msg.sender, address(this), amount1), 'T1');
+
         emit Mint(msg.sender, recipient, tickLower, tickUpper, amount, amount0, amount1);
     }
 
