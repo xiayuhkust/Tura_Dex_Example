@@ -433,48 +433,41 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             ? TickMath.MIN_SQRT_RATIO + 1
             : TickMath.MAX_SQRT_RATIO - 1;
 
-        // Update protocol fees
-        if (zeroForOne) {
-            protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
-        } else {
-            protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
-        }
-
         // Calculate next price
-        swapState.nextPrice = zeroForOne
+        state.nextPrice = zeroForOne
             ? SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
                 sqrtPriceX96,
-                swapState.currentLiquidity,
-                swapState.amountAfterFee,
+                state.currentLiquidity,
+                state.amountAfterFee,
                 true
             )
             : SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
                 sqrtPriceX96,
-                swapState.currentLiquidity,
-                swapState.amountAfterFee,
+                state.currentLiquidity,
+                state.amountAfterFee,
                 true
             );
 
         // Verify price is within limits
         if (zeroForOne) {
-            require(swapState.nextPrice <= sqrtPriceX96 && swapState.nextPrice >= sqrtPriceLimitX96, 'SPL');
+            require(state.nextPrice <= sqrtPriceX96 && state.nextPrice >= sqrtPriceLimitX96, 'SPL');
         } else {
-            require(swapState.nextPrice >= sqrtPriceX96 && swapState.nextPrice <= sqrtPriceLimitX96, 'SPL');
+            require(state.nextPrice >= sqrtPriceX96 && state.nextPrice <= sqrtPriceLimitX96, 'SPL');
         }
 
         // Execute swap
-        (amount0, amount1) = _handleSwap(zeroForOne, swapState, recipient);
+        (amount0, amount1) = _handleSwap(zeroForOne, state, recipient);
 
         // Update pool state
-        _slot0.tick = swapState.nextTick;
-        _slot0.sqrtPriceX96 = swapState.nextPrice;
+        _slot0.tick = state.nextTick;
+        _slot0.sqrtPriceX96 = state.nextPrice;
         _slot0.unlocked = true;
 
         // Calculate next tick and update liquidity
-        swapState.nextTick = TickMath.getTickAtSqrtRatio(swapState.nextPrice);
-        if (currentTick != swapState.nextTick) {
+        state.nextTick = TickMath.getTickAtSqrtRatio(state.nextPrice);
+        if (currentTick != state.nextTick) {
             int128 liquidityNet = ticks.cross(
-                swapState.nextTick,
+                state.nextTick,
                 feeGrowthGlobal0X128,
                 feeGrowthGlobal1X128
             );
