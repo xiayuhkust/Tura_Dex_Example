@@ -270,15 +270,12 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         uint160 sqrtPriceUpperX96,
         uint128 liquidity
     ) internal pure returns (uint256 amount0, uint256 amount1) {
-        // Scale liquidity to avoid overflow
-        uint128 scaledLiquidity = liquidity / 1e12;
-
         if (sqrtPriceCurrentX96 <= sqrtPriceLowerX96) {
             // Current price below range, only token0 needed
             amount0 = SqrtPriceMath.getAmount0Delta(
                 sqrtPriceLowerX96,
                 sqrtPriceUpperX96,
-                scaledLiquidity,
+                liquidity,
                 true
             );
             amount1 = 0;
@@ -287,13 +284,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount0 = SqrtPriceMath.getAmount0Delta(
                 sqrtPriceCurrentX96,
                 sqrtPriceUpperX96,
-                scaledLiquidity,
+                liquidity,
                 true
             );
             amount1 = SqrtPriceMath.getAmount1Delta(
                 sqrtPriceLowerX96,
                 sqrtPriceCurrentX96,
-                scaledLiquidity,
+                liquidity,
                 true
             );
         } else {
@@ -302,7 +299,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount1 = SqrtPriceMath.getAmount1Delta(
                 sqrtPriceLowerX96,
                 sqrtPriceUpperX96,
-                scaledLiquidity,
+                liquidity,
                 true
             );
         }
@@ -394,9 +391,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.nextPrice = sqrtPriceX96;
         state.nextTick = _currentTick;
 
-        // Calculate fees
-        (state.feeAmount, state.amountAfterFee) = _calculateFees(amountSpecified, zeroForOne, state.currentLiquidity);
-        
         // Calculate fees (fee is in millionths, so 3000 = 0.3%)
         (state.feeAmount, state.amountAfterFee) = _calculateFees(amountSpecified, zeroForOne, state.currentLiquidity);
         state.currentLiquidity = uint128(liquidity); // Store current liquidity for fee calculation
