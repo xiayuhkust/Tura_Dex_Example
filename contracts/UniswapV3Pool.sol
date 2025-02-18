@@ -368,7 +368,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 }
                 
                 // Update position fees
-                bytes32 positionKey = keccak256(abi.encodePacked(msg.sender, MIN_TICK, MAX_TICK));
+                bytes32 positionKey = keccak256(abi.encodePacked(recipient, MIN_TICK, MAX_TICK));
                 IPosition.Info storage position = positions[positionKey];
                 if (position.liquidity > 0) {
                     position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
@@ -402,8 +402,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.nextPrice = sqrtPriceX96;
         state.nextTick = _currentTick;
         
-        // Calculate fees
-        state.feeAmount = FullMath.mulDiv(amountSpecified, uint256(fee), 1000000); // fee is in millionths
+        // Calculate fees (fee is in millionths, so 3000 = 0.3%)
+        state.feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
         state.amountAfterFee = amountSpecified.sub(state.feeAmount);
 
         // Execute swap
