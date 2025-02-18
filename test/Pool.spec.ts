@@ -20,8 +20,8 @@ describe('UniswapV3Pool', () => {
     const TICK_SPACING = 60;
     const MIN_TICK = -887272;
     const MAX_TICK = 887272;
-    const BASE_AMOUNT = ethers.utils.parseUnits('0.01', 18); // Small base amount
-    const BUFFER_MULTIPLIER = 10000; // Buffer multiplier for token amounts
+    const BASE_AMOUNT = ethers.utils.parseUnits('100', 18); // 100 tokens
+    const BUFFER_MULTIPLIER = 100; // Buffer multiplier for token amounts
 
     beforeEach(async () => {
         [owner, other] = await ethers.getSigners();
@@ -73,8 +73,8 @@ describe('UniswapV3Pool', () => {
         // Initialize pool
         await pool.initialize(SQRT_PRICE_X96);
         return {
-            userAmount: BASE_AMOUNT,
-            lpAmount: BASE_AMOUNT.mul(100)
+            userAmount: BASE_AMOUNT.div(10), // 10% of base amount
+            lpAmount: BASE_AMOUNT // Full base amount
         };
     }
 
@@ -96,11 +96,11 @@ describe('UniswapV3Pool', () => {
         });
 
         it('creates a position and updates liquidity', async () => {
-            const liquidityAmount = BASE_AMOUNT.mul(10); // 10x base amount for testing
+            const liquidityAmount = BASE_AMOUNT.div(10); // 10% of base amount for testing
             
             // Mint tokens with extra buffer
-            await token0.mint(owner.address, liquidityAmount.mul(100));
-            await token1.mint(owner.address, liquidityAmount.mul(100));
+            await token0.mint(owner.address, BASE_AMOUNT.mul(BUFFER_MULTIPLIER));
+            await token1.mint(owner.address, BASE_AMOUNT.mul(BUFFER_MULTIPLIER));
             
             // Approve tokens
             await token0.approve(pool.address, ethers.constants.MaxUint256);
@@ -116,8 +116,8 @@ describe('UniswapV3Pool', () => {
     });
 
     describe('swapping', () => {
-        const swapAmount = BASE_AMOUNT; // Base amount for swaps
-        const lpAmount = BASE_AMOUNT.mul(100); // 100x base amount for liquidity
+        const swapAmount = BASE_AMOUNT.div(10); // 10% of base amount for swaps
+        const lpAmount = BASE_AMOUNT; // Full base amount for liquidity
         
         beforeEach(async () => {
             await setupTestPool();
