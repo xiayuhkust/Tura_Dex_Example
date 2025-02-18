@@ -268,12 +268,14 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     function _calculateFees(uint256 amount) private pure returns (uint256 feeAmount, uint256 amountAfterFee) {
         // Calculate fee amount first (0.3% = 3/1000)
         feeAmount = amount.mul(3).div(1000);
-        // Calculate output amount as remainder
-        amountAfterFee = amount.sub(feeAmount);
+        // Calculate output amount (99.7% = 997/1000)
+        amountAfterFee = amount.mul(997).div(1000);
         // Verify calculations
         require(feeAmount.add(amountAfterFee) == amount, "Invalid fee calculation");
         // Ensure fee amount is exactly 0.3%
         require(feeAmount == amount.mul(3).div(1000), "Invalid fee amount");
+        // Ensure output amount is exactly 99.7%
+        require(amountAfterFee == amount.mul(997).div(1000), "Invalid output amount");
     }
 
     function _handleSwap(
