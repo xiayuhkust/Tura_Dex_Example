@@ -1,10 +1,10 @@
-/** @jsxImportSource @emotion/react */
 import { useWeb3React } from '@web3-react/core'
 import { InjectedConnector } from '@web3-react/injected-connector'
 import { useToast } from '@chakra-ui/react'
 import type { UseToastOptions } from '@chakra-ui/react'
 import { useCallback, useEffect } from 'react'
-import { MetaMaskToast } from '../components/MetaMaskToast'
+import * as React from 'react'
+import { MetaMaskToast } from '../components'
 
 declare global {
   interface Window {
