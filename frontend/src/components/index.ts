@@ -8,6 +8,7 @@ export * from './LoadingSpinner'
 export * from './TransactionConfirmation'
 export * from './SwapInterface'
 export * from './MetaMaskToast'
+export * from './NetworkErrorToast'
 
 // Types
 export type { Token } from '../hooks'

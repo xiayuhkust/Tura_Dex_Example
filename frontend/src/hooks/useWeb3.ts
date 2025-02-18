@@ -4,7 +4,7 @@ import { useToast } from '@chakra-ui/react'
 import type { UseToastOptions } from '@chakra-ui/react'
 import { useCallback, useEffect } from 'react'
 import * as React from 'react'
-import { MetaMaskToast } from '../components'
+import { MetaMaskToast, NetworkErrorToast } from '../components'
 
 declare global {
   interface Window {
@@ -77,13 +77,23 @@ export function useWeb3() {
         } catch (switchError: any) {
           // This error code indicates that the chain has not been added to MetaMask
           if (switchError.code === 4902) {
-            toast({
+            const toastOptions: UseToastOptions = {
               title: 'Network Not Found',
               description: `Please add ${NETWORK_NAME} to your wallet`,
               status: 'warning',
-              duration: 5000,
+              duration: null,
               isClosable: true,
-            })
+              position: 'top',
+              render: ({ onClose }) => (
+                <NetworkErrorToast
+                  onClose={onClose}
+                  networkName={NETWORK_NAME}
+                  chainId={CHAIN_ID}
+                  rpcUrl={import.meta.env.VITE_TURA_RPC_URL}
+                />
+              )
+            }
+            toast(toastOptions)
           }
         }
       }
