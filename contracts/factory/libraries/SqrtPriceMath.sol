@@ -16,19 +16,20 @@ library SqrtPriceMath {
         if (sqrtRatioAX96 > sqrtRatioBX96)
             (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
 
-        // Scale down liquidity and price to avoid overflow
-        uint128 scaledLiquidity = liquidity / 1e12;
-        uint160 scaledRatioA = sqrtRatioAX96 / 1e6;
-        uint160 scaledRatioB = sqrtRatioBX96 / 1e6;
+        // Scale down liquidity to avoid overflow
+        uint128 scaledLiquidity = liquidity / 1e9;
         
         uint256 numerator1 = uint256(scaledLiquidity) << 96;
-        uint256 numerator2 = scaledRatioB - scaledRatioA;
+        uint256 numerator2 = sqrtRatioBX96 - sqrtRatioAX96;
 
-        require(scaledRatioA > 0);
+        require(sqrtRatioAX96 > 0);
 
-        return roundUp
-            ? FullMath.mulDivRoundingUp(numerator1, numerator2, scaledRatioB)
-            : FullMath.mulDiv(numerator1, numerator2, scaledRatioB);
+        uint256 amount = roundUp
+            ? FullMath.mulDivRoundingUp(numerator1, numerator2, sqrtRatioBX96)
+            : FullMath.mulDiv(numerator1, numerator2, sqrtRatioBX96);
+            
+        // Scale back up
+        return amount * 1e9;
     }
 
     function getAmount1Delta(
@@ -40,18 +41,19 @@ library SqrtPriceMath {
         if (sqrtRatioAX96 > sqrtRatioBX96)
             (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
 
-        // Scale down liquidity and price to avoid overflow
-        uint128 scaledLiquidity = liquidity / 1e12;
-        uint160 scaledRatioA = sqrtRatioAX96 / 1e6;
-        uint160 scaledRatioB = sqrtRatioBX96 / 1e6;
+        // Scale down liquidity to avoid overflow
+        uint128 scaledLiquidity = liquidity / 1e9;
 
-        return roundUp
+        uint256 amount = roundUp
             ? FullMath.mulDivRoundingUp(
                 scaledLiquidity,
-                scaledRatioB - scaledRatioA,
+                sqrtRatioBX96 - sqrtRatioAX96,
                 2**96
             )
-            : FullMath.mulDiv(scaledLiquidity, scaledRatioB - scaledRatioA, 2**96);
+            : FullMath.mulDiv(scaledLiquidity, sqrtRatioBX96 - sqrtRatioAX96, 2**96);
+            
+        // Scale back up
+        return amount * 1e9;
     }
 
     function getNextSqrtPriceFromAmount0RoundingUp(
