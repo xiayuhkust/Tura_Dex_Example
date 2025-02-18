@@ -107,12 +107,13 @@ describe('TuraPool', () => {
   });
 
   describe('Liquidity Provision', () => {
+    let poolAddress: string;
+    
     beforeEach(async () => {
       // Create new pool with high fee for liquidity tests
       await factory.createPool(token0.address, token1.address, FEE_AMOUNTS.HIGH);
-      const poolAddress = await factory.getPool(token0.address, token1.address, FEE_AMOUNTS.HIGH);
+      poolAddress = await factory.getPool(token0.address, token1.address, FEE_AMOUNTS.HIGH);
       pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
-      await pool.initialize(INITIAL_PRICE);
 
       // Mint tokens and approve for all users
       const amount = ethers.utils.parseEther('10.0'); // Increase amount for sufficient liquidity
@@ -132,8 +133,8 @@ describe('TuraPool', () => {
     it('should add initial liquidity', async () => {
       const amount = ethers.utils.parseEther('1.0');
       
-      // Get initial liquidity
-      const initialLiquidity = await pool.liquidity();
+      // Initialize pool first
+      await pool.initialize(INITIAL_PRICE);
       
       // Add liquidity
       await pool.mint(
@@ -143,9 +144,9 @@ describe('TuraPool', () => {
         amount
       );
 
-      // Verify liquidity increased by the correct amount
-      const finalLiquidity = await pool.liquidity();
-      expect(finalLiquidity.sub(initialLiquidity)).to.equal(amount);
+      // Verify liquidity
+      const liquidity = await pool.liquidity();
+      expect(liquidity).to.equal(amount);
     });
 
     it('should track positions correctly', async () => {
@@ -153,9 +154,8 @@ describe('TuraPool', () => {
       const tickLower = -887272;
       const tickUpper = 887272;
       
-      // Get initial position
-      const positionKey = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [owner.address, tickLower, tickUpper]));
-      const initialPosition = await pool.positions(positionKey);
+      // Initialize pool first
+      await pool.initialize(INITIAL_PRICE);
       
       // Add liquidity
       await pool.mint(
@@ -165,9 +165,10 @@ describe('TuraPool', () => {
         amount
       );
 
-      // Verify position liquidity increased by the correct amount
-      const finalPosition = await pool.positions(positionKey);
-      expect(finalPosition.liquidity.sub(initialPosition.liquidity)).to.equal(amount);
+      // Verify position
+      const positionKey = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [owner.address, tickLower, tickUpper]));
+      const position = await pool.positions(positionKey);
+      expect(position.liquidity).to.equal(amount);
     });
 
     it('should collect fees after swaps', async () => {
