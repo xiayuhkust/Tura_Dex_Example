@@ -12,6 +12,8 @@ import './factory/interfaces/IPosition.sol';
 import './factory/libraries/Position.sol';
 import './factory/libraries/SqrtPriceMath.sol';
 import './factory/libraries/Tick.sol';
+import './libraries/FixedPoint128.sol';
+import './libraries/FullMath.sol';
 
 contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     using Tick for mapping(int24 => Tick.Info);
@@ -265,7 +267,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         address sender;
     }
 
-    function _calculateFees(uint256 amount) private returns (uint256 feeAmount, uint256 amountAfterFee) {
+    function _calculateFees(uint256 amount, bool zeroForOne, uint128 currentLiquidity) private returns (uint256 feeAmount, uint256 amountAfterFee) {
         // Calculate fee amount first (0.3% = 3/1000)
         feeAmount = amount.mul(3).div(1000);
         // Calculate output amount as remainder (99.7%)
@@ -289,6 +291,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
     function _handleSwap(
         bool zeroForOne,
+        uint128 currentLiquidity,
         SwapState memory state,
         address recipient
     ) private returns (int256 amount0, int256 amount1) {
@@ -414,7 +417,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.nextTick = _currentTick;
         
         // Calculate fees (fee is in millionths, so 3000 = 0.3%)
-        (state.feeAmount, state.amountAfterFee) = _calculateFees(amountSpecified);
+        (state.feeAmount, state.amountAfterFee) = _calculateFees(amountSpecified, zeroForOne, state.currentLiquidity);
         state.currentLiquidity = uint128(liquidity); // Store current liquidity for fee calculation
         state.sender = msg.sender; // Store sender for fee tracking
 
