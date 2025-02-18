@@ -67,9 +67,6 @@ export function SwapInterface() {
       setIsLoading(false)
     }
   }, [active, inputToken, outputToken, inputAmount, outputAmount, warning, toast, handleError])
-    inputAmount,
-    outputAmount
-  )
   
   return (
     <Box 
