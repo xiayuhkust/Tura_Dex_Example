@@ -4,7 +4,7 @@ import { useWeb3 } from '../hooks/useWeb3'
 import { usePriceImpact } from '../hooks/usePriceImpact'
 import type { Token } from '../hooks'
 import { TokenSelect, TradeDetails, Settings, LoadingSpinner } from './index'
-import { useError } from '../hooks/useError'
+import { useError } from '../hooks'
 
 export function SwapInterface() {
   const { active, account, connect } = useWeb3()
@@ -47,11 +47,24 @@ export function SwapInterface() {
   )
   
   return (
-    <Box maxW="md" mx="auto" mt="10" p="6" borderRadius="xl" bg="brand.surface" boxShadow="xl">
-      <VStack spacing="6">
+    <Box 
+      maxW={{ base: "95%", sm: "md" }} 
+      mx="auto" 
+      mt={{ base: "4", sm: "10" }} 
+      p={{ base: "4", sm: "6" }} 
+      borderRadius="xl" 
+      bg="brand.surface" 
+      boxShadow="xl"
+    >
+      <VStack spacing={{ base: "4", sm: "6" }}>
         <HStack w="full" justify="space-between">
           <HStack>
-            <Text fontSize="2xl" fontWeight="bold" bgGradient="linear(to-r, brand.primary, brand.secondary)" bgClip="text">
+            <Text 
+              fontSize={{ base: "xl", sm: "2xl" }} 
+              fontWeight="bold" 
+              bgGradient="linear(to-r, brand.primary, brand.secondary)" 
+              bgClip="text"
+            >
               AgentSwap
             </Text>
             <Settings
@@ -62,7 +75,7 @@ export function SwapInterface() {
             />
           </HStack>
           {active && (
-            <Text fontSize="sm" color="whiteAlpha.700">
+            <Text fontSize={{ base: "xs", sm: "sm" }} color="whiteAlpha.700">
               {account?.slice(0, 6)}...{account?.slice(-4)}
             </Text>
           )}
