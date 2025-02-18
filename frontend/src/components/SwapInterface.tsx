@@ -3,7 +3,8 @@ import { Box, VStack, Text, Button, HStack, Divider, IconButton, useToast } from
 import { useWeb3 } from '../hooks/useWeb3'
 import { usePriceImpact } from '../hooks/usePriceImpact'
 import type { Token } from '../hooks'
-import { TokenSelect, TradeDetails, Settings, LoadingSpinner, AddLiquidityModal } from './index'
+import { TokenSelect, TradeDetails, Settings, LoadingSpinner } from './index'
+import { AddLiquidityModal } from './AddLiquidityModal'
 import { useError } from '../hooks'
 
 export function SwapInterface() {
