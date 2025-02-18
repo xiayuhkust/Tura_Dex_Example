@@ -4,7 +4,7 @@
 1. 区块链配置
 ```
 TURA_CHAIN_ID=1337
-TURA_RPC="http://43.135.26.222:8000"
+TURA_RPC="https://rpc-beta1.turablockchain.com"
 ```
 
 2. 合约地址

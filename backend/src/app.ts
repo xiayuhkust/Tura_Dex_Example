@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const TURA_RPC = 'http://43.135.26.222:8000';
+const TURA_RPC = 'https://rpc-beta1.turablockchain.com';
 const FACTORY_ADDRESS = '0x7A7bbc265b2CaD0a22ddCE2Db5539394b9843888';
 
 const priceOracle = new PriceOracle(TURA_RPC, FACTORY_ADDRESS);
