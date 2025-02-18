@@ -127,15 +127,26 @@ describe('TuraPool', () => {
       pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
 
       // Mint tokens and approve for all users
-      const mintAmount = BASE_AMOUNT.mul(10000); // Large buffer for testing
-      await Promise.all(
-        [owner, user1, user2].flatMap(user => [
-          token0.mint(user.address, mintAmount),
-          token1.mint(user.address, mintAmount),
-          token0.connect(user).approve(poolAddress, ethers.constants.MaxUint256),
-          token1.connect(user).approve(poolAddress, ethers.constants.MaxUint256)
-        ])
-      );
+      const mintAmount = BASE_AMOUNT.mul(100000); // Very large buffer for testing
+      const users = [owner, user1, user2];
+      
+      // Mint tokens for all users
+      for (const user of users) {
+        await token0.mint(user.address, mintAmount);
+        await token1.mint(user.address, mintAmount);
+        await token0.connect(user).approve(poolAddress, ethers.constants.MaxUint256);
+        await token1.connect(user).approve(poolAddress, ethers.constants.MaxUint256);
+      }
+      
+      // Log initial balances for debugging
+      for (const user of users) {
+        const balance0 = await token0.balanceOf(user.address);
+        const balance1 = await token1.balanceOf(user.address);
+        console.log(`${user.address} balances:`, 
+          ethers.utils.formatUnits(balance0, 18),
+          ethers.utils.formatUnits(balance1, 18)
+        );
+      }
 
       // Initialize pool with initial price only
       if ((await pool.slot0()).sqrtPriceX96 == 0) {

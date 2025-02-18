@@ -48,12 +48,26 @@ describe('TuraLiquidity', () => {
     pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
 
     // Mint initial tokens and approve
-    const mintAmount = BASE_AMOUNT.mul(10000); // Large buffer for testing
-    for (const token of [sortedToken0, sortedToken1]) {
-      for (const user of [owner, user1, user2]) {
+    const mintAmount = BASE_AMOUNT.mul(100000); // Very large buffer for testing
+    const tokens = [token0, token1];
+    const users = [owner, user1, user2];
+    
+    // Mint tokens for all users
+    for (const token of tokens) {
+      for (const user of users) {
         await token.mint(user.address, mintAmount);
         await token.connect(user).approve(poolAddress, ethers.constants.MaxUint256);
       }
+    }
+    
+    // Log initial balances for debugging
+    for (const user of users) {
+      const balance0 = await token0.balanceOf(user.address);
+      const balance1 = await token1.balanceOf(user.address);
+      console.log(`${user.address} balances:`, 
+        ethers.utils.formatUnits(balance0, 18),
+        ethers.utils.formatUnits(balance1, 18)
+      );
     }
 
     // Initialize pool
