@@ -1,7 +1,8 @@
 import { useWeb3React } from '@web3-react/core'
 import { InjectedConnector } from '@web3-react/injected-connector'
-import { Box, Button, Text, VStack, useToast } from '@chakra-ui/react'
+import { useToast } from '@chakra-ui/react'
 import { useCallback, useEffect } from 'react'
+import { MetaMaskToast } from '../components/MetaMaskToast'
 
 const CHAIN_ID = Number(import.meta.env.VITE_TURA_CHAIN_ID || "1337")
 const NETWORK_NAME = 'Tura Network'
@@ -44,23 +45,7 @@ export function useWeb3() {
           duration: null,
           isClosable: true,
           position: 'top',
-          render: ({ onClose }) => (
-            <Box p={3} bg="orange.700" borderRadius="md">
-              <VStack align="start" spacing={2}>
-                <Text fontWeight="bold">MetaMask Required</Text>
-                <Text>Please install MetaMask to connect your wallet.</Text>
-                <Button
-                  as="a"
-                  href="https://metamask.io"
-                  target="_blank"
-                  size="sm"
-                  colorScheme="orange"
-                >
-                  Install MetaMask
-                </Button>
-              </VStack>
-            </Box>
-          )
+          render: ({ onClose }) => <MetaMaskToast onClose={onClose} />
         })
         return
       }
