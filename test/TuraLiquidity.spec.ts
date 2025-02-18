@@ -32,6 +32,10 @@ describe('TuraLiquidity', () => {
     token0 = await TestERC20.deploy('Test Token 0', 'TT0', 18);
     token1 = await TestERC20.deploy('Test Token 1', 'TT1', 18);
 
+    // Mint initial tokens to owner
+    await token0.mint(owner.address, INITIAL_LIQUIDITY);
+    await token1.mint(owner.address, INITIAL_LIQUIDITY);
+
     // Deploy factory
     const UniswapV3Factory = await ethers.getContractFactory('UniswapV3Factory');
     factory = await UniswapV3Factory.deploy();

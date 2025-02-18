@@ -29,6 +29,10 @@ describe('TuraPool', () => {
     token0 = await TestERC20.deploy('Test Token 0', 'TT0', 18);
     token1 = await TestERC20.deploy('Test Token 1', 'TT1', 18);
 
+    // Mint initial tokens to owner
+    await token0.mint(owner.address, INITIAL_LIQUIDITY);
+    await token1.mint(owner.address, INITIAL_LIQUIDITY);
+
     // Deploy factory
     factory = await UniswapV3Factory.deploy();
 
@@ -44,7 +48,8 @@ describe('TuraPool', () => {
       const poolToken1 = await pool.token1();
       const poolFee = await pool.fee();
       
-      expect([poolToken0.toLowerCase(), poolToken1.toLowerCase()]).to.have.members([token0.address.toLowerCase(), token1.address.toLowerCase()]);
+      expect(poolToken0.toLowerCase()).to.equal(token0.address.toLowerCase());
+      expect(poolToken1.toLowerCase()).to.equal(token1.address.toLowerCase());
       expect(poolFee).to.equal(FEE_AMOUNT);
       expect(await pool.token1()).to.equal(token1.address);
       expect(await pool.fee()).to.equal(FEE_AMOUNT);
