@@ -277,13 +277,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     ) private returns (int256 amount0, int256 amount1) {
         if (zeroForOne) {
             // Calculate amounts
-            amount0 = int256(state.amountAfterFee);
+            amount0 = int256(state.amountSpecified);
             amount1 = -int256(state.amountAfterFee);
             
             // Transfer tokens
-            require(IERC20(token0).transferFrom(state.sender, address(this), uint256(state.amountSpecified)), 'T0');
+            require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(state.amountSpecified)), 'T0');
             if (-amount1 > 0) {
-                require(IERC20(token1).transfer(state.recipient, uint256(-amount1)), 'T1');
+                require(IERC20(token1).transfer(recipient, uint256(-amount1)), 'T1');
             }
 
             // Update protocol fees and fee growth
@@ -339,12 +339,12 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         } else {
             // Calculate amounts
             amount0 = -int256(state.amountAfterFee);
-            amount1 = int256(state.amountAfterFee);
+            amount1 = int256(state.amountSpecified);
             
             // Transfer tokens
-            require(IERC20(token1).transferFrom(state.sender, address(this), uint256(state.amountSpecified)), 'T1');
+            require(IERC20(token1).transferFrom(msg.sender, address(this), uint256(state.amountSpecified)), 'T1');
             if (-amount0 > 0) {
-                require(IERC20(token0).transfer(state.recipient, uint256(-amount0)), 'T0');
+                require(IERC20(token0).transfer(recipient, uint256(-amount0)), 'T0');
             }
 
             // Update protocol fees and fee growth
