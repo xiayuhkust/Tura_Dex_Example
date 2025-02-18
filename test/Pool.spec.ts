@@ -135,16 +135,18 @@ describe('UniswapV3Pool', () => {
 
         it('executes swap zero for one', async () => {
             const swapAmount = ethers.utils.parseEther('0.001'); // Small enough for ~40 Tura balance
-            const initialBalance = await token0.balanceOf(other.address);
-            
-            // Transfer tokens to pool first
-            await token0.connect(other).transfer(pool.address, swapAmount);
+            const initialBalance0 = await token0.balanceOf(other.address);
+            const initialBalance1 = await token1.balanceOf(other.address);
             
             // Execute swap
             await pool.connect(other).swap(true, swapAmount, other.address);
             
-            const finalBalance = await token0.balanceOf(other.address);
-            expect(initialBalance.sub(finalBalance)).to.equal(swapAmount);
+            const finalBalance0 = await token0.balanceOf(other.address);
+            const finalBalance1 = await token1.balanceOf(other.address);
+            
+            // Verify token transfers
+            expect(initialBalance0.sub(finalBalance0)).to.equal(swapAmount);
+            expect(finalBalance1.sub(initialBalance1)).to.equal(swapAmount.mul(997).div(1000)); // 0.3% fee
             
             const { sqrtPriceX96, tick } = await pool.slot0();
             expect(sqrtPriceX96).to.be.lt(SQRT_PRICE_X96);
@@ -153,16 +155,18 @@ describe('UniswapV3Pool', () => {
 
         it('executes swap one for zero', async () => {
             const swapAmount = ethers.utils.parseEther('0.001'); // Small enough for ~40 Tura balance
-            const initialBalance = await token1.balanceOf(other.address);
-            
-            // Transfer tokens to pool first
-            await token1.connect(other).transfer(pool.address, swapAmount);
+            const initialBalance0 = await token0.balanceOf(other.address);
+            const initialBalance1 = await token1.balanceOf(other.address);
             
             // Execute swap
             await pool.connect(other).swap(false, swapAmount, other.address);
             
-            const finalBalance = await token1.balanceOf(other.address);
-            expect(initialBalance.sub(finalBalance)).to.equal(swapAmount);
+            const finalBalance0 = await token0.balanceOf(other.address);
+            const finalBalance1 = await token1.balanceOf(other.address);
+            
+            // Verify token transfers
+            expect(finalBalance0.sub(initialBalance0)).to.equal(swapAmount.mul(997).div(1000)); // 0.3% fee
+            expect(initialBalance1.sub(finalBalance1)).to.equal(swapAmount);
             
             const { sqrtPriceX96, tick } = await pool.slot0();
             expect(sqrtPriceX96).to.be.gt(SQRT_PRICE_X96);

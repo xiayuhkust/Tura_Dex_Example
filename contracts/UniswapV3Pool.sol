@@ -397,9 +397,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         // Execute swap
         (amount0, amount1) = _handleSwap(zeroForOne, state, recipient);
         
-        // Update state
-        _slot0.unlocked = true;
-
         // Update pool state
         _slot0.tick = state.nextTick;
         _slot0.sqrtPriceX96 = state.nextPrice;
@@ -418,6 +415,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 : uint128(int128(liquidity) + liquidityNet);
         }
 
+        emit Swap(msg.sender, recipient, amount0, amount1, state.nextPrice, state.nextTick, liquidity);
         return (amount0, amount1);
     }
 }
