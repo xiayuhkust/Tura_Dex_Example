@@ -27,7 +27,19 @@ describe('UniswapV3Pool', () => {
 
     describe('initialization', () => {
         beforeEach(async () => {
-            await setupTestPool();
+            // Deploy new tokens for each test
+            const TokenFactory = await ethers.getContractFactory('TestERC20');
+            token0 = await TokenFactory.deploy('Token0', 'TK0', 18);
+            token1 = await TokenFactory.deploy('Token1', 'TK1', 18);
+
+            // Deploy factory
+            const FactoryFactory = await ethers.getContractFactory('UniswapV3Factory');
+            factory = await FactoryFactory.deploy();
+
+            // Create pool
+            await factory.createPool(token0.address, token1.address, FEE);
+            const poolAddress = await factory.getPool(token0.address, token1.address, FEE);
+            pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
         });
 
         it('sets initial price', async () => {
@@ -65,12 +77,12 @@ describe('UniswapV3Pool', () => {
         await token1.connect(other).approve(pool.address, ethers.constants.MaxUint256);
 
         // Setup initial amounts - using minimal amounts for Tura testing
-        const userAmount = ethers.utils.parseEther('0.00000001'); // 0.00000001 Tura for testing (~40 Tura total)
-        const lpAmount = ethers.utils.parseEther('0.000000005'); // 0.000000005 Tura for LP (~2900 Tura total)
+        const userAmount = ethers.utils.parseEther('0.00001'); // 0.00001 Tura for testing (~40 Tura total)
+        const lpAmount = ethers.utils.parseEther('0.0001'); // 0.0001 Tura for LP (~2900 Tura total)
         
         // Mint tokens first
-        await token0.mint(owner.address, userAmount.mul(2));
-        await token1.mint(owner.address, userAmount.mul(2));
+        await token0.mint(owner.address, lpAmount);
+        await token1.mint(owner.address, lpAmount);
         await token0.mint(other.address, userAmount);
         await token1.mint(other.address, userAmount);
 

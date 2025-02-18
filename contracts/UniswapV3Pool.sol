@@ -78,6 +78,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             unlocked: true
         });
 
+        // Initialize current tick
+        _currentTick = tick;
+
         emit Initialize(sqrtPriceX96, tick);
     }
 
