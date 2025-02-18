@@ -51,10 +51,12 @@ describe('TuraLiquidity', () => {
     for (const token of [sortedToken0, sortedToken1]) {
       for (const user of [owner, user1, user2]) {
         await token.mint(user.address, mintAmount);
-        await token.connect(user).approve(pool.address, ethers.constants.MaxUint256);
-        await token.connect(user).approve(factory.address, ethers.constants.MaxUint256);
+        await token.connect(user).approve(poolAddress, ethers.constants.MaxUint256);
       }
     }
+
+    // Initialize pool
+    await pool.initialize(INITIAL_PRICE);
   });
 
   describe('Liquidity Provision', () => {
