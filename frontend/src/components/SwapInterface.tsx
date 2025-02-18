@@ -132,10 +132,10 @@ export function SwapInterface() {
                 size="lg"
                 bg="brand.primary"
                 _hover={{ opacity: 0.9 }}
-                isDisabled={!inputAmount || !outputAmount}
+                isDisabled={!inputAmount || !outputAmount || warning?.level === 'error'}
                 onClick={handleSwap}
               >
-                Swap
+                {warning?.level === 'error' ? 'Price Impact Too High' : 'Swap'}
               </Button>
             )}
           </VStack>
