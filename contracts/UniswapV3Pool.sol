@@ -339,56 +339,30 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount0 = int256(state.amountSpecified);
             amount1 = -int256(state.amountAfterFee);
             
-            // Transfer tokens - ensure we have enough balance
-            uint256 balance0Before = IERC20(token0).balanceOf(address(this));
-            uint256 balance1Before = IERC20(token1).balanceOf(address(this));
-            
+            // Transfer tokens
             require(IERC20(token0).transferFrom(state.sender, address(this), uint256(state.amountSpecified)), 'T0');
-            require(balance1Before >= uint256(state.amountAfterFee), 'IL'); // Insufficient liquidity
             require(IERC20(token1).transfer(recipient, uint256(state.amountAfterFee)), 'T1');
             
             // Update protocol fees and fee growth
             protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
             if (state.currentLiquidity > 0) {
-                // Update fee growth
                 uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, FixedPoint128.Q128, state.currentLiquidity);
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
-                
-                // Update position fees for liquidity provider
-                bytes32 positionKey = keccak256(abi.encodePacked(state.sender, MIN_TICK, MAX_TICK));
-                IPosition.Info storage position = positions[positionKey];
-                if (position.liquidity > 0) {
-                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
-                    position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
-                }
             }
         } else {
             // Calculate amounts - input token is amountSpecified, output token is amountAfterFee
             amount0 = -int256(state.amountAfterFee);
             amount1 = int256(state.amountSpecified);
             
-            // Transfer tokens - ensure we have enough balance
-            uint256 balance0Before = IERC20(token0).balanceOf(address(this));
-            uint256 balance1Before = IERC20(token1).balanceOf(address(this));
-            
+            // Transfer tokens
             require(IERC20(token1).transferFrom(state.sender, address(this), uint256(state.amountSpecified)), 'T1');
-            require(balance0Before >= uint256(state.amountAfterFee), 'IL'); // Insufficient liquidity
             require(IERC20(token0).transfer(recipient, uint256(state.amountAfterFee)), 'T0');
             
             // Update protocol fees and fee growth
             protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
             if (state.currentLiquidity > 0) {
-                // Update fee growth
                 uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, FixedPoint128.Q128, state.currentLiquidity);
                 feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(feePerLiquidity);
-                
-                // Update position fees for liquidity provider
-                bytes32 positionKey = keccak256(abi.encodePacked(state.sender, MIN_TICK, MAX_TICK));
-                IPosition.Info storage position = positions[positionKey];
-                if (position.liquidity > 0) {
-                    position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
-                    position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
-                }
             }
         }
     }
@@ -417,6 +391,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.currentLiquidity = liquidity;
         state.nextPrice = sqrtPriceX96;
         state.nextTick = _currentTick;
+
+        // Calculate fees
+        (state.feeAmount, state.amountAfterFee) = _calculateFees(amountSpecified, zeroForOne, state.currentLiquidity);
         
         // Calculate fees (fee is in millionths, so 3000 = 0.3%)
         (state.feeAmount, state.amountAfterFee) = _calculateFees(amountSpecified, zeroForOne, state.currentLiquidity);
