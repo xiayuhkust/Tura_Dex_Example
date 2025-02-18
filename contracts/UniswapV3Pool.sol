@@ -111,8 +111,25 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         require(tickLower >= TickMath.MIN_TICK, 'TLM'); // Tick Lower too low
         require(tickUpper <= TickMath.MAX_TICK, 'TUM'); // Tick Upper too high
 
+        // Calculate token amounts first
+        uint160 sqrtPriceLowerX96 = TickMath.getSqrtRatioAtTick(tickLower);
+        uint160 sqrtPriceUpperX96 = TickMath.getSqrtRatioAtTick(tickUpper);
+        uint160 sqrtPriceCurrentX96 = _slot0.sqrtPriceX96;
+
+        // Calculate token amounts based on price range
+        (amount0, amount1) = _calculateAmounts(
+            sqrtPriceCurrentX96,
+            sqrtPriceLowerX96,
+            sqrtPriceUpperX96,
+            amount
+        );
+
+        // Transfer tokens before updating state
+        if (amount0 > 0) require(IERC20(token0).transferFrom(msg.sender, address(this), amount0), 'T0');
+        if (amount1 > 0) require(IERC20(token1).transferFrom(msg.sender, address(this), amount1), 'T1');
+
         // Update ticks and track liquidity changes
-        bool flippedLower = ticks.update(
+        ticks.update(
             tickLower,
             _slot0.tick,
             int128(amount),
@@ -120,7 +137,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             feeGrowthGlobal1X128,
             false
         );
-        bool flippedUpper = ticks.update(
+        ticks.update(
             tickUpper,
             _slot0.tick,
             int128(-amount),
