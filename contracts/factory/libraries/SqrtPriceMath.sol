@@ -17,17 +17,19 @@ library SqrtPriceMath {
             (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
 
         // Scale down sqrt price ratios to avoid overflow
-        uint160 scaledRatioA = sqrtRatioAX96 / 1e48;
-        uint160 scaledRatioB = sqrtRatioBX96 / 1e48;
+        uint160 scaledRatioA = sqrtRatioAX96 / 1e24;
+        uint160 scaledRatioB = sqrtRatioBX96 / 1e24;
         
-        uint256 numerator1 = uint256(liquidity) << 48; // Use half the bits
+        uint256 numerator1 = uint256(liquidity) << 72; // Use 3/4 of the bits
         uint256 numerator2 = scaledRatioB - scaledRatioA;
 
         require(scaledRatioA > 0);
 
-        return roundUp
+        uint256 amount = roundUp
             ? FullMath.mulDivRoundingUp(numerator1, numerator2, scaledRatioB)
             : FullMath.mulDiv(numerator1, numerator2, scaledRatioB);
+            
+        return amount / 1e24; // Scale back down to maintain precision
     }
 
     function getAmount1Delta(
@@ -40,16 +42,18 @@ library SqrtPriceMath {
             (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
 
         // Scale down sqrt price ratios to avoid overflow
-        uint160 scaledRatioA = sqrtRatioAX96 / 1e48;
-        uint160 scaledRatioB = sqrtRatioBX96 / 1e48;
+        uint160 scaledRatioA = sqrtRatioAX96 / 1e24;
+        uint160 scaledRatioB = sqrtRatioBX96 / 1e24;
 
-        return roundUp
+        uint256 amount = roundUp
             ? FullMath.mulDivRoundingUp(
                 liquidity,
                 scaledRatioB - scaledRatioA,
-                2**48 // Use half the bits
+                2**72 // Use 3/4 of the bits
             )
-            : FullMath.mulDiv(liquidity, scaledRatioB - scaledRatioA, 2**48);
+            : FullMath.mulDiv(liquidity, scaledRatioB - scaledRatioA, 2**72);
+            
+        return amount / 1e24; // Scale back down to maintain precision
     }
 
     function getNextSqrtPriceFromAmount0RoundingUp(
