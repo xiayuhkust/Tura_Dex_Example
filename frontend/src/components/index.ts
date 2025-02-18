@@ -11,5 +11,4 @@ export * from './SwapInterface'
 // Types
 export type { Token } from '../hooks'
 
-// Hooks
-export { useError } from './useError'
+// No hooks exports needed

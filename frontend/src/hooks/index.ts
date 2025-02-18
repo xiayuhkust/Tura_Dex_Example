@@ -2,7 +2,7 @@ export * from './useWeb3'
 export * from './useTokenBalances'
 export * from './useRecentTokens'
 export * from './usePriceImpact'
-// UI-related hooks are in components directory
+export * from './useError'
 
 export interface Token {
   address: string
