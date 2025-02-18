@@ -12,6 +12,12 @@ declare global {
   }
 }
 
+declare global {
+  interface Window {
+    ethereum?: any
+  }
+}
+
 const CHAIN_ID = Number(import.meta.env.VITE_TURA_CHAIN_ID || "1337")
 const NETWORK_NAME = 'Tura Network'
 
@@ -84,14 +90,14 @@ export function useWeb3() {
               duration: null,
               isClosable: true,
               position: 'top',
-              render: ({ onClose }) => (
-                <NetworkErrorToast
-                  onClose={onClose}
-                  networkName={NETWORK_NAME}
-                  chainId={CHAIN_ID}
-                  rpcUrl={import.meta.env.VITE_TURA_RPC_URL}
-                />
-              )
+              render: function NetworkToastContent({ onClose }) {
+                return React.createElement(NetworkErrorToast, {
+                  onClose,
+                  networkName: NETWORK_NAME,
+                  chainId: CHAIN_ID,
+                  rpcUrl: import.meta.env.VITE_TURA_RPC_URL
+                })
+              }
             }
             toast(toastOptions)
           }
