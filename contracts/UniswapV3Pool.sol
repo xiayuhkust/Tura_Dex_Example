@@ -265,15 +265,26 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         address sender;
     }
 
-    function _calculateFees(uint256 amount) private pure returns (uint256 feeAmount, uint256 amountAfterFee) {
+    function _calculateFees(uint256 amount) private returns (uint256 feeAmount, uint256 amountAfterFee) {
         // Calculate fee amount first (0.3% = 3/1000)
         feeAmount = amount.mul(3).div(1000);
         // Calculate output amount as remainder (99.7%)
         amountAfterFee = amount.sub(feeAmount);
         // Verify calculations
         require(feeAmount.add(amountAfterFee) == amount, "Invalid fee calculation");
-        // Ensure fee amount is exactly 0.3%
-        require(feeAmount == amount.mul(3).div(1000), "Invalid fee amount");
+        
+        // Update protocol fees and fee growth
+        if (zeroForOne) {
+            protocolFees0 = protocolFees0.add(feeAmount);
+            feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(
+                FullMath.mulDiv(feeAmount, FixedPoint128.Q128, liquidity)
+            );
+        } else {
+            protocolFees1 = protocolFees1.add(feeAmount);
+            feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(
+                FullMath.mulDiv(feeAmount, FixedPoint128.Q128, liquidity)
+            );
+        }
     }
 
     function _handleSwap(
