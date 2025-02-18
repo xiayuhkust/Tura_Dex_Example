@@ -428,7 +428,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
         // Cache state variables
         uint160 sqrtPriceX96 = _slot0.sqrtPriceX96;
-        int24 tick = state.tick;
+        int24 tick = _slot0.tick;
         uint128 currentLiquidity = liquidity;
 
         // Calculate price limits
