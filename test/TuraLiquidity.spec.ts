@@ -45,7 +45,6 @@ describe('TuraLiquidity', () => {
     await factory.createPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNTS[0]);
     const poolAddress = await factory.getPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNTS[0]);
     pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
-    await pool.initialize(INITIAL_PRICE);
 
     // Mint initial tokens and approve for all users
     const mintAmount = ethers.utils.parseEther('1000000'); // Large amount for testing

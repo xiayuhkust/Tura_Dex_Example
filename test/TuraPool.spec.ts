@@ -51,8 +51,7 @@ describe('TuraPool', () => {
       }
     }
 
-    // Initialize pool
-    await pool.initialize(INITIAL_PRICE);
+    // Note: Pool initialization is handled in individual tests that need it
   });
 
   describe('Pool Creation', () => {
@@ -70,8 +69,9 @@ describe('TuraPool', () => {
 
     it('should initialize pool with valid price', async () => {
       await pool.initialize(INITIAL_PRICE);
-      const { sqrtPriceX96 } = await pool.slot0();
+      const { sqrtPriceX96, tick } = await pool.slot0();
       expect(sqrtPriceX96).to.not.equal(0);
+      expect(tick).to.equal(0); // Initial tick should be 0 at price of 1.0
     });
 
     it('should fail with invalid fee tier', async () => {
