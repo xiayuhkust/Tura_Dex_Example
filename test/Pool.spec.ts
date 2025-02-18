@@ -32,25 +32,20 @@ describe('UniswapV3Pool', () => {
         // Deploy factory
         const FactoryFactory = await ethers.getContractFactory('UniswapV3Factory');
         factory = await FactoryFactory.deploy();
-
-        // Create pool
-        await factory.createPool(token0.address, token1.address, FEE);
-        const poolAddress = await factory.getPool(token0.address, token1.address, FEE);
-        pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
-
-        // Approve tokens
-        await token0.approve(pool.address, ethers.constants.MaxUint256);
-        await token1.approve(pool.address, ethers.constants.MaxUint256);
-        await token0.connect(other).approve(pool.address, ethers.constants.MaxUint256);
-        await token1.connect(other).approve(pool.address, ethers.constants.MaxUint256);
     });
 
     describe('initialization', () => {
         beforeEach(async () => {
-            // Reset pool for each test
+            // Create new pool for each test
             await factory.createPool(token0.address, token1.address, FEE);
             const poolAddress = await factory.getPool(token0.address, token1.address, FEE);
             pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
+
+            // Approve tokens
+            await token0.approve(pool.address, ethers.constants.MaxUint256);
+            await token1.approve(pool.address, ethers.constants.MaxUint256);
+            await token0.connect(other).approve(pool.address, ethers.constants.MaxUint256);
+            await token1.connect(other).approve(pool.address, ethers.constants.MaxUint256);
         });
 
         it('sets initial price', async () => {
