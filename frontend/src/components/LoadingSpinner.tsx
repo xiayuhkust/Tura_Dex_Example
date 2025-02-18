@@ -1,3 +1,4 @@
+import React from 'react'
 import { Spinner, Box, Text, VStack } from '@chakra-ui/react'
 
 interface LoadingSpinnerProps {
