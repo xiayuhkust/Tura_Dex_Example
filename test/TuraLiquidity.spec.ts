@@ -32,15 +32,6 @@ describe('TuraLiquidity', () => {
     token0 = await TestERC20.deploy('Test Token 0', 'TT0', 18);
     token1 = await TestERC20.deploy('Test Token 1', 'TT1', 18);
 
-    // Mint initial tokens to owner and users
-    const mintAmount = ethers.utils.parseEther('1.0'); // Mint more tokens than needed
-    await token0.mint(owner.address, mintAmount);
-    await token1.mint(owner.address, mintAmount);
-    await token0.mint(user1.address, mintAmount);
-    await token1.mint(user1.address, mintAmount);
-    await token0.mint(user2.address, mintAmount);
-    await token1.mint(user2.address, mintAmount);
-
     // Deploy factory
     const UniswapV3Factory = await ethers.getContractFactory('UniswapV3Factory');
     factory = await UniswapV3Factory.deploy();
@@ -58,12 +49,12 @@ describe('TuraLiquidity', () => {
 
     // Mint initial tokens to all users
     const mintAmount = ethers.utils.parseEther('1.0'); // Mint more tokens than needed
-    await sortedToken0.mint(owner.address, mintAmount);
-    await sortedToken1.mint(owner.address, mintAmount);
-    await sortedToken0.mint(user1.address, mintAmount);
-    await sortedToken1.mint(user1.address, mintAmount);
-    await sortedToken0.mint(user2.address, mintAmount);
-    await sortedToken1.mint(user2.address, mintAmount);
+    for (const token of [sortedToken0, sortedToken1]) {
+      for (const user of [owner, user1, user2]) {
+        await token.mint(user.address, mintAmount);
+        await token.connect(user).approve(pool.address, ethers.constants.MaxUint256);
+      }
+    }
 
     // Approve tokens for all tests
     await sortedToken0.approve(pool.address, ethers.constants.MaxUint256);
