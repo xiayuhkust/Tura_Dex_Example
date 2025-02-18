@@ -69,11 +69,12 @@ describe('TuraLiquidity', () => {
         await pool.initialize(INITIAL_PRICE);
       }
       
-      // Mint and approve tokens
-      await token0.mint(owner.address, INITIAL_LIQUIDITY);
-      await token1.mint(owner.address, INITIAL_LIQUIDITY);
-      await token0.approve(pool.address, INITIAL_LIQUIDITY);
-      await token1.approve(pool.address, INITIAL_LIQUIDITY);
+      // Mint tokens with extra buffer
+      const mintAmount = BASE_AMOUNT.mul(10000); // Large buffer for testing
+      await token0.mint(owner.address, mintAmount);
+      await token1.mint(owner.address, mintAmount);
+      await token0.approve(pool.address, ethers.constants.MaxUint256);
+      await token1.approve(pool.address, ethers.constants.MaxUint256);
       
       // Add liquidity
       await pool.mint(
@@ -143,13 +144,13 @@ describe('TuraLiquidity', () => {
       }
       
       // Add initial liquidity
-      const liquidityAmount = ethers.utils.parseEther('1.0'); // Larger amount for meaningful swaps
+      const liquidityAmount = BASE_AMOUNT.mul(100); // 100x base amount for meaningful swaps
       await pool.mint(owner.address, lower, upper, liquidityAmount);
 
       // Perform swap
-      const swapAmount = ethers.utils.parseEther('0.1'); // 10% of liquidity
-      await token0.mint(user1.address, swapAmount);
-      await token0.connect(user1).approve(pool.address, swapAmount);
+      const swapAmount = BASE_AMOUNT.mul(10); // 10x base amount for swap
+      await token0.mint(user1.address, swapAmount.mul(100)); // Extra buffer
+      await token0.connect(user1).approve(pool.address, ethers.constants.MaxUint256);
       await pool.connect(user1).swap(
         true, // zeroForOne
         swapAmount,
