@@ -17,7 +17,7 @@ describe('TuraLiquidity', () => {
 
   const FEE_AMOUNTS = [3000, 5000, 10000]; // 0.3%, 0.5%, 1%
   const INITIAL_PRICE = '1000000000000000000'; // 1.0
-  const INITIAL_LIQUIDITY = '10000000000000'; // 0.00001 - Extremely small amount for Tura testing
+  const INITIAL_LIQUIDITY = '100000000'; // Even smaller amount for testing
   const TICK_RANGES = [
     { lower: -887272, upper: 887272 }, // Full range
     { lower: -443636, upper: 443636 }, // Half range
@@ -48,21 +48,13 @@ describe('TuraLiquidity', () => {
     await pool.initialize(INITIAL_PRICE);
 
     // Mint initial tokens to all users
-    const mintAmount = ethers.utils.parseEther('1.0'); // Mint more tokens than needed
+    const mintAmount = ethers.utils.parseEther('1000000'); // Large amount for testing
     for (const token of [sortedToken0, sortedToken1]) {
       for (const user of [owner, user1, user2]) {
         await token.mint(user.address, mintAmount);
         await token.connect(user).approve(pool.address, ethers.constants.MaxUint256);
       }
     }
-
-    // Approve tokens for all tests
-    await sortedToken0.approve(pool.address, ethers.constants.MaxUint256);
-    await sortedToken1.approve(pool.address, ethers.constants.MaxUint256);
-    await sortedToken0.connect(user1).approve(pool.address, ethers.constants.MaxUint256);
-    await sortedToken1.connect(user1).approve(pool.address, ethers.constants.MaxUint256);
-    await sortedToken0.connect(user2).approve(pool.address, ethers.constants.MaxUint256);
-    await sortedToken1.connect(user2).approve(pool.address, ethers.constants.MaxUint256);
   });
 
   describe('Liquidity Provision', () => {
@@ -106,17 +98,9 @@ describe('TuraLiquidity', () => {
       const { lower, upper } = TICK_RANGES[0];
       
       // First LP
-      await token0.transfer(user1.address, INITIAL_LIQUIDITY);
-      await token1.transfer(user1.address, INITIAL_LIQUIDITY);
-      await token0.connect(user1).approve(pool.address, INITIAL_LIQUIDITY);
-      await token1.connect(user1).approve(pool.address, INITIAL_LIQUIDITY);
       await pool.connect(user1).mint(user1.address, lower, upper, INITIAL_LIQUIDITY);
 
       // Second LP
-      await token0.transfer(user2.address, INITIAL_LIQUIDITY);
-      await token1.transfer(user2.address, INITIAL_LIQUIDITY);
-      await token0.connect(user2).approve(pool.address, INITIAL_LIQUIDITY);
-      await token1.connect(user2).approve(pool.address, INITIAL_LIQUIDITY);
       await pool.connect(user2).mint(user2.address, lower, upper, INITIAL_LIQUIDITY);
 
       const position1Key = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [user1.address, lower, upper]));

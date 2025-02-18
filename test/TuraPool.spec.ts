@@ -16,7 +16,7 @@ describe('TuraPool', () => {
 
   const FEE_AMOUNT = 3000; // 0.3%
   const INITIAL_PRICE = '1000000000000000000'; // 1.0
-  const INITIAL_LIQUIDITY = '10000000000000'; // 0.00001 - Extremely small amount for Tura testing
+  const INITIAL_LIQUIDITY = '100000000'; // Even smaller amount for testing
 
   beforeEach(async () => {
     [owner, user1, user2] = await ethers.getSigners();
