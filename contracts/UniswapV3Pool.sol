@@ -428,6 +428,17 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.nextPrice = sqrtPriceX96;
         state.nextTick = currentTick;
 
+        // Execute swap
+        (amount0, amount1) = _handleSwap(zeroForOne, state, recipient);
+
+        // Update pool state
+        liquidity = state.currentLiquidity;
+        _slot0.sqrtPriceX96 = state.nextPrice;
+        _slot0.tick = state.nextTick;
+        _slot0.unlocked = true;
+
+        emit Swap(msg.sender, recipient, amount0, amount1, state.nextPrice, state.currentLiquidity, state.nextTick);
+
         // Calculate price limits
         uint160 sqrtPriceLimitX96 = zeroForOne
             ? TickMath.MIN_SQRT_RATIO + 1
@@ -497,15 +508,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 : uint128(int128(liquidity) + liquidityNet);
         }
 
-        // Execute swap
-        (amount0, amount1) = _handleSwap(zeroForOne, swapState, recipient);
-
-        // Update pool state
-        liquidity = state.currentLiquidity;
-        _slot0.sqrtPriceX96 = state.nextPrice;
-        _slot0.tick = state.nextTick;
-        _slot0.unlocked = true;
-
-        emit Swap(msg.sender, recipient, amount0, amount1, state.nextPrice, state.currentLiquidity, state.nextTick);
+        return (amount0, amount1);
     }
 }
