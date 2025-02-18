@@ -120,13 +120,13 @@ describe('UniswapV3Pool', () => {
         it('creates a position and updates liquidity', async () => {
             const liquidityAmount = BASE_AMOUNT.mul(10); // 10x base amount for testing
             
-            // Mint tokens first
-            await token0.mint(owner.address, liquidityAmount);
-            await token1.mint(owner.address, liquidityAmount);
+            // Mint tokens with extra buffer
+            await token0.mint(owner.address, liquidityAmount.mul(100));
+            await token1.mint(owner.address, liquidityAmount.mul(100));
             
             // Approve tokens
-            await token0.approve(pool.address, liquidityAmount);
-            await token1.approve(pool.address, liquidityAmount);
+            await token0.approve(pool.address, ethers.constants.MaxUint256);
+            await token1.approve(pool.address, ethers.constants.MaxUint256);
             
             // Add liquidity
             await pool.mint(owner.address, MIN_TICK, MAX_TICK, liquidityAmount);
@@ -139,25 +139,25 @@ describe('UniswapV3Pool', () => {
 
     describe('swapping', () => {
         const swapAmount = BASE_AMOUNT; // Base amount for swaps
-        const lpAmount = BASE_AMOUNT.mul(10); // 10x base amount for liquidity
+        const lpAmount = BASE_AMOUNT.mul(100); // 100x base amount for liquidity
         
         beforeEach(async () => {
             await setupTestPool();
             await pool.initialize(SQRT_PRICE_X96);
             
             // Mint tokens for LP with extra buffer
-            await token0.mint(owner.address, lpAmount.mul(100));
-            await token1.mint(owner.address, lpAmount.mul(100));
+            await token0.mint(owner.address, lpAmount.mul(1000));
+            await token1.mint(owner.address, lpAmount.mul(1000));
             
             // Mint tokens for swapper with extra buffer
-            await token0.mint(other.address, swapAmount.mul(100));
-            await token1.mint(other.address, swapAmount.mul(100));
+            await token0.mint(other.address, swapAmount.mul(1000));
+            await token1.mint(other.address, swapAmount.mul(1000));
             
             // Approve tokens
-            await token0.approve(pool.address, lpAmount.mul(100));
-            await token1.approve(pool.address, lpAmount.mul(100));
-            await token0.connect(other).approve(pool.address, swapAmount.mul(100));
-            await token1.connect(other).approve(pool.address, swapAmount.mul(100));
+            await token0.approve(pool.address, ethers.constants.MaxUint256);
+            await token1.approve(pool.address, ethers.constants.MaxUint256);
+            await token0.connect(other).approve(pool.address, ethers.constants.MaxUint256);
+            await token1.connect(other).approve(pool.address, ethers.constants.MaxUint256);
             
             // Add liquidity
             await pool.mint(owner.address, MIN_TICK, MAX_TICK, lpAmount);
