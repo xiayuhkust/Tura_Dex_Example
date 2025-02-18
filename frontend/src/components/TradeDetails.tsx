@@ -1,4 +1,4 @@
-import React from 'react'
+// Trade details component for displaying swap information
 import {
   VStack,
   HStack,
@@ -12,13 +12,7 @@ import {
 } from '@chakra-ui/react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
-interface Token {
-  address: string
-  symbol: string
-  name: string
-  balance?: string
-  price?: string
-}
+import { Token } from '../hooks/usePriceImpact'
 
 interface TradeDetailsProps {
   inputToken?: Token
