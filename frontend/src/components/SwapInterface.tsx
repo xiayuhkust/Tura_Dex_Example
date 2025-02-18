@@ -20,6 +20,13 @@ export function SwapInterface() {
 
   const { handleError } = useError()
 
+  const { priceImpact, warning } = usePriceImpact(
+    inputToken,
+    outputToken,
+    inputAmount,
+    outputAmount
+  )
+
   const handleSwap = useCallback(async () => {
     try {
       if (!active) {
@@ -60,10 +67,6 @@ export function SwapInterface() {
       setIsLoading(false)
     }
   }, [active, inputToken, outputToken, inputAmount, outputAmount, warning, toast, handleError])
-
-  const { priceImpact, warning } = usePriceImpact(
-    inputToken,
-    outputToken,
     inputAmount,
     outputAmount
   )
