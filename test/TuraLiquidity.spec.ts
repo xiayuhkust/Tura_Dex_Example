@@ -17,7 +17,8 @@ describe('TuraLiquidity', () => {
 
   const FEE_AMOUNTS = [3000, 5000, 10000]; // 0.3%, 0.5%, 1%
   const INITIAL_PRICE = '79228162514264337593543950336'; // 1.0 in Q96
-  const INITIAL_LIQUIDITY = ethers.utils.parseUnits('1', 12).toString(); // 1 token for testing
+  const BASE_AMOUNT = ethers.utils.parseUnits('1', 12); // 1e12 base units
+  const INITIAL_LIQUIDITY = BASE_AMOUNT.mul(100).toString(); // 100x base amount for testing
   const TICK_RANGES = [
     { lower: -887272, upper: 887272 }, // Full range
     { lower: -443636, upper: 443636 }, // Half range
@@ -47,7 +48,7 @@ describe('TuraLiquidity', () => {
     pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
 
     // Mint initial tokens and approve
-    const mintAmount = ethers.utils.parseEther('1000000');
+    const mintAmount = BASE_AMOUNT.mul(10000); // Large buffer for testing
     for (const token of [sortedToken0, sortedToken1]) {
       for (const user of [owner, user1, user2]) {
         await token.mint(user.address, mintAmount);
