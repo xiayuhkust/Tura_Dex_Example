@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react'
 import { useTokenBalances } from '../hooks/useTokenBalances'
 import { useRecentTokens } from '../hooks/useRecentTokens'
-import type { Token } from '../hooks/types'
+import type { Token } from '../hooks'
 
 const DEMO_TOKENS: Token[] = [
   {
