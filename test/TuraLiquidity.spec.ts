@@ -62,9 +62,10 @@ describe('TuraLiquidity', () => {
     it('should add initial liquidity in full range', async () => {
       const { lower, upper } = TICK_RANGES[0];
       
-      await token0.approve(pool.address, INITIAL_LIQUIDITY);
-      await token1.approve(pool.address, INITIAL_LIQUIDITY);
-
+      // Initialize pool first
+      await pool.initialize(INITIAL_PRICE);
+      
+      // Add liquidity
       await pool.mint(
         owner.address,
         lower,
@@ -72,16 +73,18 @@ describe('TuraLiquidity', () => {
         INITIAL_LIQUIDITY
       );
 
+      // Verify position
       const positionKey = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [owner.address, lower, upper]));
       const position = await pool.positions(positionKey);
       expect(position.liquidity).to.equal(INITIAL_LIQUIDITY);
     });
 
     it('should add liquidity in multiple ranges', async () => {
+      // Initialize pool first
+      await pool.initialize(INITIAL_PRICE);
+      
+      // Add liquidity in multiple ranges
       for (const range of TICK_RANGES) {
-        await token0.approve(pool.address, INITIAL_LIQUIDITY);
-        await token1.approve(pool.address, INITIAL_LIQUIDITY);
-
         await pool.mint(
           owner.address,
           range.lower,
@@ -89,6 +92,7 @@ describe('TuraLiquidity', () => {
           INITIAL_LIQUIDITY
         );
 
+        // Verify position
         const positionKey = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [owner.address, range.lower, range.upper]));
         const position = await pool.positions(positionKey);
         expect(position.liquidity).to.equal(INITIAL_LIQUIDITY);
@@ -98,12 +102,16 @@ describe('TuraLiquidity', () => {
     it('should allow multiple LPs to add liquidity', async () => {
       const { lower, upper } = TICK_RANGES[0];
       
-      // First LP
+      // Initialize pool first
+      await pool.initialize(INITIAL_PRICE);
+      
+      // First LP adds liquidity
       await pool.connect(user1).mint(user1.address, lower, upper, INITIAL_LIQUIDITY);
 
-      // Second LP
+      // Second LP adds liquidity
       await pool.connect(user2).mint(user2.address, lower, upper, INITIAL_LIQUIDITY);
 
+      // Verify both positions
       const position1Key = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [user1.address, lower, upper]));
       const position2Key = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [user2.address, lower, upper]));
       const position1 = await pool.positions(position1Key);
@@ -115,17 +123,20 @@ describe('TuraLiquidity', () => {
     it('should collect fees after swaps', async () => {
       const { lower, upper } = TICK_RANGES[0];
       
+      // Initialize pool first
+      await pool.initialize(INITIAL_PRICE);
+      
       // Add initial liquidity
-      await token0.approve(pool.address, INITIAL_LIQUIDITY);
-      await token1.approve(pool.address, INITIAL_LIQUIDITY);
-      await pool.mint(owner.address, lower, upper, INITIAL_LIQUIDITY);
+      const liquidityAmount = ethers.utils.parseEther('1.0'); // Larger amount for meaningful swaps
+      await pool.mint(owner.address, lower, upper, liquidityAmount);
 
       // Perform swap
-      await token0.transfer(user1.address, INITIAL_LIQUIDITY);
-      await token0.connect(user1).approve(pool.address, INITIAL_LIQUIDITY);
+      const swapAmount = ethers.utils.parseEther('0.1'); // 10% of liquidity
+      await token0.mint(user1.address, swapAmount);
+      await token0.connect(user1).approve(pool.address, swapAmount);
       await pool.connect(user1).swap(
-        true,
-        BigNumber.from(INITIAL_LIQUIDITY).div(2),
+        true, // zeroForOne
+        swapAmount,
         owner.address
       );
 
