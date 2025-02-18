@@ -267,28 +267,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         address sender;
     }
 
-    function _calculateFees(uint256 amount, bool zeroForOne, uint128 currentLiquidity) private returns (uint256 feeAmount, uint256 amountAfterFee) {
+    function _calculateFees(uint256 amount, bool zeroForOne, uint128 currentLiquidity) private pure returns (uint256 feeAmount, uint256 amountAfterFee) {
         // Calculate fee amount first (0.3% = 3/1000)
-        feeAmount = amount.mul(3).div(1000);
+        feeAmount = FullMath.mulDiv(amount, 3, 1000);
         // Calculate output amount as remainder (99.7%)
         amountAfterFee = amount.sub(feeAmount);
         // Verify calculations
         require(feeAmount.add(amountAfterFee) == amount, "Invalid fee calculation");
-        
-        // Update protocol fees and fee growth
-        if (zeroForOne) {
-            protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
-            if (currentLiquidity > 0) {
-                uint256 feePerLiquidity = FullMath.mulDiv(feeAmount, FixedPoint128.Q128, currentLiquidity);
-                feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
-            }
-        } else {
-            protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
-            if (currentLiquidity > 0) {
-                uint256 feePerLiquidity = FullMath.mulDiv(feeAmount, FixedPoint128.Q128, currentLiquidity);
-                feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(feePerLiquidity);
-            }
-        }
     }
 
     function _handleSwap(
@@ -305,45 +290,18 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(state.amountSpecified)), 'T0');
             require(IERC20(token1).transfer(recipient, uint256(state.amountAfterFee)), 'T1');
             
-            // Update fee tracking
-            if (state.currentLiquidity > 0) {
-                bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
-                IPosition.Info storage position = positions[positionKey];
-                if (position.liquidity > 0) {
-                    uint256 positionFee = FullMath.mulDiv(state.feeAmount, position.liquidity, state.currentLiquidity);
-                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(positionFee));
-                }
-            }
-            
-            // Update protocol fees and position fees
+            // Update protocol fees and fee growth
             protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
             if (state.currentLiquidity > 0) {
                 // Update fee growth
                 uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, FixedPoint128.Q128, state.currentLiquidity);
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
                 
-                // Update position fees
-                bytes32 positionKey = keccak256(abi.encodePacked(msg.sender, MIN_TICK, MAX_TICK));
-                IPosition.Info storage position = positions[positionKey];
-                if (position.liquidity > 0) {
-                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
-                }
-            }
-            
-            // Update protocol fees and fee growth
-            protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
-            
-            // Update protocol fees and fee growth
-            if (state.currentLiquidity > 0) {
-                uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
-                feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
-                
-                // Update position fees for liquidity provider (owner)
+                // Update position fees for liquidity provider
                 bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
                 IPosition.Info storage position = positions[positionKey];
                 if (position.liquidity > 0) {
-                    uint256 feeAmount = state.feeAmount.mul(position.liquidity).div(state.currentLiquidity);
-                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
+                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
                     position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
                 }
             }
@@ -354,77 +312,20 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             
             // Transfer tokens - take full amount from sender, send amount after fees to recipient
             require(IERC20(token1).transferFrom(msg.sender, address(this), uint256(state.amountSpecified)), 'T1');
-            if (state.amountAfterFee > 0) {
-                require(IERC20(token0).transfer(recipient, uint256(state.amountAfterFee)), 'T0');
-            }
+            require(IERC20(token0).transfer(recipient, uint256(state.amountAfterFee)), 'T0');
             
-            // Update protocol fees and position fees
+            // Update protocol fees and fee growth
             protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
             if (state.currentLiquidity > 0) {
                 // Update fee growth
                 uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, FixedPoint128.Q128, state.currentLiquidity);
                 feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(feePerLiquidity);
                 
-                // Update position fees
-                bytes32 positionKey = keccak256(abi.encodePacked(msg.sender, MIN_TICK, MAX_TICK));
-                IPosition.Info storage position = positions[positionKey];
-                if (position.liquidity > 0) {
-                    position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
-                }
-            }
-            
-            // Update protocol fees and fee growth
-            protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
-            
-            // Update position fees for liquidity provider (owner)
-            if (state.currentLiquidity > 0) {
-                uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
-                feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(feePerLiquidity);
-                
+                // Update position fees for liquidity provider
                 bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
                 IPosition.Info storage position = positions[positionKey];
                 if (position.liquidity > 0) {
                     position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
-                    position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
-                }
-            }
-            
-            // Update position fees for liquidity provider (owner)
-            if (state.currentLiquidity > 0) {
-                uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
-                feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(feePerLiquidity);
-                
-                bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
-                IPosition.Info storage position = positions[positionKey];
-                if (position.liquidity > 0) {
-                    uint256 feeAmount = FullMath.mulDiv(state.feeAmount, position.liquidity, state.currentLiquidity);
-                    position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(feeAmount));
-                    position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
-                }
-            }
-            
-            // Update position fees for liquidity provider (owner)
-            if (state.currentLiquidity > 0) {
-                uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
-                feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(feePerLiquidity);
-                
-                bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
-                IPosition.Info storage position = positions[positionKey];
-                if (position.liquidity > 0) {
-                    position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
-                    position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
-                }
-            }
-            if (state.currentLiquidity > 0) {
-                uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
-                feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(feePerLiquidity);
-
-                // Update position fees for liquidity provider (owner)
-                bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
-                IPosition.Info storage position = positions[positionKey];
-                if (position.liquidity > 0) {
-                    uint256 feeAmount = state.feeAmount.mul(position.liquidity).div(state.currentLiquidity);
-                    position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(feeAmount));
                     position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
                 }
             }
