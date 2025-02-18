@@ -283,7 +283,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             // Transfer tokens - take full amount from sender, send amount after fees to recipient
             require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(state.amountSpecified)), 'T0');
             if (-amount1 > 0) {
-                require(IERC20(token1).transfer(recipient, uint256(state.amountAfterFee)), 'T1');
+                require(IERC20(token1).transfer(recipient, uint256(-amount1)), 'T1');
             }
             
             // Update protocol fees and fee growth
@@ -293,48 +293,12 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
 
                 // Update position fees for liquidity provider (owner)
-                bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
+                bytes32 positionKey = keccak256(abi.encodePacked(msg.sender, MIN_TICK, MAX_TICK));
                 IPosition.Info storage position = positions[positionKey];
                 if (position.liquidity > 0) {
                     uint256 feeAmount = state.feeAmount.mul(position.liquidity).div(state.currentLiquidity);
                     position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
                     position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
-                }
-            }
-
-            // Update protocol fees and fee growth
-            protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
-            if (state.currentLiquidity > 0) {
-                uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
-                feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
-                
-                // Update position fee growth for current tick range
-                // Find all positions in the current tick range and update their fees
-                mapping(int24 => Tick.Info) storage tickMap = ticks;
-                Tick.Info storage lowerTick = tickMap[MIN_TICK];
-                Tick.Info storage upperTick = tickMap[MAX_TICK];
-                
-                // Calculate fee growth inside the position's range
-                uint256 feeGrowthInside0X128 = feeGrowthGlobal0X128;
-                if (lowerTick.initialized) {
-                    feeGrowthInside0X128 = feeGrowthInside0X128.sub(lowerTick.feeGrowthOutside0X128);
-                }
-                if (upperTick.initialized) {
-                    feeGrowthInside0X128 = feeGrowthInside0X128.sub(upperTick.feeGrowthOutside0X128);
-                }
-                
-                // Update protocol fees and fee growth
-                if (state.currentLiquidity > 0) {
-                    protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
-                    feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity));
-
-                    // Update position fees
-                    bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
-                    IPosition.Info storage position = positions[positionKey];
-                    if (position.liquidity > 0) {
-                        position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
-                        position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
-                    }
                 }
             }
         } else {
@@ -345,7 +309,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             // Transfer tokens - take full amount from sender, send amount after fees to recipient
             require(IERC20(token1).transferFrom(msg.sender, address(this), uint256(state.amountSpecified)), 'T1');
             if (-amount0 > 0) {
-                require(IERC20(token0).transfer(recipient, uint256(state.amountAfterFee)), 'T0');
+                require(IERC20(token0).transfer(recipient, uint256(-amount0)), 'T0');
             }
             
             // Update protocol fees and fee growth
@@ -398,17 +362,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
         // Ensure we have enough liquidity
         require(state.currentLiquidity > 0, "IL"); // Insufficient liquidity
-
-        // Execute swap
-        (amount0, amount1) = _handleSwap(zeroForOne, state, recipient);
-
-        // Update pool state
-        liquidity = state.currentLiquidity;
-        _slot0.sqrtPriceX96 = state.nextPrice;
-        _slot0.tick = state.nextTick;
-        _slot0.unlocked = true;
-
-        emit Swap(msg.sender, recipient, amount0, amount1, state.nextPrice, state.currentLiquidity, state.nextTick);
 
         // Calculate price limits
         uint160 sqrtPriceLimitX96 = zeroForOne
