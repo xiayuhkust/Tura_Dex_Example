@@ -32,21 +32,6 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
   const toast = useToast()
   const { handleError } = useError()
 
-  if (!library || !account) {
-    return (
-      <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
-        <ModalOverlay backdropFilter="blur(4px)" />
-        <ModalContent bg="brand.surface" borderRadius="xl">
-          <ModalHeader color="white">Create Liquidity Pool</ModalHeader>
-          <ModalCloseButton color="white" />
-          <ModalBody pb={6}>
-            <Text color="whiteAlpha.700">Please connect your wallet to create a pool</Text>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-    )
-  }
-
   const handleCreatePool = useCallback(async () => {
     if (!active) {
       handleError(new Error('Please connect your wallet first'))
@@ -65,7 +50,6 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
 
     try {
       setIsLoading(true)
-      // Implement pool creation using UniswapV3Factory
       const factoryContract = new (library as any).eth.Contract(
         ['function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool)'],
         '0x1F98431c8aD98523631AE4a59f267346ea31F984' // UniswapV3Factory address
@@ -93,6 +77,23 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
       setIsLoading(false)
     }
   }, [active, token0, token1, amount0, amount1, library, account, handleError, toast, onClose])
+
+  if (!library || !account) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
+        <ModalOverlay backdropFilter="blur(4px)" />
+        <ModalContent bg="brand.surface" borderRadius="xl">
+          <ModalHeader color="white">Create Liquidity Pool</ModalHeader>
+          <ModalCloseButton color="white" />
+          <ModalBody pb={6}>
+            <Text color="whiteAlpha.700">Please connect your wallet to create a pool</Text>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    )
+  }
+
+
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
