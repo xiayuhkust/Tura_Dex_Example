@@ -21,6 +21,7 @@ describe('TuraPool', () => {
     HIGH: 10000    // 1%
   };
   const INITIAL_PRICE = '79228162514264337593543950336'; // 1.0 in Q96
+  const INITIAL_LIQUIDITY = ethers.utils.parseUnits('0.000001', 18); // Very small initial liquidity
   const INITIAL_LIQUIDITY = ethers.utils.parseEther('1.0'); // 1.0 tokens
 
   beforeEach(async () => {
@@ -133,18 +134,19 @@ describe('TuraPool', () => {
     });
 
     it('should add initial liquidity', async () => {
-      const amount = ethers.utils.parseEther('1.0');
+      const amount = ethers.utils.parseUnits('1', 6); // Use smaller amounts
       
       // Initialize pool first
       if ((await pool.slot0()).sqrtPriceX96 == 0) {
         await pool.initialize(INITIAL_PRICE);
       }
 
-      // Mint and approve tokens
-      await token0.mint(owner.address, amount);
-      await token1.mint(owner.address, amount);
-      await token0.approve(pool.address, amount);
-      await token1.approve(pool.address, amount);
+      // Mint and approve tokens with buffer
+      const mintAmount = amount.mul(2); // Double the amount for safety
+      await token0.mint(owner.address, mintAmount);
+      await token1.mint(owner.address, mintAmount);
+      await token0.approve(pool.address, mintAmount);
+      await token1.approve(pool.address, mintAmount);
       
       // Add liquidity
       await pool.mint(
