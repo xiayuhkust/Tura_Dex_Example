@@ -46,6 +46,16 @@ describe('UniswapV3Pool', () => {
             await token1.approve(pool.address, ethers.constants.MaxUint256);
             await token0.connect(other).approve(pool.address, ethers.constants.MaxUint256);
             await token1.connect(other).approve(pool.address, ethers.constants.MaxUint256);
+
+            // Setup initial amounts - using minimal amounts for Tura testing
+            const userAmount = ethers.utils.parseEther('0.00000001'); // 0.00000001 Tura for testing (~40 Tura total)
+            const lpAmount = ethers.utils.parseEther('0.000000005'); // 0.000000005 Tura for LP (~2900 Tura total)
+            
+            // Mint tokens first
+            await token0.mint(owner.address, userAmount.mul(2));
+            await token1.mint(owner.address, userAmount.mul(2));
+            await token0.mint(other.address, userAmount);
+            await token1.mint(other.address, userAmount);
         });
 
         it('sets initial price', async () => {
