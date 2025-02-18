@@ -42,25 +42,16 @@ describe('TuraPool', () => {
       [token0, token1] = [token1, token0];
     }
 
-    // Mint initial tokens and approve
-    const mintAmount = ethers.utils.parseEther('1000000');
-    for (const token of [token0, token1]) {
-      for (const user of [owner, user1, user2]) {
-        await token.mint(user.address, mintAmount);
-        await token.connect(user).approve(factory.address, ethers.constants.MaxUint256);
-      }
-    }
-
     // Create pool
     await factory.createPool(token0.address, token1.address, FEE_AMOUNTS.MEDIUM);
     const poolAddress = await factory.getPool(token0.address, token1.address, FEE_AMOUNTS.MEDIUM);
     pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
 
     // Mint tokens and approve for all users
-    const mintAmount = ethers.utils.parseEther('0.0001'); // Small amount for testing
+    const testAmount = ethers.utils.parseEther('0.0001'); // Small amount for testing
     for (const token of [token0, token1]) {
       for (const user of [owner, user1, user2]) {
-        await token.mint(user.address, mintAmount);
+        await token.mint(user.address, testAmount);
         await token.connect(user).approve(poolAddress, ethers.constants.MaxUint256);
       }
     }
