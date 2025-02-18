@@ -13,7 +13,9 @@ export const theme = extendTheme({
       surfaceHover: '#2D3131' // Hover state for surface elements
     },
     gradients: {
-      background: 'radial-gradient(circle at top left, rgba(255,59,154,0.1), transparent 40%), radial-gradient(circle at top right, rgba(76,130,251,0.1), transparent 40%)',
+      background: 'radial-gradient(circle at top left, rgba(255,59,154,0.15), transparent 40%), radial-gradient(circle at top right, rgba(76,130,251,0.15), transparent 40%), radial-gradient(circle at bottom center, rgba(255,184,0,0.1), transparent 30%)',
+      primaryButton: 'linear-gradient(45deg, #FF3B9A, #4C82FB)',
+      secondaryButton: 'linear-gradient(45deg, #4C82FB, #FFB800)'
     }
   },
   styles: {
@@ -34,20 +36,37 @@ export const theme = extendTheme({
     Button: {
       baseStyle: {
         borderRadius: 'xl',
-        fontWeight: 'semibold'
+        fontWeight: 'semibold',
+        transition: 'all 0.2s',
+        _hover: {
+          transform: 'translateY(-1px)',
+          boxShadow: '0 4px 12px rgba(255, 59, 154, 0.2)'
+        },
+        _active: {
+          transform: 'translateY(0)',
+          boxShadow: 'none'
+        }
       },
       variants: {
         solid: {
           bg: 'brand.primary',
           color: 'white',
+          backgroundImage: 'linear-gradient(45deg, brand.primary, brand.secondary)',
           _hover: {
-            bg: 'brand.primary',
-            opacity: 0.9
+            opacity: 0.9,
+            backgroundImage: 'linear-gradient(45deg, brand.secondary, brand.primary)'
           }
         },
         outline: {
-          borderColor: 'brand.primary',
-          color: 'brand.primary',
+          borderColor: 'whiteAlpha.400',
+          color: 'white',
+          _hover: {
+            bg: 'whiteAlpha.100',
+            borderColor: 'brand.primary'
+          }
+        },
+        ghost: {
+          color: 'whiteAlpha.900',
           _hover: {
             bg: 'whiteAlpha.100'
           }
@@ -59,10 +78,31 @@ export const theme = extendTheme({
         bg: 'brand.surface',
         borderRadius: 'xl',
         p: 4,
-        boxShadow: 'lg',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        border: '1px solid',
+        borderColor: 'whiteAlpha.100',
+        transition: 'all 0.3s ease',
         _hover: {
           bg: 'brand.surfaceHover',
-          transition: 'background 0.2s'
+          borderColor: 'brand.primary',
+          transform: 'translateY(-2px)',
+          boxShadow: '0 8px 24px rgba(255, 59, 154, 0.15)'
+        }
+      }
+    },
+    Modal: {
+      baseStyle: {
+        overlay: {
+          bg: 'blackAlpha.800',
+          backdropFilter: 'blur(8px)'
+        },
+        dialog: {
+          bg: 'brand.surface',
+          borderRadius: 'xl',
+          border: '1px solid',
+          borderColor: 'whiteAlpha.100',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          backgroundImage: 'gradients.background'
         }
       }
     }
