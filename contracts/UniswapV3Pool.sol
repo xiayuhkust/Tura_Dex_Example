@@ -368,9 +368,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 }
                 
                 // Update position fees
-                {
-                    bytes32 positionKey = keccak256(abi.encodePacked(msg.sender, MIN_TICK, MAX_TICK));
-                    IPosition.Info storage position = positions[positionKey];
+                bytes32 positionKey = keccak256(abi.encodePacked(msg.sender, MIN_TICK, MAX_TICK));
+                IPosition.Info storage position = positions[positionKey];
+                if (position.liquidity > 0) {
                     position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
                     position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
                 }
@@ -403,19 +403,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.nextTick = _currentTick;
         
         // Calculate fees
-        state.feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
+        state.feeAmount = FullMath.mulDiv(amountSpecified, uint256(fee), 1000000); // fee is in millionths
         state.amountAfterFee = amountSpecified.sub(state.feeAmount);
-        
-        // Update position fees
-        bytes32 positionKey = keccak256(abi.encodePacked(msg.sender, MIN_TICK, MAX_TICK));
-        IPosition.Info storage position = positions[positionKey];
-        if (position.liquidity > 0) {
-            if (zeroForOne) {
-                position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
-            } else {
-                position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
-            }
-        }
 
         // Execute swap
         (amount0, amount1) = _handleSwap(zeroForOne, state, recipient);
