@@ -442,7 +442,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amountAfterFee: amountAfterFee,
             currentLiquidity: liquidity,
             recipient: recipient,
-            nextTick: tick,
+            nextTick: currentTick,
             nextPrice: sqrtPriceX96,
             sender: msg.sender
         });
@@ -486,7 +486,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
         // Calculate next tick and update liquidity
         swapState.nextTick = TickMath.getTickAtSqrtRatio(swapState.nextPrice);
-        if (tick != swapState.nextTick) {
+        if (currentTick != swapState.nextTick) {
             int128 liquidityNet = ticks.cross(
                 swapState.nextTick,
                 feeGrowthGlobal0X128,
@@ -506,6 +506,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         _slot0.tick = state.nextTick;
         _slot0.unlocked = true;
 
-        emit Swap(msg.sender, recipient, amount0, amount1, swapState.nextPrice, swapState.currentLiquidity, swapState.nextTick);
+        emit Swap(msg.sender, recipient, amount0, amount1, state.nextPrice, state.currentLiquidity, state.nextTick);
     }
 }
