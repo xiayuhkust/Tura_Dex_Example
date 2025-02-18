@@ -123,6 +123,10 @@ describe('UniswapV3Pool', () => {
             await token0.mint(owner.address, liquidityAmount);
             await token1.mint(owner.address, liquidityAmount);
             
+            // Approve tokens
+            await token0.approve(pool.address, liquidityAmount);
+            await token1.approve(pool.address, liquidityAmount);
+            
             // Add liquidity
             await pool.mint(owner.address, MIN_TICK, MAX_TICK, liquidityAmount);
 
@@ -140,6 +144,10 @@ describe('UniswapV3Pool', () => {
             // Mint tokens for LP
             await token0.mint(owner.address, lpAmount);
             await token1.mint(owner.address, lpAmount);
+            
+            // Approve tokens
+            await token0.approve(pool.address, lpAmount);
+            await token1.approve(pool.address, lpAmount);
             
             // Add liquidity
             await pool.mint(owner.address, MIN_TICK, MAX_TICK, lpAmount);
