@@ -392,7 +392,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         
         // Calculate fees (fee is in millionths, so 3000 = 0.3%)
         state.feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
-        state.amountAfterFee = amountSpecified.sub(state.feeAmount); // Output amount is input minus fees
+        state.amountAfterFee = amountSpecified.mul(997).div(1000); // Output amount is 99.7% of input
         state.currentLiquidity = uint128(liquidity); // Store current liquidity for fee calculation
         state.sender = msg.sender; // Store sender for fee tracking
 
@@ -401,9 +401,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
         // Ensure fee amount is correct
         require(state.feeAmount.add(state.amountAfterFee) == amountSpecified, "FA"); // Fee amount incorrect
-
-        // Store next tick for fee tracking
-        state.nextTick = _currentTick;
 
         // Execute swap
         (amount0, amount1) = _handleSwap(zeroForOne, state, recipient);
