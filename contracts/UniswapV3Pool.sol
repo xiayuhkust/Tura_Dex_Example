@@ -268,30 +268,41 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         uint160 sqrtPriceCurrentX96,
         uint160 sqrtPriceLowerX96,
         uint160 sqrtPriceUpperX96,
-        uint128 amount
+        uint128 liquidity
     ) internal pure returns (uint256 amount0, uint256 amount1) {
+        // Calculate amounts based on price range
         if (sqrtPriceCurrentX96 <= sqrtPriceLowerX96) {
             // Current price below range, only token0 needed
-            amount0 = amount;
+            amount0 = SqrtPriceMath.getAmount0Delta(
+                sqrtPriceLowerX96,
+                sqrtPriceUpperX96,
+                liquidity,
+                true
+            );
             amount1 = 0;
         } else if (sqrtPriceCurrentX96 < sqrtPriceUpperX96) {
             // Current price within range, need both tokens
             amount0 = SqrtPriceMath.getAmount0Delta(
                 sqrtPriceCurrentX96,
                 sqrtPriceUpperX96,
-                amount,
+                liquidity,
                 true
             );
             amount1 = SqrtPriceMath.getAmount1Delta(
                 sqrtPriceLowerX96,
                 sqrtPriceCurrentX96,
-                amount,
+                liquidity,
                 true
             );
         } else {
             // Current price above range, only token1 needed
             amount0 = 0;
-            amount1 = amount;
+            amount1 = SqrtPriceMath.getAmount1Delta(
+                sqrtPriceLowerX96,
+                sqrtPriceUpperX96,
+                liquidity,
+                true
+            );
         }
     }
 

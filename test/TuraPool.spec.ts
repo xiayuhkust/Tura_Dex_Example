@@ -140,7 +140,9 @@ describe('TuraPool', () => {
         await pool.initialize(INITIAL_PRICE);
       }
 
-      // Approve tokens
+      // Mint and approve tokens
+      await token0.mint(owner.address, amount);
+      await token1.mint(owner.address, amount);
       await token0.approve(pool.address, amount);
       await token1.approve(pool.address, amount);
       
