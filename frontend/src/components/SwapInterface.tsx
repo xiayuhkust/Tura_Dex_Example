@@ -22,9 +22,31 @@ export function SwapInterface() {
 
   const handleSwap = useCallback(async () => {
     try {
+      if (!active) {
+        throw new Error('Please connect your wallet first')
+      }
+
+      if (!inputToken || !outputToken) {
+        throw new Error('Please select tokens')
+      }
+
+      if (!inputAmount || !outputAmount) {
+        throw new Error('Please enter amounts')
+      }
+
+      if (warning?.level === 'error') {
+        throw new Error('Price impact too high')
+      }
+
       setIsLoading(true)
       // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 2000))
+
+      // Simulate random errors for testing
+      if (Math.random() < 0.3) {
+        throw new Error('Network error: Transaction failed')
+      }
+
       toast({
         title: 'Swap successful',
         description: 'Your transaction has been confirmed',
@@ -37,7 +59,7 @@ export function SwapInterface() {
     } finally {
       setIsLoading(false)
     }
-  }, [toast, handleError])
+  }, [active, inputToken, outputToken, inputAmount, outputAmount, warning, toast, handleError])
 
   const { priceImpact, warning } = usePriceImpact(
     inputToken,
