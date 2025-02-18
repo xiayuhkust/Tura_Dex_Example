@@ -277,7 +277,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     ) private returns (int256 amount0, int256 amount1) {
         if (zeroForOne) {
             // Calculate amounts
-            amount0 = int256(state.amountAfterFee);
+            amount0 = int256(state.amountSpecified);
             amount1 = -int256(state.amountAfterFee);
             
             // Transfer tokens
@@ -368,7 +368,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 }
                 
                 // Update position fees
-                bytes32 positionKey = keccak256(abi.encodePacked(recipient, MIN_TICK, MAX_TICK));
+                bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
                 IPosition.Info storage position = positions[positionKey];
                 if (position.liquidity > 0) {
                     position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
