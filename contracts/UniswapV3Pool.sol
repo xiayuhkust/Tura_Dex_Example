@@ -312,13 +312,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 state.amountAfterFee = state.amountSpecified.sub(feeAmount);
 
                 // Calculate swap amounts
-                amount0 = int256(amountAfterFee);
-                amount1 = -int256(amountAfterFee);
+                amount0 = int256(state.amountAfterFee);
+                amount1 = -int256(state.amountAfterFee);
 
                 // Update protocol fees and fee growth
                 if (state.currentLiquidity > 0) {
-                    protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
-                    feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(FullMath.mulDiv(feeAmount, Q128, state.currentLiquidity));
+                    protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
+                    feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity));
 
                     // Update position fees
                     bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
@@ -374,13 +374,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 state.amountAfterFee = state.amountSpecified.sub(feeAmount);
 
                 // Calculate swap amounts
-                amount0 = -int256(amountAfterFee);
-                amount1 = int256(amountAfterFee);
+                amount0 = -int256(state.amountAfterFee);
+                amount1 = int256(state.amountAfterFee);
 
                 // Update protocol fees and fee growth
                 if (state.currentLiquidity > 0) {
-                    protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
-                    feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(FullMath.mulDiv(feeAmount, Q128, state.currentLiquidity));
+                    protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
+                    feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity));
 
                     // Update position fees
                     bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
