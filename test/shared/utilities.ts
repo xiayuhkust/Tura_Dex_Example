@@ -2,12 +2,7 @@ import bn from 'bignumber.js'
 import { BigNumber, BigNumberish, constants, Contract, ContractTransaction, utils, Wallet } from 'ethers'
 import { ethers } from 'hardhat'
 
-// Contract types
-import type { UniswapV3Pool } from '../../typechain/contracts/v3/UniswapV3Pool'
-import type { TestERC20 } from '../../typechain/contracts/v3/test/TestERC20'
-import type { TestUniswapV3Callee } from '../../typechain/contracts/v3/test/TestUniswapV3Callee'
-import type { TestUniswapV3Router } from '../../typechain/contracts/v3/test/TestUniswapV3Router'
-import type { MockTimeUniswapV3Pool } from '../../typechain/contracts/v3/test/MockTimeUniswapV3Pool'
+// Using Contract type from ethers for all contract interactions
 
 export const MaxUint128 = BigNumber.from(2).pow(128).sub(1)
 
@@ -114,10 +109,10 @@ export function createPoolFunctions({
   token1,
   pool,
 }: {
-  swapTarget: TestUniswapV3Callee
-  token0: TestERC20
-  token1: TestERC20
-  pool: MockTimeUniswapV3Pool
+  swapTarget: Contract
+  token0: Contract
+  token1: Contract
+  pool: Contract
 }): PoolFunctions {
   async function swapToSqrtPrice(
     inputToken: Contract,
@@ -236,10 +231,10 @@ export function createMultiPoolFunctions({
   poolInput,
   poolOutput,
 }: {
-  inputToken: TestERC20
-  swapTarget: TestUniswapV3Router
-  poolInput: MockTimeUniswapV3Pool
-  poolOutput: MockTimeUniswapV3Pool
+  inputToken: Contract
+  swapTarget: Contract
+  poolInput: Contract
+  poolOutput: Contract
 }): MultiPoolFunctions {
   async function swapForExact0Multi(amountOut: BigNumberish, to: Wallet | string): Promise<ContractTransaction> {
     const method = swapTarget.swapForExact0Multi

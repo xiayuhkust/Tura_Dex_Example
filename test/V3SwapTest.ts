@@ -1,10 +1,7 @@
 import { ethers, waffle } from 'hardhat'
-import { MockTimeUniswapV3Pool } from '../typechain/contracts/v3/test/MockTimeUniswapV3Pool'
-import { TestERC20 } from '../typechain/contracts/v3/test/TestERC20'
-import { TestUniswapV3Callee } from '../typechain/contracts/v3/test/TestUniswapV3Callee'
+import { Contract, Wallet } from 'ethers'
 import { expect } from './shared/expect'
 import { poolFixture } from './shared/fixtures'
-import { Wallet } from 'ethers'
 import {
   FeeAmount,
   TICK_SPACINGS,
@@ -24,10 +21,10 @@ type PoolFunctions = ReturnType<typeof createPoolFunctions>
 
 describe('UniswapV3Pool Swaps', () => {
   let wallet: Wallet, other: Wallet
-  let token0: TestERC20
-  let token1: TestERC20
-  let pool: MockTimeUniswapV3Pool
-  let swapTarget: TestUniswapV3Callee
+  let token0: Contract
+  let token1: Contract
+  let pool: Contract
+  let swapTarget: Contract
   let poolFunctions: PoolFunctions
 
   let loadFixture: ReturnType<typeof createFixtureLoader>
@@ -87,7 +84,7 @@ describe('UniswapV3Pool Swaps', () => {
       await poolFunctions.swapExact1For0(swapAmount, wallet.address)
       const result = await pool.collectProtocol(wallet.address, MaxUint128, MaxUint128)
       const receipt = await result.wait()
-      const event = receipt.events?.find(e => e.event === 'CollectProtocol')
+      const event = receipt.events?.find((e: { event: string }) => e.event === 'CollectProtocol')
       expect(event?.args?.amount0).to.be.gt(0)
       expect(event?.args?.amount1).to.be.gt(0)
     })

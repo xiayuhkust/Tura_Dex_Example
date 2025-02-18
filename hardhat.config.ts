@@ -1,14 +1,11 @@
-import { HardhatUserConfig } from "hardhat/config";
-import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
-import "@openzeppelin/hardhat-upgrades";
-import "@typechain/hardhat";
-import "@typechain/ethers-v5";
+import "@nomiclabs/hardhat-ethers";
+import "hardhat-typechain";
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const config: HardhatUserConfig = {
+export default {
   solidity: {
     version: "0.7.6",
     settings: {
@@ -38,5 +35,3 @@ const config: HardhatUserConfig = {
     artifacts: "./artifacts"
   }
 };
-
-export default config;

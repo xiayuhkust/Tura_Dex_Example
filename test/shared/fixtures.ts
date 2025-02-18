@@ -1,37 +1,29 @@
-import { BigNumber, Wallet } from 'ethers'
+import { BigNumber, Contract, Wallet } from 'ethers'
 import { ethers } from 'hardhat'
 import { Fixture } from 'ethereum-waffle'
 import { FeeAmount, TICK_SPACINGS } from './utilities'
 
-// Contract types
-import type { MockTimeUniswapV3Pool } from '../../typechain/contracts/v3/test/MockTimeUniswapV3Pool'
-import type { UniswapV3Factory } from '../../typechain/contracts/v3/UniswapV3Factory'
-import type { TestERC20 } from '../../typechain/contracts/v3/test/TestERC20'
-import type { TestUniswapV3Callee } from '../../typechain/contracts/v3/test/TestUniswapV3Callee'
-import type { TestUniswapV3Router } from '../../typechain/contracts/v3/test/TestUniswapV3Router'
-import type { MockTimeUniswapV3PoolDeployer } from '../../typechain/contracts/v3/test/MockTimeUniswapV3PoolDeployer'
-
 interface FactoryFixture {
-  factory: UniswapV3Factory
+  factory: Contract
 }
 
 async function factoryFixture(): Promise<FactoryFixture> {
   const factoryFactory = await ethers.getContractFactory('UniswapV3Factory')
-  const factory = (await factoryFactory.deploy()) as UniswapV3Factory
+  const factory = await factoryFactory.deploy()
   return { factory }
 }
 
 interface TokensFixture {
-  token0: TestERC20
-  token1: TestERC20
-  token2: TestERC20
+  token0: Contract
+  token1: Contract
+  token2: Contract
 }
 
 async function tokensFixture(): Promise<TokensFixture> {
   const tokenFactory = await ethers.getContractFactory('TestERC20')
-  const tokenA = (await tokenFactory.deploy(BigNumber.from(2).pow(255))) as TestERC20
-  const tokenB = (await tokenFactory.deploy(BigNumber.from(2).pow(255))) as TestERC20
-  const tokenC = (await tokenFactory.deploy(BigNumber.from(2).pow(255))) as TestERC20
+  const tokenA = await tokenFactory.deploy(BigNumber.from(2).pow(255))
+  const tokenB = await tokenFactory.deploy(BigNumber.from(2).pow(255))
+  const tokenC = await tokenFactory.deploy(BigNumber.from(2).pow(255))
 
   const [token0, token1, token2] = [tokenA, tokenB, tokenC].sort((tokenA, tokenB) =>
     tokenA.address.toLowerCase() < tokenB.address.toLowerCase() ? -1 : 1
@@ -43,9 +35,9 @@ async function tokensFixture(): Promise<TokensFixture> {
 type TokensAndFactoryFixture = FactoryFixture & TokensFixture
 
 interface PoolFixture extends TokensAndFactoryFixture {
-  pool: MockTimeUniswapV3Pool
-  swapTargetCallee: TestUniswapV3Callee
-  swapTargetRouter: TestUniswapV3Router
+  pool: Contract
+  swapTargetCallee: Contract
+  swapTargetRouter: Contract
 }
 
 // Monday, October 5, 2020 9:00:00 AM GMT-05:00
@@ -58,8 +50,8 @@ export const poolFixture: Fixture<PoolFixture> = async function (): Promise<Pool
   const calleeContractFactory = await ethers.getContractFactory('TestUniswapV3Callee')
   const routerContractFactory = await ethers.getContractFactory('TestUniswapV3Router')
 
-  const swapTargetCallee = (await calleeContractFactory.deploy()) as TestUniswapV3Callee
-  const swapTargetRouter = (await routerContractFactory.deploy()) as TestUniswapV3Router
+  const swapTargetCallee = await calleeContractFactory.deploy()
+  const swapTargetRouter = await routerContractFactory.deploy()
 
   const MockTimeUniswapV3PoolDeployerFactory = await ethers.getContractFactory('MockTimeUniswapV3PoolDeployer')
   const MockTimeUniswapV3PoolFactory = await ethers.getContractFactory('MockTimeUniswapV3Pool')
@@ -75,7 +67,7 @@ export const poolFixture: Fixture<PoolFixture> = async function (): Promise<Pool
 
   const receipt = await tx.wait()
   const poolAddress = receipt.events?.[0].args?.pool as string
-  const pool = MockTimeUniswapV3PoolFactory.attach(poolAddress) as MockTimeUniswapV3Pool
+  const pool = MockTimeUniswapV3PoolFactory.attach(poolAddress)
 
   return {
     token0,
