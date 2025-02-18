@@ -102,6 +102,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         int24 tickUpper,
         uint128 amount
     ) external override returns (uint256 amount0, uint256 amount1) {
+        require(_slot0.sqrtPriceX96 != 0, 'AI'); // Not initialized
         require(amount > 0, 'IL'); // Invalid liquidity
         require(tickLower < tickUpper, 'TLU'); // Tick Lower < Upper
         require(tickLower >= TickMath.MIN_TICK, 'TLM'); // Tick Lower too low
