@@ -161,11 +161,11 @@ describe('TuraPool', () => {
 
       // Verify liquidity
       const liquidity = await pool.liquidity();
-      expect(liquidity).to.equal(amount);
+      expect(liquidity).to.equal(liquidityAmount);
     });
 
     it('should track positions correctly', async () => {
-      const amount = ethers.utils.parseUnits('1', 12); // 1e12 units
+      const liquidityAmount = BASE_AMOUNT.mul(100); // 100x base amount for testing
       const tickLower = -887272;
       const tickUpper = 887272;
       
@@ -179,13 +179,13 @@ describe('TuraPool', () => {
         owner.address,
         tickLower,
         tickUpper,
-        amount
+        liquidityAmount
       );
 
       // Verify position
       const positionKey = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [owner.address, tickLower, tickUpper]));
       const position = await pool.positions(positionKey);
-      expect(position.liquidity).to.equal(amount);
+      expect(position.liquidity).to.equal(liquidityAmount);
     });
 
     it('should collect fees after swaps', async () => {
