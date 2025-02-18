@@ -7,12 +7,17 @@ export interface Token {
   price?: string
 }
 
+interface Warning {
+  level: 'error' | 'warning' | 'info'
+  message: string
+}
+
 export function usePriceImpact(
   inputToken: Token | undefined,
   outputToken: Token | undefined,
   inputAmount: string,
   outputAmount: string
-) {
+): { priceImpact: number; warning: Warning | null } {
   return useMemo(() => {
     if (!inputToken?.price || !outputToken?.price || !inputAmount || !outputAmount) {
       return {
