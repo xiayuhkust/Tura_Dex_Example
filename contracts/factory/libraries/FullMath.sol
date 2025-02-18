@@ -2,6 +2,18 @@
 pragma solidity =0.7.6;
 
 library FullMath {
+    function mulDivRoundingUp(
+        uint256 a,
+        uint256 b,
+        uint256 denominator
+    ) internal pure returns (uint256 result) {
+        result = mulDiv(a, b, denominator);
+        if (mulmod(a, b, denominator) > 0) {
+            require(result < type(uint256).max);
+            result++;
+        }
+    }
+
     function mulDiv(
         uint256 a,
         uint256 b,
@@ -57,17 +69,5 @@ library FullMath {
 
         result = prod0 * inv;
         return result;
-    }
-
-    function mulDivRoundingUp(
-        uint256 a,
-        uint256 b,
-        uint256 denominator
-    ) internal pure returns (uint256 result) {
-        result = mulDiv(a, b, denominator);
-        if (mulmod(a, b, denominator) > 0) {
-            require(result < type(uint256).max);
-            result++;
-        }
     }
 }
