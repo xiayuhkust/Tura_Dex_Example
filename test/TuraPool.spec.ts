@@ -82,9 +82,6 @@ describe('TuraPool', () => {
     });
 
     it('should add initial liquidity', async () => {
-      await token0.approve(pool.address, INITIAL_LIQUIDITY);
-      await token1.approve(pool.address, INITIAL_LIQUIDITY);
-
       await pool.mint(
         owner.address,
         -887272,
@@ -96,9 +93,6 @@ describe('TuraPool', () => {
     });
 
     it('should track positions correctly', async () => {
-      await token0.approve(pool.address, INITIAL_LIQUIDITY);
-      await token1.approve(pool.address, INITIAL_LIQUIDITY);
-
       await pool.mint(
         owner.address,
         -887272,
@@ -113,9 +107,6 @@ describe('TuraPool', () => {
 
     it('should collect fees after swaps', async () => {
       // Add initial liquidity
-      await token0.approve(pool.address, INITIAL_LIQUIDITY);
-      await token1.approve(pool.address, INITIAL_LIQUIDITY);
-
       await pool.mint(
         owner.address,
         -887272,
