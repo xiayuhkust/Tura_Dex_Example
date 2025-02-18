@@ -109,13 +109,67 @@ export function TokenListModal({ isOpen, onClose, onSelect }: TokenListModalProp
               border="none"
               _focus={{ border: 'none', ring: 1, ringColor: 'brand.primary' }}
             />
-            <VStack w="full" align="stretch" spacing={2} maxH="60vh" overflowY="auto">
-              {filteredTokens.map(token => (
-                <Box
-                  key={token.address}
-                  p={3}
-                  borderRadius="lg"
-                  bg="whiteAlpha.100"
+            <VStack w="full" align="stretch" spacing={4} maxH="60vh" overflowY="auto">
+              {recentTokens.length > 0 && (
+                <Box>
+                  <Text color="whiteAlpha.600" mb={2}>Recently Used</Text>
+                  <VStack align="stretch" spacing={2}>
+                    {recentTokens.map((token: Token) => (
+                      <Box
+                        key={token.address}
+                        p={3}
+                        borderRadius="lg"
+                        bg="whiteAlpha.100"
+                        cursor="pointer"
+                        _hover={{ bg: 'whiteAlpha.200' }}
+                        onClick={() => {
+                          const updatedToken = { ...token, lastUsed: Date.now() }
+                          onSelect(updatedToken)
+                          addRecentToken(updatedToken)
+                          onClose()
+                        }}
+                      >
+                        <HStack justify="space-between">
+                          <HStack spacing={3}>
+                            <Image
+                              boxSize="8"
+                              borderRadius="full"
+                              src={token.logoURI}
+                              fallback={<Box boxSize="8" borderRadius="full" bg="brand.primary" />}
+                            />
+                            <VStack align="start" spacing={0}>
+                              <Text color="white" fontWeight="bold">{token.symbol}</Text>
+                              <Text color="whiteAlpha.700" fontSize="sm">{token.name}</Text>
+                            </VStack>
+                          </HStack>
+                          <VStack align="end" spacing={0}>
+                            <Text color="whiteAlpha.900">{token.balance}</Text>
+                            <HStack spacing={1}>
+                              <Text color="whiteAlpha.700" fontSize="sm">${token.price}</Text>
+                              <Text 
+                                color={parseFloat(token.priceChange24h || '0') >= 0 ? 'green.400' : 'red.400'} 
+                                fontSize="sm"
+                              >
+                                {token.priceChange24h}%
+                              </Text>
+                            </HStack>
+                          </VStack>
+                        </HStack>
+                      </Box>
+                    ))}
+                  </VStack>
+                </Box>
+              )}
+              
+              <Box>
+                <Text color="whiteAlpha.600" mb={2}>All Tokens</Text>
+                <VStack align="stretch" spacing={2}>
+                  {filteredTokens.map((token: Token) => (
+                    <Box
+                      key={token.address}
+                      p={3}
+                      borderRadius="lg"
+                      bg="whiteAlpha.100"
                   cursor="pointer"
                   _hover={{ bg: 'whiteAlpha.200' }}
                   onClick={() => {
