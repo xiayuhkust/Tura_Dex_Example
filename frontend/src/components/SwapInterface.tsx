@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { Box, VStack, Text, Button, HStack, Divider, IconButton } from '@chakra-ui/react'
+import { useState, useCallback } from 'react'
+import { Box, VStack, Text, Button, HStack, Divider, IconButton, useToast } from '@chakra-ui/react'
 import { useWeb3 } from '../hooks/useWeb3'
 import { TokenSelect } from './TokenSelect'
 import { TradeDetails } from './TradeDetails'
 import { Settings } from './Settings'
+import { LoadingSpinner } from './LoadingSpinner'
 import { usePriceImpact, Token } from '../hooks/usePriceImpact'
 
 export function SwapInterface() {
@@ -15,6 +16,33 @@ export function SwapInterface() {
   const [inputToken, setInputToken] = useState<Token>()
   const [outputToken, setOutputToken] = useState<Token>()
   const [estimatedGas] = useState<string>('~0.0001 ETH')
+  const [isLoading, setIsLoading] = useState(false)
+  const toast = useToast()
+
+  const handleSwap = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      toast({
+        title: 'Swap successful',
+        description: 'Your transaction has been confirmed',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      })
+    } catch (error) {
+      toast({
+        title: 'Swap failed',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [toast])
 
   const { priceImpact, warning } = usePriceImpact(
     inputToken,
@@ -102,15 +130,20 @@ export function SwapInterface() {
               estimatedGas={estimatedGas}
             />
 
-            <Button
-              w="full"
-              size="lg"
-              bg="brand.primary"
-              _hover={{ opacity: 0.9 }}
-              isDisabled={!inputAmount || !outputAmount}
-            >
-              Swap
-            </Button>
+            {isLoading ? (
+              <LoadingSpinner message="Preparing swap..." />
+            ) : (
+              <Button
+                w="full"
+                size="lg"
+                bg="brand.primary"
+                _hover={{ opacity: 0.9 }}
+                isDisabled={!inputAmount || !outputAmount}
+                onClick={handleSwap}
+              >
+                Swap
+              </Button>
+            )}
           </VStack>
         )}
       </VStack>
