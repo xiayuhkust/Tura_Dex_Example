@@ -178,23 +178,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             liquidity = uint128(uint256(liquidity).add(uint256(amount)));
         }
 
-        // Calculate token amounts based on price range
-        uint160 sqrtPriceLowerX96 = TickMath.getSqrtRatioAtTick(tickLower);
-        uint160 sqrtPriceUpperX96 = TickMath.getSqrtRatioAtTick(tickUpper);
-        uint160 sqrtPriceCurrentX96 = _slot0.sqrtPriceX96;
-
-        // Calculate token amounts
-        (amount0, amount1) = _calculateAmounts(
-            sqrtPriceCurrentX96,
-            sqrtPriceLowerX96,
-            sqrtPriceUpperX96,
-            amount
-        );
-
-        // Transfer tokens to pool
-        if (amount0 > 0) require(IERC20(token0).transferFrom(msg.sender, address(this), amount0), 'T0');
-        if (amount1 > 0) require(IERC20(token1).transferFrom(msg.sender, address(this), amount1), 'T1');
-
         emit Mint(msg.sender, recipient, tickLower, tickUpper, amount, amount0, amount1);
     }
 
@@ -406,9 +389,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.nextPrice = sqrtPriceX96;
         state.nextTick = _currentTick;
 
-        // Store current liquidity and sender for fee tracking
-        state.currentLiquidity = uint128(liquidity);
-        state.sender = msg.sender;
+        // Calculate fees (fee is in millionths, so 3000 = 0.3%)
+        (state.feeAmount, state.amountAfterFee) = _calculateFees(amountSpecified, zeroForOne, state.currentLiquidity);
 
         // Ensure we have enough liquidity
         require(state.currentLiquidity > 0, "IL"); // Insufficient liquidity
