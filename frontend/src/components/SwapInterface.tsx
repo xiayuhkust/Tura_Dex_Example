@@ -5,7 +5,7 @@ import { TokenSelect } from './TokenSelect'
 import { TradeDetails } from './TradeDetails'
 import { Settings } from './Settings'
 import { LoadingSpinner } from './LoadingSpinner'
-import { usePriceImpact, Token } from '../hooks/usePriceImpact'
+import { usePriceImpact, Token } from '../hooks'
 
 export function SwapInterface() {
   const { active, account, connect } = useWeb3()

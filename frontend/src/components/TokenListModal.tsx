@@ -16,7 +16,7 @@ import {
 import { useTokenBalances } from '../hooks/useTokenBalances'
 import { useRecentTokens } from '../hooks/useRecentTokens'
 
-import { Token } from '../hooks/usePriceImpact'
+import { Token } from '../hooks'
 
 const DEMO_TOKENS: Token[] = [
   {
