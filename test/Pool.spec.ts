@@ -145,8 +145,8 @@ describe('UniswapV3Pool', () => {
             const initialPoolBalance1 = await token1.balanceOf(pool.address);
             
             // Calculate expected amounts
-            const amountAfterFee = swapAmount.mul(997).div(1000); // 99.7% output
-            const feeAmount = swapAmount.sub(amountAfterFee); // 0.3% fee
+            const feeAmount = swapAmount.mul(3).div(1000); // 0.3% fee first
+            const amountAfterFee = swapAmount.sub(feeAmount); // Remainder is output
             
             // Execute swap
             await pool.connect(other).swap(true, swapAmount, other.address);
@@ -160,10 +160,10 @@ describe('UniswapV3Pool', () => {
             // Verify token0 was taken from user
             expect(finalBalance0).to.equal(initialBalance0.sub(swapAmount), "User token0 balance incorrect");
             // Verify token1 was given to user
-            expect(finalBalance1).to.be.gt(initialBalance1, "User token1 balance should increase");
+            expect(finalBalance1).to.equal(initialBalance1.add(amountAfterFee), "User token1 balance incorrect");
             // Verify pool balances changed correctly
             expect(finalPoolBalance0).to.equal(initialPoolBalance0.add(swapAmount), "Pool token0 balance incorrect");
-            expect(finalPoolBalance1).to.be.lt(initialPoolBalance1, "Pool token1 balance should decrease");
+            expect(finalPoolBalance1).to.equal(initialPoolBalance1.sub(amountAfterFee), "Pool token1 balance incorrect");
             
             // Verify fee growth and protocol fees
             const position = await pool.getPosition(owner.address, MIN_TICK, MAX_TICK);
@@ -182,12 +182,12 @@ describe('UniswapV3Pool', () => {
             const initialPoolBalance0 = await token0.balanceOf(pool.address);
             const initialPoolBalance1 = await token1.balanceOf(pool.address);
             
+            // Calculate expected amounts
+            const feeAmount = swapAmount.mul(3).div(1000); // 0.3% fee first
+            const amountAfterFee = swapAmount.sub(feeAmount); // Remainder is output
+            
             // Execute swap
             await pool.connect(other).swap(false, swapAmount, other.address);
-            
-            // Calculate expected amounts
-            const amountAfterFee = swapAmount.mul(997).div(1000); // 99.7% output
-            const feeAmount = swapAmount.sub(amountAfterFee); // 0.3% fee
             
             // Verify balances changed correctly
             const finalBalance0 = await token0.balanceOf(other.address);
@@ -198,9 +198,9 @@ describe('UniswapV3Pool', () => {
             // Verify token1 was taken from user
             expect(finalBalance1).to.equal(initialBalance1.sub(swapAmount), "User token1 balance incorrect");
             // Verify token0 was given to user
-            expect(finalBalance0).to.be.gt(initialBalance0, "User token0 balance should increase");
+            expect(finalBalance0).to.equal(initialBalance0.add(amountAfterFee), "User token0 balance incorrect");
             // Verify pool balances changed correctly
-            expect(finalPoolBalance0).to.be.lt(initialPoolBalance0, "Pool token0 balance should decrease");
+            expect(finalPoolBalance0).to.equal(initialPoolBalance0.sub(amountAfterFee), "Pool token0 balance incorrect");
             expect(finalPoolBalance1).to.equal(initialPoolBalance1.add(swapAmount), "Pool token1 balance incorrect");
             
             // Verify fee growth
