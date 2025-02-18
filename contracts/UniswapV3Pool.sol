@@ -147,32 +147,17 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
         // Calculate amounts of token0 and token1 needed
         if (sqrtPriceCurrentX96 <= sqrtPriceLowerX96) {
-            amount0 = SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
-                sqrtPriceLowerX96,
-                amount,
-                uint256(amount),
-                true
-            );
+            // All liquidity below current price, only token0 needed
+            amount0 = uint256(amount);
+            amount1 = 0;
         } else if (sqrtPriceCurrentX96 < sqrtPriceUpperX96) {
-            amount0 = SqrtPriceMath.getNextSqrtPriceFromAmount0RoundingUp(
-                sqrtPriceCurrentX96,
-                amount,
-                uint256(amount),
-                true
-            );
-            amount1 = SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
-                sqrtPriceCurrentX96,
-                amount,
-                uint256(amount),
-                true
-            );
+            // Current price within range, need both tokens
+            amount0 = uint256(amount).div(2);
+            amount1 = uint256(amount).div(2);
         } else {
-            amount1 = SqrtPriceMath.getNextSqrtPriceFromAmount1RoundingDown(
-                sqrtPriceUpperX96,
-                amount,
-                uint256(amount),
-                true
-            );
+            // All liquidity above current price, only token1 needed
+            amount0 = 0;
+            amount1 = uint256(amount);
         }
 
         // Transfer tokens to pool
@@ -356,6 +341,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     ) external override returns (int256 amount0, int256 amount1) {
         require(amountSpecified > 0, 'AS'); // Amount specified must be greater than 0
         require(_slot0.unlocked, 'LOK'); // Locked
+        require(_slot0.sqrtPriceX96 != 0, 'AI'); // Must be initialized
 
         // Lock the pool
         _slot0.unlocked = false;
