@@ -12,7 +12,7 @@ interface Token {
   priceChange24h?: string
 }
 
-interface TokenSelectProps {
+export interface TokenSelectProps {
   value: string
   onChange: (value: string) => void
   label: string

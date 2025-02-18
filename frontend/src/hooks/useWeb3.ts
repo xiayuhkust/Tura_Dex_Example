@@ -4,7 +4,8 @@ import { useToast } from '@chakra-ui/react'
 import type { UseToastOptions } from '@chakra-ui/react'
 import { useCallback, useEffect } from 'react'
 import * as React from 'react'
-import { MetaMaskToast, NetworkErrorToast } from '../components'
+import { MetaMaskToast } from '../components'
+import { NetworkErrorToast } from '../components/NetworkErrorToast'
 
 declare global {
   interface Window {
