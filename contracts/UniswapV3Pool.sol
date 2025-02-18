@@ -148,16 +148,32 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         // Calculate amounts of token0 and token1 needed
         if (sqrtPriceCurrentX96 <= sqrtPriceLowerX96) {
             // All liquidity below current price, only token0 needed
-            amount0 = uint256(amount);
+            amount0 = SqrtPriceMath.getAmount0Delta(
+                sqrtPriceLowerX96,
+                sqrtPriceUpperX96,
+                amount
+            );
             amount1 = 0;
         } else if (sqrtPriceCurrentX96 < sqrtPriceUpperX96) {
             // Current price within range, need both tokens
-            amount0 = uint256(amount).div(2);
-            amount1 = uint256(amount).div(2);
+            amount0 = SqrtPriceMath.getAmount0Delta(
+                sqrtPriceCurrentX96,
+                sqrtPriceUpperX96,
+                amount
+            );
+            amount1 = SqrtPriceMath.getAmount1Delta(
+                sqrtPriceLowerX96,
+                sqrtPriceCurrentX96,
+                amount
+            );
         } else {
             // All liquidity above current price, only token1 needed
             amount0 = 0;
-            amount1 = uint256(amount);
+            amount1 = SqrtPriceMath.getAmount1Delta(
+                sqrtPriceLowerX96,
+                sqrtPriceUpperX96,
+                amount
+            );
         }
 
         // Transfer tokens to pool
