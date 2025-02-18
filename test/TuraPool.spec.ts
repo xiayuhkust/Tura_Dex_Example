@@ -33,9 +33,9 @@ describe('TuraPool', () => {
     await Promise.all([token0.deployed(), token1.deployed(), factory.deployed()]);
 
     // Sort tokens and create pool
-    [token0, token1] = token0.address.toLowerCase() < token1.address.toLowerCase() 
-      ? [token0, token1] 
-      : [token1, token0];
+    if (token0.address.toLowerCase() > token1.address.toLowerCase()) {
+      [token0, token1] = [token1, token0];
+    }
 
     await factory.createPool(token0.address, token1.address, FEE_AMOUNT);
     pool = await ethers.getContractAt(
@@ -45,14 +45,16 @@ describe('TuraPool', () => {
     
     // Initialize pool and setup tokens
     await pool.initialize(INITIAL_PRICE);
-    await Promise.all([
-      ...([owner, user1, user2].map(async user => {
-        for (const token of [token0, token1]) {
+
+    // Mint tokens and approve for all users
+    await Promise.all(
+      [owner, user1, user2].flatMap(user => 
+        [token0, token1].map(async token => {
           await token.mint(user.address, ethers.utils.parseEther('1000000'));
           await token.connect(user).approve(pool.address, ethers.constants.MaxUint256);
-        }
-      }))
-    ]);
+        })
+      )
+    );
 
     // Deploy factory and create pool
     factory = await UniswapV3Factory.deploy();
