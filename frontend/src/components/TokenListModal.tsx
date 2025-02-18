@@ -13,10 +13,7 @@ import {
   Box,
   Image
 } from '@chakra-ui/react'
-import { useTokenBalances } from '../hooks/useTokenBalances'
-import { useRecentTokens } from '../hooks/useRecentTokens'
-
-import { Token } from '../hooks'
+import { useTokenBalances, useRecentTokens, Token } from '../hooks/index'
 
 const DEMO_TOKENS: Token[] = [
   {

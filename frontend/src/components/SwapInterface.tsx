@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { Box, VStack, Text, Button, HStack, Divider, IconButton, useToast } from '@chakra-ui/react'
-import { useWeb3, usePriceImpact, Token } from '../hooks'
-import { TokenSelect, TradeDetails, Settings, LoadingSpinner } from '.'
+import { useWeb3, usePriceImpact, Token, useError } from '../hooks'
+import { TokenSelect, TradeDetails, Settings, LoadingSpinner } from './index'
 
 export function SwapInterface() {
   const { active, account, connect } = useWeb3()
