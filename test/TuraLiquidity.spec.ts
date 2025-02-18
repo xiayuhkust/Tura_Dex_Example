@@ -46,14 +46,13 @@ describe('TuraLiquidity', () => {
     const poolAddress = await factory.getPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNTS[0]);
     pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
 
-    // Mint initial tokens and approve for all users
-    const mintAmount = ethers.utils.parseEther('1000000'); // Large amount for testing
+    // Mint initial tokens and approve
+    const mintAmount = ethers.utils.parseEther('1000000');
     for (const token of [sortedToken0, sortedToken1]) {
       for (const user of [owner, user1, user2]) {
         await token.mint(user.address, mintAmount);
         await token.connect(user).approve(pool.address, ethers.constants.MaxUint256);
-        console.log(`Balance for ${user.address}: ${await token.balanceOf(user.address)}`);
-        console.log(`Allowance for ${user.address}: ${await token.allowance(user.address, pool.address)}`);
+        await token.connect(user).approve(factory.address, ethers.constants.MaxUint256);
       }
     }
   });

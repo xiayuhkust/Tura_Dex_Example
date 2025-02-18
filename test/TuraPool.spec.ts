@@ -42,14 +42,14 @@ describe('TuraPool', () => {
       [token0, token1] = [token1, token0];
     }
 
-    // Mint initial tokens
-    await Promise.all(
-      [owner, user1, user2].flatMap(user => 
-        [token0, token1].map(async token => {
-          await token.mint(user.address, ethers.utils.parseEther('1000000'));
-        })
-      )
-    );
+    // Mint initial tokens and approve
+    const mintAmount = ethers.utils.parseEther('1000000');
+    for (const token of [token0, token1]) {
+      for (const user of [owner, user1, user2]) {
+        await token.mint(user.address, mintAmount);
+        await token.connect(user).approve(factory.address, ethers.constants.MaxUint256);
+      }
+    }
 
     // Note: Pool initialization is handled in individual tests that need it
   });
