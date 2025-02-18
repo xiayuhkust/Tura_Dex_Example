@@ -19,6 +19,7 @@ interface TokenSelectProps {
   balance?: string
   onTokenSelect?: (token: Token) => void
   selectedToken?: Token
+  isDisabled?: boolean
 }
 
 export function TokenSelect({ 
@@ -26,7 +27,8 @@ export function TokenSelect({
   onChange, 
   label,
   onTokenSelect,
-  selectedToken 
+  selectedToken,
+  isDisabled 
 }: TokenSelectProps) {
   const { isOpen, onOpen, onClose } = useDisclosure()
 
@@ -50,6 +52,7 @@ export function TokenSelect({
               _focus={{ border: 'none' }}
               type="number"
               min="0"
+              isDisabled={isDisabled}
             />
             <Button
               variant="outline"
@@ -57,6 +60,7 @@ export function TokenSelect({
               _hover={{ bg: 'whiteAlpha.200' }}
               px="4"
               onClick={onOpen}
+              isDisabled={isDisabled}
             >
               <HStack>
                 {selectedToken && (
