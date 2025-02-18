@@ -20,7 +20,7 @@ describe('UniswapV3Pool', () => {
     const TICK_SPACING = 60;
     const MIN_TICK = -887272;
     const MAX_TICK = 887272;
-    const BASE_AMOUNT = ethers.utils.parseUnits('1', 12); // 1e12 base units
+    const BASE_AMOUNT = ethers.utils.parseUnits('0.01', 18); // Small base amount
     const BUFFER_MULTIPLIER = 10000; // Buffer multiplier for token amounts
 
     beforeEach(async () => {
@@ -81,7 +81,6 @@ describe('UniswapV3Pool', () => {
     describe('minting', () => {
         beforeEach(async () => {
             await setupTestPool();
-            await pool.initialize(SQRT_PRICE_X96);
         });
 
         it('fails with zero liquidity', async () => {
@@ -122,7 +121,6 @@ describe('UniswapV3Pool', () => {
         
         beforeEach(async () => {
             await setupTestPool();
-            await pool.initialize(SQRT_PRICE_X96);
             
             // Mint tokens for LP with extra buffer
             await token0.mint(owner.address, lpAmount.mul(1000));

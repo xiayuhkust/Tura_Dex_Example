@@ -21,7 +21,7 @@ describe('TuraPool', () => {
     HIGH: 10000    // 1%
   };
   
-  const BASE_AMOUNT = ethers.utils.parseUnits('1', 12); // 1e12 base units
+  const BASE_AMOUNT = ethers.utils.parseUnits('0.01', 18); // Small base amount
   const INITIAL_PRICE = '79228162514264337593543950336'; // 1.0 in Q96
   const INITIAL_LIQUIDITY = BASE_AMOUNT.mul(100); // 100x base amount for testing
 
