@@ -286,9 +286,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 require(IERC20(token1).transfer(recipient, uint256(state.amountAfterFee)), 'T1');
             }
             
-            // Update protocol fees
-            protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
-
             // Update protocol fees and fee growth
             protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
             if (state.currentLiquidity > 0) {
@@ -351,9 +348,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 require(IERC20(token0).transfer(recipient, uint256(state.amountAfterFee)), 'T0');
             }
             
-            // Update protocol fees
-            protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
-
             // Update protocol fees and fee growth
             protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
             if (state.currentLiquidity > 0) {
@@ -398,15 +392,12 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         
         // Calculate fees (fee is in millionths, so 3000 = 0.3%)
         state.feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
-        state.amountAfterFee = amountSpecified.mul(997).div(1000); // Output amount is 99.7% of input
+        state.amountAfterFee = amountSpecified.sub(state.feeAmount); // Output amount is input minus fees
         state.currentLiquidity = uint128(liquidity); // Store current liquidity for fee calculation
         state.sender = msg.sender; // Store sender for fee tracking
 
         // Ensure we have enough liquidity
         require(state.currentLiquidity > 0, "IL"); // Insufficient liquidity
-
-        // Ensure fee amount is correct
-        require(state.feeAmount.add(state.amountAfterFee) == amountSpecified, "FA"); // Fee amount incorrect
 
         // Execute swap
         (amount0, amount1) = _handleSwap(zeroForOne, state, recipient);
