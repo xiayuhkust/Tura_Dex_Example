@@ -170,23 +170,23 @@ export function TokenListModal({ isOpen, onClose, onSelect }: TokenListModalProp
                       p={3}
                       borderRadius="lg"
                       bg="whiteAlpha.100"
-                  cursor="pointer"
-                  _hover={{ bg: 'whiteAlpha.200' }}
-                  onClick={() => {
-                    const updatedToken = { ...token, lastUsed: Date.now() }
-                    onSelect(updatedToken)
-                    addRecentToken(updatedToken)
-                    onClose()
-                  }}
-                >
-                  <HStack justify="space-between">
-                    <HStack spacing={3}>
-                      <Image
-                        boxSize="8"
-                        borderRadius="full"
-                        src={token.logoURI}
-                        fallback={<Box boxSize="8" borderRadius="full" bg="brand.primary" />}
-                      />
+                      cursor="pointer"
+                      _hover={{ bg: 'whiteAlpha.200' }}
+                      onClick={() => {
+                        const updatedToken = { ...token, lastUsed: Date.now() }
+                        onSelect(updatedToken)
+                        addRecentToken(updatedToken)
+                        onClose()
+                      }}
+                    >
+                      <HStack justify="space-between">
+                        <HStack spacing={3}>
+                          <Image
+                            boxSize="8"
+                            borderRadius="full"
+                            src={token.logoURI}
+                            fallback={<Box boxSize="8" borderRadius="full" bg="brand.primary" />}
+                          />
                       <VStack align="start" spacing={0}>
                         <Text color="white" fontWeight="bold">{token.symbol}</Text>
                         <Text color="whiteAlpha.700" fontSize="sm">{token.name}</Text>
