@@ -259,12 +259,15 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         uint160 sqrtPriceUpperX96,
         uint128 liquidity
     ) internal pure returns (uint256 amount0, uint256 amount1) {
+        // Scale down liquidity to avoid overflow
+        uint128 scaledLiquidity = liquidity / 1e6;
+
         if (sqrtPriceCurrentX96 <= sqrtPriceLowerX96) {
             // Current price below range, only token0 needed
             amount0 = SqrtPriceMath.getAmount0Delta(
                 sqrtPriceLowerX96,
                 sqrtPriceUpperX96,
-                liquidity,
+                scaledLiquidity,
                 true
             );
             amount1 = 0;
@@ -273,13 +276,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount0 = SqrtPriceMath.getAmount0Delta(
                 sqrtPriceCurrentX96,
                 sqrtPriceUpperX96,
-                liquidity,
+                scaledLiquidity,
                 true
             );
             amount1 = SqrtPriceMath.getAmount1Delta(
                 sqrtPriceLowerX96,
                 sqrtPriceCurrentX96,
-                liquidity,
+                scaledLiquidity,
                 true
             );
         } else {
@@ -288,10 +291,14 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount1 = SqrtPriceMath.getAmount1Delta(
                 sqrtPriceLowerX96,
                 sqrtPriceUpperX96,
-                liquidity,
+                scaledLiquidity,
                 true
             );
         }
+
+        // Scale amounts back up
+        amount0 = amount0 * 1e6;
+        amount1 = amount1 * 1e6;
     }
 
 
