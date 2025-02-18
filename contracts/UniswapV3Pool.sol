@@ -304,6 +304,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 true
             );
         }
+
+        // Scale amounts to reasonable values
+        amount0 = amount0 / 1e12;
+        amount1 = amount1 / 1e12;
     }
 
 

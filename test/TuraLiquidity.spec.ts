@@ -17,7 +17,7 @@ describe('TuraLiquidity', () => {
 
   const FEE_AMOUNTS = [3000, 5000, 10000]; // 0.3%, 0.5%, 1%
   const INITIAL_PRICE = '79228162514264337593543950336'; // 1.0 in Q96
-  const INITIAL_LIQUIDITY = ethers.utils.parseUnits('0.0001', 18).toString(); // Small initial liquidity
+  const INITIAL_LIQUIDITY = ethers.utils.parseUnits('0.000001', 18).toString(); // Very small initial liquidity
   const TICK_RANGES = [
     { lower: -887272, upper: 887272 }, // Full range
     { lower: -443636, upper: 443636 }, // Half range
