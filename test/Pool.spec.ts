@@ -38,16 +38,6 @@ describe('UniswapV3Pool', () => {
         const poolAddress = await factory.getPool(token0.address, token1.address, FEE);
         pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
 
-        // Setup initial amounts - using minimal amounts for Tura testing
-        const userAmount = ethers.utils.parseEther('0.0000001'); // 0.0000001 Tura for testing
-        const lpAmount = ethers.utils.parseEther('0.00000005'); // 0.00000005 Tura for LP
-            
-        // Mint tokens first
-        await token0.mint(owner.address, userAmount.mul(2));
-        await token1.mint(owner.address, userAmount.mul(2));
-        await token0.mint(other.address, userAmount);
-        await token1.mint(other.address, userAmount);
-            
         // Approve tokens
         await token0.approve(pool.address, ethers.constants.MaxUint256);
         await token1.approve(pool.address, ethers.constants.MaxUint256);
@@ -68,6 +58,22 @@ describe('UniswapV3Pool', () => {
             await expect(pool.initialize(SQRT_PRICE_X96)).to.be.revertedWith('AI');
         });
     });
+
+    describe('minting', () => {
+        beforeEach(async () => {
+            // Setup initial amounts - using minimal amounts for Tura testing
+            const userAmount = ethers.utils.parseEther('0.00000001'); // 0.00000001 Tura for testing
+            const lpAmount = ethers.utils.parseEther('0.000000005'); // 0.000000005 Tura for LP
+            
+            // Mint tokens first
+            await token0.mint(owner.address, userAmount.mul(2));
+            await token1.mint(owner.address, userAmount.mul(2));
+            await token0.mint(other.address, userAmount);
+            await token1.mint(other.address, userAmount);
+
+            // Initialize pool
+            await pool.initialize(SQRT_PRICE_X96);
+        });
 
     describe('minting', () => {
         beforeEach(async () => {
