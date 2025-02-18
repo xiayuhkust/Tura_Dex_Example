@@ -18,7 +18,7 @@ describe('TuraLiquidity', () => {
   const FEE_AMOUNTS = [3000, 5000, 10000]; // 0.3%, 0.5%, 1%
   const INITIAL_PRICE = '79228162514264337593543950336'; // 1.0 in Q96
   const BASE_AMOUNT = ethers.utils.parseUnits('1', 12); // 1e12 base units
-  const INITIAL_LIQUIDITY = BASE_AMOUNT.mul(100).toString(); // 100x base amount for testing
+  const INITIAL_LIQUIDITY = BASE_AMOUNT.mul(10).toString(); // 10x base amount for testing
   const TICK_RANGES = [
     { lower: -887272, upper: 887272 }, // Full range
     { lower: -443636, upper: 443636 }, // Half range
@@ -64,18 +64,6 @@ describe('TuraLiquidity', () => {
     it('should add initial liquidity in full range', async () => {
       const { lower, upper } = TICK_RANGES[0];
       
-      // Initialize pool first
-      if ((await pool.slot0()).sqrtPriceX96 == 0) {
-        await pool.initialize(INITIAL_PRICE);
-      }
-      
-      // Mint tokens with extra buffer
-      const mintAmount = BASE_AMOUNT.mul(10000); // Large buffer for testing
-      await token0.mint(owner.address, mintAmount);
-      await token1.mint(owner.address, mintAmount);
-      await token0.approve(pool.address, ethers.constants.MaxUint256);
-      await token1.approve(pool.address, ethers.constants.MaxUint256);
-      
       // Add liquidity
       await pool.mint(
         owner.address,
@@ -91,12 +79,6 @@ describe('TuraLiquidity', () => {
     });
 
     it('should add liquidity in multiple ranges', async () => {
-      // Initialize pool first
-      if ((await pool.slot0()).sqrtPriceX96 == 0) {
-        await pool.initialize(INITIAL_PRICE);
-      }
-      
-      // Add liquidity in multiple ranges
       for (const range of TICK_RANGES) {
         await pool.mint(
           owner.address,
@@ -114,11 +96,6 @@ describe('TuraLiquidity', () => {
 
     it('should allow multiple LPs to add liquidity', async () => {
       const { lower, upper } = TICK_RANGES[0];
-      
-      // Initialize pool first
-      if ((await pool.slot0()).sqrtPriceX96 == 0) {
-        await pool.initialize(INITIAL_PRICE);
-      }
       
       // First LP adds liquidity
       await pool.connect(user1).mint(user1.address, lower, upper, INITIAL_LIQUIDITY);
