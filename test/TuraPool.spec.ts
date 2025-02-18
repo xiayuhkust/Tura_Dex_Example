@@ -22,8 +22,8 @@ describe('TuraPool', () => {
     [owner, user1, user2] = await ethers.getSigners();
 
     // Get contract factories
-    const TestERC20 = await hre.ethers.getContractFactory('TestERC20');
-    const UniswapV3Factory = await hre.ethers.getContractFactory('UniswapV3Factory');
+    const TestERC20 = await ethers.getContractFactory('TestERC20');
+    const UniswapV3Factory = await ethers.getContractFactory('UniswapV3Factory');
 
     // Deploy test tokens
     token0 = await TestERC20.deploy('Test Token 0', 'TT0', 18);
@@ -129,7 +129,7 @@ describe('TuraPool', () => {
       
       await pool.connect(user1).swap(
         true,
-        hre.ethers.BigNumber.from(INITIAL_LIQUIDITY).div(2),
+        ethers.BigNumber.from(INITIAL_LIQUIDITY).div(2),
         owner.address
       );
 
