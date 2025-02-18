@@ -28,11 +28,44 @@ describe('TuraPool', () => {
     // Deploy test tokens
     token0 = await TestERC20.deploy('Test Token 0', 'TT0', 18);
     token1 = await TestERC20.deploy('Test Token 1', 'TT1', 18);
+    await token0.deployed();
+    await token1.deployed();
 
     // Sort tokens for pool creation
     const [sortedToken0, sortedToken1] = token0.address.toLowerCase() < token1.address.toLowerCase()
       ? [token0, token1]
       : [token1, token0];
+
+    // Deploy factory and create pool
+    factory = await UniswapV3Factory.deploy();
+    await factory.deployed();
+    
+    await factory.createPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNT);
+    const poolAddress = await factory.getPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNT);
+    pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
+    
+    // Initialize pool with 1.0 price
+    await pool.initialize(INITIAL_PRICE);
+
+    // Mint initial tokens and approve for all users
+    const mintAmount = ethers.utils.parseEther('1000000');
+    for (const token of [sortedToken0, sortedToken1]) {
+      for (const user of [owner, user1, user2]) {
+        await token.mint(user.address, mintAmount);
+        await token.connect(user).approve(pool.address, ethers.constants.MaxUint256);
+      }
+    }
+
+    // Deploy factory and create pool
+    factory = await UniswapV3Factory.deploy();
+    await factory.deployed();
+    
+    await factory.createPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNT);
+    const poolAddress = await factory.getPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNT);
+    pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
+    
+    // Initialize pool with 1.0 price
+    await pool.initialize(INITIAL_PRICE);
 
     // Deploy factory and create pool
     factory = await UniswapV3Factory.deploy();

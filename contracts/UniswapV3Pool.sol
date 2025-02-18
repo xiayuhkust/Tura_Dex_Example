@@ -145,25 +145,12 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         uint160 sqrtPriceUpperX96 = TickMath.getSqrtRatioAtTick(tickUpper);
         uint160 sqrtPriceCurrentX96 = _slot0.sqrtPriceX96;
 
-        // Calculate amounts of token0 and token1 needed
-        if (sqrtPriceCurrentX96 <= sqrtPriceLowerX96) {
-            // All liquidity below current price, only token0 needed
-            amount0 = uint256(amount);
-            amount1 = 0;
-        } else if (sqrtPriceCurrentX96 < sqrtPriceUpperX96) {
-            // Current price within range, need both tokens
-            uint256 priceRatio = FullMath.mulDiv(
-                sqrtPriceCurrentX96,
-                FixedPoint128.Q128,
-                sqrtPriceUpperX96
-            );
-            amount0 = FullMath.mulDiv(uint256(amount), priceRatio, FixedPoint128.Q128);
-            amount1 = FullMath.mulDiv(uint256(amount), FixedPoint128.Q128 - priceRatio, FixedPoint128.Q128);
-        } else {
-            // All liquidity above current price, only token1 needed
-            amount0 = 0;
-            amount1 = uint256(amount);
-        }
+        // Calculate amounts of token0 and token1 needed based on current price
+        uint256 sqrtRatioAX96 = sqrtPriceCurrentX96 < sqrtPriceLowerX96 ? sqrtPriceLowerX96 : sqrtPriceCurrentX96;
+        uint256 sqrtRatioBX96 = sqrtPriceCurrentX96 < sqrtPriceUpperX96 ? sqrtPriceCurrentX96 : sqrtPriceUpperX96;
+
+        amount0 = uint256(amount).mul(sqrtRatioBX96.sub(sqrtRatioAX96)).div(sqrtRatioBX96);
+        amount1 = uint256(amount).mul(sqrtRatioAX96).div(sqrtRatioBX96);
 
         // Transfer tokens to pool
         if (amount0 > 0) require(IERC20(token0).transferFrom(msg.sender, address(this), amount0), 'T0');
