@@ -414,6 +414,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         Slot0 memory slot = _slot0;
         slot.unlocked = false;
 
+        // Lock the pool
+        _slot0.unlocked = false;
+
         // Initialize swap state
         SwapState memory state;
         state.amountSpecified = amountSpecified;
@@ -422,14 +425,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.currentLiquidity = liquidity;
         state.feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
         state.amountAfterFee = amountSpecified.sub(state.feeAmount);
-
-        // Lock the pool
-        _slot0.unlocked = false;
-
-        // Cache state variables
-        uint160 sqrtPriceX96 = _slot0.sqrtPriceX96;
-        int24 tick = _slot0.tick;
-        uint128 currentLiquidity = liquidity;
+        state.nextPrice = _slot0.sqrtPriceX96;
+        state.nextTick = _slot0.tick;
 
         // Calculate price limits
         uint160 sqrtPriceLimitX96 = zeroForOne
@@ -505,7 +502,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
         // Update pool state
         liquidity = swapState.currentLiquidity;
-        state.sqrtPriceX96 = swapState.nextPrice;
+        _slot0.sqrtPriceX96 = state.nextPrice;
         state.tick = swapState.nextTick;
         state.unlocked = true;
         _slot0 = state;
