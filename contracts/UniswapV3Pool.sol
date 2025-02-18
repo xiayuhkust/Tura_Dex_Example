@@ -276,7 +276,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         address recipient
     ) private returns (int256 amount0, int256 amount1) {
         if (zeroForOne) {
-            // Calculate amounts
+            // Calculate amounts - input token is amountSpecified, output token is amountAfterFee
             amount0 = int256(state.amountSpecified);
             amount1 = -int256(state.amountAfterFee);
             
@@ -337,7 +337,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 }
             }
         } else {
-            // Calculate amounts
+            // Calculate amounts - input token is amountSpecified, output token is amountAfterFee
             amount0 = -int256(state.amountAfterFee);
             amount1 = int256(state.amountSpecified);
             
@@ -390,7 +390,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         
         // Calculate fees (fee is in millionths, so 3000 = 0.3%)
         state.feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
-        state.amountAfterFee = amountSpecified.sub(state.feeAmount);
+        state.amountAfterFee = amountSpecified.sub(state.feeAmount); // Output amount is input minus fees
 
         // Execute swap
         (amount0, amount1) = _handleSwap(zeroForOne, state, recipient);
