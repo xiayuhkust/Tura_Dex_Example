@@ -410,12 +410,12 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         require(amountSpecified > 0, 'AS'); // Amount specified must be greater than 0
         require(_slot0.unlocked, 'LOK'); // Locked
 
-        // Lock the pool and cache state
-        Slot0 memory slot = _slot0;
-        slot.unlocked = false;
-
         // Lock the pool
         _slot0.unlocked = false;
+
+        // Cache state variables
+        uint160 sqrtPriceX96 = _slot0.sqrtPriceX96;
+        int24 currentTick = _slot0.tick;
 
         // Initialize swap state
         SwapState memory state;
@@ -425,8 +425,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.currentLiquidity = liquidity;
         state.feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
         state.amountAfterFee = amountSpecified.sub(state.feeAmount);
-        state.nextPrice = _slot0.sqrtPriceX96;
-        state.nextTick = _slot0.tick;
+        state.nextPrice = sqrtPriceX96;
+        state.nextTick = currentTick;
 
         // Calculate price limits
         uint160 sqrtPriceLimitX96 = zeroForOne
@@ -501,11 +501,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         (amount0, amount1) = _handleSwap(zeroForOne, swapState, recipient);
 
         // Update pool state
-        liquidity = swapState.currentLiquidity;
+        liquidity = state.currentLiquidity;
         _slot0.sqrtPriceX96 = state.nextPrice;
-        state.tick = swapState.nextTick;
-        state.unlocked = true;
-        _slot0 = state;
+        _slot0.tick = state.nextTick;
+        _slot0.unlocked = true;
 
         emit Swap(msg.sender, recipient, amount0, amount1, swapState.nextPrice, swapState.currentLiquidity, swapState.nextTick);
     }
