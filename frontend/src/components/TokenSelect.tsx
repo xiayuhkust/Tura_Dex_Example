@@ -1,4 +1,4 @@
-import { Box, Button, Input, Text, HStack, VStack, useDisclosure } from '@chakra-ui/react'
+import { Box, Button, Input, Text, HStack, VStack, useDisclosure, Image } from '@chakra-ui/react'
 import { TokenListModal } from './TokenListModal'
 
 interface Token {
@@ -6,6 +6,10 @@ interface Token {
   symbol: string
   name: string
   balance?: string
+  logoURI?: string
+  lastUsed?: number
+  price?: string
+  priceChange24h?: string
 }
 
 interface TokenSelectProps {
@@ -54,7 +58,17 @@ export function TokenSelect({
               px="4"
               onClick={onOpen}
             >
-              {selectedToken ? selectedToken.symbol : 'Select Token'}
+              <HStack>
+                {selectedToken && (
+                  <Image
+                    boxSize="6"
+                    borderRadius="full"
+                    src={selectedToken.logoURI}
+                    fallback={<Box boxSize="6" borderRadius="full" bg="brand.primary" />}
+                  />
+                )}
+                <Text>{selectedToken ? selectedToken.symbol : 'Select Token'}</Text>
+              </HStack>
             </Button>
           </HStack>
         </VStack>
