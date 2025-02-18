@@ -86,6 +86,15 @@ describe('UniswapV3Pool', () => {
         await token0.mint(other.address, userAmount.mul(2));
         await token1.mint(other.address, userAmount.mul(2));
 
+        // Verify token balances
+        const ownerBalance0 = await token0.balanceOf(owner.address);
+        const ownerBalance1 = await token1.balanceOf(owner.address);
+        const otherBalance0 = await token0.balanceOf(other.address);
+        const otherBalance1 = await token1.balanceOf(other.address);
+
+        console.log('Owner balances:', ethers.utils.formatEther(ownerBalance0), ethers.utils.formatEther(ownerBalance1));
+        console.log('Other balances:', ethers.utils.formatEther(otherBalance0), ethers.utils.formatEther(otherBalance1));
+
         return { userAmount, lpAmount };
     }
 
