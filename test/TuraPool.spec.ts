@@ -48,10 +48,10 @@ describe('TuraPool', () => {
     pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
 
     // Mint tokens and approve for all users
-    const testAmount = ethers.utils.parseEther('0.0001'); // Small amount for testing
+    const testAmount = ethers.utils.parseUnits('1', 12); // Small amount for testing (1e12)
     for (const token of [token0, token1]) {
       for (const user of [owner, user1, user2]) {
-        await token.mint(user.address, testAmount);
+        await token.mint(user.address, testAmount.mul(1000)); // Give extra tokens for testing
         await token.connect(user).approve(poolAddress, ethers.constants.MaxUint256);
       }
     }
@@ -66,10 +66,11 @@ describe('TuraPool', () => {
     let testPool: Contract;
 
     it('should create pool with correct tokens and fee', async () => {
-      await factory.createPool(token0.address, token1.address, FEE_AMOUNTS.MEDIUM);
+      // Create pool with different fee tier to avoid duplicate
+      await factory.createPool(token0.address, token1.address, FEE_AMOUNTS.LOW);
       testPool = await ethers.getContractAt(
         'UniswapV3Pool',
-        await factory.getPool(token0.address, token1.address, FEE_AMOUNTS.MEDIUM)
+        await factory.getPool(token0.address, token1.address, FEE_AMOUNTS.LOW)
       );
 
       expect((await testPool.token0()).toLowerCase()).to.equal(token0.address.toLowerCase());
@@ -141,7 +142,7 @@ describe('TuraPool', () => {
     });
 
     it('should add initial liquidity', async () => {
-      const amount = ethers.utils.parseUnits('0.000001', 18); // Very small amount
+      const amount = ethers.utils.parseUnits('1', 12); // 1e12 units
       
       // Initialize pool first
       if ((await pool.slot0()).sqrtPriceX96 == 0) {
@@ -168,7 +169,7 @@ describe('TuraPool', () => {
     });
 
     it('should track positions correctly', async () => {
-      const amount = ethers.utils.parseEther('1.0');
+      const amount = ethers.utils.parseUnits('1', 12); // 1e12 units
       const tickLower = -887272;
       const tickUpper = 887272;
       
