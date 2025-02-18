@@ -114,50 +114,50 @@ describe('TuraPool', () => {
       pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
       await pool.initialize(INITIAL_PRICE);
 
-      // Update token approvals for new pool
+      // Mint tokens and approve for all users
+      const amount = ethers.utils.parseEther('10.0'); // Increase amount for sufficient liquidity
       await Promise.all(
-        [owner, user1, user2].map(async user => {
-          await token0.connect(user).approve(poolAddress, ethers.constants.MaxUint256);
-          await token1.connect(user).approve(poolAddress, ethers.constants.MaxUint256);
-        })
+        [owner, user1, user2].flatMap(user => [
+          token0.mint(user.address, amount),
+          token1.mint(user.address, amount),
+          token0.connect(user).approve(poolAddress, ethers.constants.MaxUint256),
+          token1.connect(user).approve(poolAddress, ethers.constants.MaxUint256)
+        ])
       );
 
       // Add initial liquidity to avoid IL errors
+      await pool.mint(
+        owner.address,
+        -887272,
+        887272,
+        ethers.utils.parseEther('1.0')
+      );
+    });
+
+    it('should add initial liquidity', async () => {
       const amount = ethers.utils.parseEther('1.0');
-      await token0.mint(owner.address, amount);
-      await token1.mint(owner.address, amount);
-      await token0.connect(owner).approve(pool.address, amount);
-      await token1.connect(owner).approve(pool.address, amount);
       await pool.mint(
         owner.address,
         -887272,
         887272,
         amount
       );
-    });
 
-    it('should add initial liquidity', async () => {
-      await pool.mint(
-        owner.address,
-        -887272,
-        887272,
-        INITIAL_LIQUIDITY
-      );
-
-      expect(await pool.liquidity()).to.equal(INITIAL_LIQUIDITY);
+      expect(await pool.liquidity()).to.equal(amount);
     });
 
     it('should track positions correctly', async () => {
+      const amount = ethers.utils.parseEther('1.0');
       await pool.mint(
         owner.address,
         -887272,
         887272,
-        INITIAL_LIQUIDITY
+        amount
       );
 
       const positionKey = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [owner.address, -887272, 887272]));
       const position = await pool.positions(positionKey);
-      expect(position.liquidity).to.equal(INITIAL_LIQUIDITY);
+      expect(position.liquidity).to.equal(amount);
     });
 
     it('should collect fees after swaps', async () => {
