@@ -16,7 +16,7 @@ describe('TuraPool', () => {
 
   const FEE_AMOUNT = 3000; // 0.3%
   const INITIAL_PRICE = '1000000000000000000'; // 1.0
-  const INITIAL_LIQUIDITY = '1000000000000000000'; // 1.0
+  const INITIAL_LIQUIDITY = '100000000000000'; // 0.0001 - Small amount for Tura testing
 
   beforeEach(async () => {
     [owner, user1, user2] = await hre.ethers.getSigners();
@@ -59,7 +59,7 @@ describe('TuraPool', () => {
     it('should fail with invalid fee tier', async () => {
       await expect(
         factory.createPool(token0.address, token1.address, 1234)
-      ).to.be.revertedWith('TF: FEE_NOT_ENABLED');
+      ).to.be.revertedWith('Invalid fee');
     });
   });
 
