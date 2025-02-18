@@ -266,16 +266,16 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     }
 
     function _calculateFees(uint256 amount) private pure returns (uint256 feeAmount, uint256 amountAfterFee) {
-        // Calculate amount after fee first (99.7% = 997/1000)
-        amountAfterFee = amount.mul(997).div(1000);
         // Calculate fee amount (0.3% = 3/1000)
         feeAmount = amount.mul(3).div(1000);
+        // Calculate amount after fee (99.7% = 997/1000)
+        amountAfterFee = amount.sub(feeAmount);
         // Verify calculations
         require(feeAmount.add(amountAfterFee) == amount, "Invalid fee calculation");
-        // Ensure output amount is exactly 99.7%
-        require(amountAfterFee == amount.mul(997).div(1000), "Invalid output amount");
         // Ensure fee amount is exactly 0.3%
         require(feeAmount == amount.mul(3).div(1000), "Invalid fee amount");
+        // Ensure output amount is exactly 99.7%
+        require(amountAfterFee == amount.sub(feeAmount), "Invalid output amount");
     }
 
     function _handleSwap(
@@ -301,7 +301,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
             IPosition.Info storage position = positions[positionKey];
             if (position.liquidity > 0) {
-                position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
+                uint256 feeAmount = state.feeAmount;
+                position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
                 position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
             }
             if (state.currentLiquidity > 0) {
