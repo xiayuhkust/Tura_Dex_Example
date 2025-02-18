@@ -305,8 +305,15 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             
             // Transfer tokens - take full amount from sender, send amount after fees to recipient
             require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(state.amountSpecified)), 'T0');
-            if (-amount1 > 0) {
+            if (state.amountAfterFee > 0) {
                 require(IERC20(token1).transfer(recipient, uint256(state.amountAfterFee)), 'T1');
+            }
+            
+            // Update position fees
+            bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
+            IPosition.Info storage position = positions[positionKey];
+            if (position.liquidity > 0) {
+                position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
             }
             
             // Update protocol fees and fee growth
@@ -333,8 +340,15 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             
             // Transfer tokens - take full amount from sender, send amount after fees to recipient
             require(IERC20(token1).transferFrom(msg.sender, address(this), uint256(state.amountSpecified)), 'T1');
-            if (-amount0 > 0) {
+            if (state.amountAfterFee > 0) {
                 require(IERC20(token0).transfer(recipient, uint256(state.amountAfterFee)), 'T0');
+            }
+            
+            // Update position fees
+            bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
+            IPosition.Info storage position = positions[positionKey];
+            if (position.liquidity > 0) {
+                position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
             }
             
             // Update protocol fees and fee growth
