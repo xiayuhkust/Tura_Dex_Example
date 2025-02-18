@@ -296,7 +296,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
                 IPosition.Info storage position = positions[positionKey];
                 if (position.liquidity > 0) {
-                    uint256 feeAmount = state.feeAmount;
+                    uint256 feeAmount = state.feeAmount.mul(position.liquidity).div(state.currentLiquidity);
                     position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
                     position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
                 }
@@ -358,7 +358,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
                 IPosition.Info storage position = positions[positionKey];
                 if (position.liquidity > 0) {
-                    uint256 feeAmount = state.feeAmount;
+                    uint256 feeAmount = state.feeAmount.mul(position.liquidity).div(state.currentLiquidity);
                     position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(feeAmount));
                     position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
                 }
@@ -398,6 +398,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
         // Ensure we have enough liquidity
         require(state.currentLiquidity > 0, "IL"); // Insufficient liquidity
+
+        // Ensure fee amount is correct
+        require(state.feeAmount.add(state.amountAfterFee) == amountSpecified, "FA"); // Fee amount incorrect
 
         // Execute swap
         (amount0, amount1) = _handleSwap(zeroForOne, state, recipient);
