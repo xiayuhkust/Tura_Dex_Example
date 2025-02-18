@@ -281,9 +281,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount1 = -int256(state.amountAfterFee);
             
             // Transfer tokens
-            require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(amount0)), 'T0');
+            require(IERC20(token0).transferFrom(state.sender, address(this), uint256(amount0)), 'T0');
             if (-amount1 > 0) {
-                require(IERC20(token1).transfer(recipient, uint256(-amount1)), 'T1');
+                require(IERC20(token1).transfer(state.recipient, uint256(-amount1)), 'T1');
             }
 
             // Update protocol fees and fee growth
@@ -327,9 +327,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount1 = int256(state.amountSpecified);
             
             // Transfer tokens
-            require(IERC20(token1).transferFrom(msg.sender, address(this), uint256(amount1)), 'T1');
+            require(IERC20(token1).transferFrom(state.sender, address(this), uint256(amount1)), 'T1');
             if (-amount0 > 0) {
-                require(IERC20(token0).transfer(recipient, uint256(-amount0)), 'T0');
+                require(IERC20(token0).transfer(state.recipient, uint256(-amount0)), 'T0');
             }
             
             // Update protocol fees and fee growth
@@ -359,7 +359,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                     feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity));
 
                     // Update position fees
-                    bytes32 positionKey = keccak256(abi.encodePacked(msg.sender, MIN_TICK, MAX_TICK));
+                    bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
                     IPosition.Info storage position = positions[positionKey];
                     if (position.liquidity > 0) {
                         position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
