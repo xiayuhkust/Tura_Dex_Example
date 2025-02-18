@@ -268,24 +268,28 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     }
 
     function _calculateFees(uint256 amount, bool zeroForOne, uint128 currentLiquidity) private returns (uint256 feeAmount, uint256 amountAfterFee) {
-        // Calculate fee amount first (0.3% = 3/1000)
-        feeAmount = amount.mul(3).div(1000);
-        // Calculate output amount as remainder (99.7%)
-        amountAfterFee = amount.sub(feeAmount);
+        // Calculate output amount first (99.7% = 997/1000)
+        amountAfterFee = amount.mul(997).div(1000);
+        // Calculate fee amount as remainder (0.3%)
+        feeAmount = amount.sub(amountAfterFee);
         // Verify calculations
         require(feeAmount.add(amountAfterFee) == amount, "Invalid fee calculation");
         
         // Update protocol fees and fee growth
         if (zeroForOne) {
             protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
-            feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(
-                FullMath.mulDiv(feeAmount, FixedPoint128.Q128, currentLiquidity)
-            );
+            if (currentLiquidity > 0) {
+                feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(
+                    FullMath.mulDiv(feeAmount, FixedPoint128.Q128, currentLiquidity)
+                );
+            }
         } else {
             protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
-            feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(
-                FullMath.mulDiv(feeAmount, FixedPoint128.Q128, currentLiquidity)
-            );
+            if (currentLiquidity > 0) {
+                feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(
+                    FullMath.mulDiv(feeAmount, FixedPoint128.Q128, currentLiquidity)
+                );
+            }
         }
     }
 
