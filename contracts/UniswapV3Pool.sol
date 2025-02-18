@@ -291,7 +291,12 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount0 = int256(state.amountSpecified);
             amount1 = -int256(state.amountAfterFee);
             
-            // Transfer output token to recipient
+            // Transfer tokens - ensure we have enough balance
+            uint256 balance0Before = IERC20(token0).balanceOf(address(this));
+            uint256 balance1Before = IERC20(token1).balanceOf(address(this));
+            
+            require(IERC20(token0).transferFrom(state.sender, address(this), uint256(state.amountSpecified)), 'T0');
+            require(balance1Before >= uint256(state.amountAfterFee), 'IL'); // Insufficient liquidity
             require(IERC20(token1).transfer(recipient, uint256(state.amountAfterFee)), 'T1');
             
             // Update protocol fees and fee growth
@@ -314,7 +319,12 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount0 = -int256(state.amountAfterFee);
             amount1 = int256(state.amountSpecified);
             
-            // Transfer output token to recipient
+            // Transfer tokens - ensure we have enough balance
+            uint256 balance0Before = IERC20(token0).balanceOf(address(this));
+            uint256 balance1Before = IERC20(token1).balanceOf(address(this));
+            
+            require(IERC20(token1).transferFrom(state.sender, address(this), uint256(state.amountSpecified)), 'T1');
+            require(balance0Before >= uint256(state.amountAfterFee), 'IL'); // Insufficient liquidity
             require(IERC20(token0).transfer(recipient, uint256(state.amountAfterFee)), 'T0');
             
             // Update protocol fees and fee growth
