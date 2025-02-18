@@ -139,6 +139,10 @@ describe('TuraPool', () => {
       if ((await pool.slot0()).sqrtPriceX96 == 0) {
         await pool.initialize(INITIAL_PRICE);
       }
+
+      // Approve tokens
+      await token0.approve(pool.address, amount);
+      await token1.approve(pool.address, amount);
       
       // Add liquidity
       await pool.mint(

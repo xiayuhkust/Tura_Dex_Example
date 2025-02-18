@@ -67,6 +67,10 @@ describe('TuraLiquidity', () => {
         await pool.initialize(INITIAL_PRICE);
       }
       
+      // Approve tokens
+      await token0.approve(pool.address, INITIAL_LIQUIDITY);
+      await token1.approve(pool.address, INITIAL_LIQUIDITY);
+      
       // Add liquidity
       await pool.mint(
         owner.address,

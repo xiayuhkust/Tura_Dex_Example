@@ -269,15 +269,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         uint160 sqrtPriceLowerX96,
         uint160 sqrtPriceUpperX96,
         uint128 amount
-    ) internal view returns (uint256 amount0, uint256 amount1) {
+    ) internal pure returns (uint256 amount0, uint256 amount1) {
         if (sqrtPriceCurrentX96 <= sqrtPriceLowerX96) {
             // Current price below range, only token0 needed
-            amount0 = SqrtPriceMath.getAmount0Delta(
-                sqrtPriceLowerX96,
-                sqrtPriceUpperX96,
-                amount,
-                true
-            );
+            amount0 = amount;
             amount1 = 0;
         } else if (sqrtPriceCurrentX96 < sqrtPriceUpperX96) {
             // Current price within range, need both tokens
@@ -296,20 +291,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         } else {
             // Current price above range, only token1 needed
             amount0 = 0;
-            amount1 = SqrtPriceMath.getAmount1Delta(
-                sqrtPriceLowerX96,
-                sqrtPriceUpperX96,
-                amount,
-                true
-            );
+            amount1 = amount;
         }
-
-        // Check token balances
-        uint256 balance0 = IERC20(token0).balanceOf(msg.sender);
-        uint256 balance1 = IERC20(token1).balanceOf(msg.sender);
-        
-        amount0 = amount0 > balance0 ? balance0 : amount0;
-        amount1 = amount1 > balance1 ? balance1 : amount1;
     }
 
 
