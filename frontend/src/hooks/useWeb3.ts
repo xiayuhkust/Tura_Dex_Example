@@ -1,9 +1,9 @@
+/** @jsxImportSource @emotion/react */
 import { useWeb3React } from '@web3-react/core'
 import { InjectedConnector } from '@web3-react/injected-connector'
 import { useToast } from '@chakra-ui/react'
 import type { UseToastOptions } from '@chakra-ui/react'
 import { useCallback, useEffect } from 'react'
-import React from 'react'
 import { MetaMaskToast } from '../components/MetaMaskToast'
 
 declare global {
@@ -53,8 +53,8 @@ export function useWeb3() {
           duration: null,
           isClosable: true,
           position: 'top',
-          render: ({ onClose }) => {
-            return <MetaMaskToast onClose={onClose} />
+          render: function ToastContent({ onClose }) {
+            return React.createElement(MetaMaskToast, { onClose })
           }
         }
         toast(toastOptions)
