@@ -291,8 +291,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount0 = int256(state.amountSpecified);
             amount1 = -int256(state.amountAfterFee);
             
-            // Transfer tokens - take full amount from sender, send amount after fees to recipient
-            require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(state.amountSpecified)), 'T0');
+            // Transfer output token to recipient
             require(IERC20(token1).transfer(recipient, uint256(state.amountAfterFee)), 'T1');
             
             // Update protocol fees and fee growth
@@ -315,8 +314,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount0 = -int256(state.amountAfterFee);
             amount1 = int256(state.amountSpecified);
             
-            // Transfer tokens - take full amount from sender, send amount after fees to recipient
-            require(IERC20(token1).transferFrom(msg.sender, address(this), uint256(state.amountSpecified)), 'T1');
+            // Transfer output token to recipient
             require(IERC20(token0).transfer(recipient, uint256(state.amountAfterFee)), 'T0');
             
             // Update protocol fees and fee growth
