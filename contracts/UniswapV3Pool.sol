@@ -266,14 +266,12 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     }
 
     function _calculateFees(uint256 amount) private pure returns (uint256 feeAmount, uint256 amountAfterFee) {
-        // Calculate output amount first (99.7% = 997/1000)
+        // Calculate fee amount first (0.3% = 3/1000)
+        feeAmount = amount.mul(3).div(1000);
+        // Calculate output amount (99.7% = 997/1000)
         amountAfterFee = amount.mul(997).div(1000);
-        // Calculate fee amount as remainder
-        feeAmount = amount.sub(amountAfterFee);
         // Verify calculations
         require(feeAmount.add(amountAfterFee) == amount, "Invalid fee calculation");
-        // Ensure output amount is exactly 99.7%
-        require(amountAfterFee == amount.mul(997).div(1000), "Invalid output amount");
     }
 
     function _handleSwap(
@@ -307,8 +305,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                     uint256 feeAmount = state.feeAmount.mul(position.liquidity).div(state.currentLiquidity);
                     position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
                     position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
-                }
-            }
                 }
             }
         } else {
