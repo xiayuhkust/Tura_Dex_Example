@@ -46,8 +46,13 @@ describe('TuraPool', () => {
       for (const user of [owner, user1, user2]) {
         await token.mint(user.address, mintAmount);
         await token.connect(user).approve(pool.address, ethers.constants.MaxUint256);
+        console.log(`Balance for ${user.address}: ${await token.balanceOf(user.address)}`);
+        console.log(`Allowance for ${user.address}: ${await token.allowance(user.address, pool.address)}`);
       }
     }
+
+    // Initialize pool
+    await pool.initialize(INITIAL_PRICE);
   });
 
   describe('Pool Creation', () => {

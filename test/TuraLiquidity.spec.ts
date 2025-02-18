@@ -47,12 +47,14 @@ describe('TuraLiquidity', () => {
     pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
     await pool.initialize(INITIAL_PRICE);
 
-    // Mint initial tokens to all users
+    // Mint initial tokens and approve for all users
     const mintAmount = ethers.utils.parseEther('1000000'); // Large amount for testing
     for (const token of [sortedToken0, sortedToken1]) {
       for (const user of [owner, user1, user2]) {
         await token.mint(user.address, mintAmount);
         await token.connect(user).approve(pool.address, ethers.constants.MaxUint256);
+        console.log(`Balance for ${user.address}: ${await token.balanceOf(user.address)}`);
+        console.log(`Allowance for ${user.address}: ${await token.allowance(user.address, pool.address)}`);
       }
     }
   });
