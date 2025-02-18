@@ -283,7 +283,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             // Transfer tokens - take full amount from sender, send amount after fees to recipient
             require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(state.amountSpecified)), 'T0');
             if (-amount1 > 0) {
-                require(IERC20(token1).transfer(recipient, uint256(state.amountAfterFee)), 'T1');
+                require(IERC20(token1).transfer(recipient, uint256(-amount1)), 'T1');
             }
 
             // Update protocol fees and fee growth
@@ -344,7 +344,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             // Transfer tokens - take full amount from sender, send amount after fees to recipient
             require(IERC20(token1).transferFrom(msg.sender, address(this), uint256(state.amountSpecified)), 'T1');
             if (-amount0 > 0) {
-                require(IERC20(token0).transfer(recipient, uint256(state.amountAfterFee)), 'T0');
+                require(IERC20(token0).transfer(recipient, uint256(-amount0)), 'T0');
             }
 
             // Update protocol fees and fee growth
@@ -391,6 +391,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         // Calculate fees (fee is in millionths, so 3000 = 0.3%)
         state.feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
         state.amountAfterFee = amountSpecified.sub(state.feeAmount); // Output amount is input minus fees
+        state.currentLiquidity = uint128(liquidity); // Store current liquidity for fee calculation
 
         // Execute swap
         (amount0, amount1) = _handleSwap(zeroForOne, state, recipient);
