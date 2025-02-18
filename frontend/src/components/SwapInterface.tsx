@@ -1,14 +1,20 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Box, VStack, Text, Button, HStack, Divider, IconButton } from '@chakra-ui/react'
 import { Settings } from './Settings'
 import { useWeb3 } from '../hooks/useWeb3'
 import { TokenSelect } from './TokenSelect'
+import { TradeDetails } from './TradeDetails'
+import { usePriceImpact } from '../hooks/usePriceImpact'
 
 interface Token {
   address: string
   symbol: string
   name: string
   balance?: string
+  logoURI?: string
+  lastUsed?: number
+  price?: string
+  priceChange24h?: string
 }
 
 export function SwapInterface() {
@@ -19,6 +25,14 @@ export function SwapInterface() {
   const [transactionDeadline, setTransactionDeadline] = useState(20)
   const [inputToken, setInputToken] = useState<Token>()
   const [outputToken, setOutputToken] = useState<Token>()
+  const [estimatedGas, setEstimatedGas] = useState<string>()
+
+  const { priceImpact, warning } = usePriceImpact(
+    inputToken,
+    outputToken,
+    inputAmount,
+    outputAmount
+  )
   
   return (
     <Box maxW="md" mx="auto" mt="10" p="6" borderRadius="xl" bg="brand.surface" boxShadow="xl">
@@ -88,20 +102,16 @@ export function SwapInterface() {
 
             <Divider borderColor="whiteAlpha.200" />
 
-            <VStack w="full" align="stretch" spacing="2">
-              <HStack justify="space-between">
-                <Text color="whiteAlpha.600">Slippage Tolerance</Text>
-                <Text color="whiteAlpha.900">{slippageTolerance}%</Text>
-              </HStack>
-              <HStack justify="space-between">
-                <Text color="whiteAlpha.600">Minimum Received</Text>
-                <Text color="whiteAlpha.900">0.0</Text>
-              </HStack>
-              <HStack justify="space-between">
-                <Text color="whiteAlpha.600">Price Impact</Text>
-                <Text color="brand.success">{"<0.01%"}</Text>
-              </HStack>
-            </VStack>
+            <TradeDetails
+              inputToken={inputToken}
+              outputToken={outputToken}
+              inputAmount={inputAmount}
+              outputAmount={outputAmount}
+              priceImpact={priceImpact}
+              warning={warning}
+              slippageTolerance={slippageTolerance}
+              estimatedGas={estimatedGas}
+            />
 
             <Button
               w="full"
