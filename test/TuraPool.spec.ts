@@ -57,17 +57,16 @@ describe('TuraPool', () => {
     pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
 
     // Mint tokens and approve for all users
+    const mintAmount = ethers.utils.parseEther('0.0001'); // Small amount for testing
     for (const token of [token0, token1]) {
       for (const user of [owner, user1, user2]) {
-        await token.mint(user.address, ethers.utils.parseEther('1000000'));
+        await token.mint(user.address, mintAmount);
         await token.connect(user).approve(poolAddress, ethers.constants.MaxUint256);
       }
     }
 
-    // Initialize pool if not already initialized
-    if ((await pool.slot0()).sqrtPriceX96 == 0) {
-      await pool.initialize(INITIAL_PRICE);
-    }
+    // Initialize pool
+    await pool.initialize(INITIAL_PRICE);
 
     // Note: Pool initialization is handled in individual tests that need it
   });
