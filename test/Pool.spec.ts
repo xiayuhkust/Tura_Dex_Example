@@ -84,8 +84,8 @@ describe('UniswapV3Pool', () => {
         beforeEach(async () => {
             // Add initial liquidity
             // Setup initial amounts
-            const userAmount = ethers.utils.parseEther('1000');
-            const lpAmount = ethers.utils.parseEther('100');
+            const userAmount = ethers.utils.parseEther('10000'); // Increase initial amounts
+            const lpAmount = ethers.utils.parseEther('1000');   // Increase LP amount
             
             // Mint and approve tokens for liquidity provider
             await token0.mint(owner.address, userAmount.mul(2));
@@ -102,9 +102,16 @@ describe('UniswapV3Pool', () => {
             await token0.connect(other).approve(pool.address, userAmount);
             await token1.connect(other).approve(pool.address, userAmount);
             
-            // Ensure pool has enough liquidity
-            await token0.mint(pool.address, lpAmount);
-            await token1.mint(pool.address, lpAmount);
+            // Verify balances
+            const ownerBalance0 = await token0.balanceOf(owner.address);
+            const ownerBalance1 = await token1.balanceOf(owner.address);
+            const otherBalance0 = await token0.balanceOf(other.address);
+            const otherBalance1 = await token1.balanceOf(other.address);
+            
+            expect(ownerBalance0).to.be.gt(0, "Owner token0 balance should be positive");
+            expect(ownerBalance1).to.be.gt(0, "Owner token1 balance should be positive");
+            expect(otherBalance0).to.be.gt(0, "Trader token0 balance should be positive");
+            expect(otherBalance1).to.be.gt(0, "Trader token1 balance should be positive");
         });
 
         it('executes swap zero for one', async () => {
