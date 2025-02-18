@@ -3,7 +3,14 @@ import { InjectedConnector } from '@web3-react/injected-connector'
 import { useToast } from '@chakra-ui/react'
 import type { UseToastOptions } from '@chakra-ui/react'
 import { useCallback, useEffect } from 'react'
+import React from 'react'
 import { MetaMaskToast } from '../components/MetaMaskToast'
+
+declare global {
+  interface Window {
+    ethereum?: any
+  }
+}
 
 const CHAIN_ID = Number(import.meta.env.VITE_TURA_CHAIN_ID || "1337")
 const NETWORK_NAME = 'Tura Network'
