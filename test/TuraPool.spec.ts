@@ -66,7 +66,7 @@ describe('TuraPool', () => {
 
       expect((await testPool.token0()).toLowerCase()).to.equal(token0.address.toLowerCase());
       expect((await testPool.token1()).toLowerCase()).to.equal(token1.address.toLowerCase());
-      expect(await testPool.fee()).to.equal(FEE_AMOUNT);
+      expect(await testPool.fee()).to.equal(FEE_AMOUNTS.MEDIUM);
 
       // Approve tokens for this pool
       await Promise.all(
@@ -99,8 +99,9 @@ describe('TuraPool', () => {
     });
 
     it('should fail with invalid fee tier', async () => {
+      const invalidFee = 1234; // Not one of the valid fee tiers (500, 3000, 10000)
       await expect(
-        factory.createPool(token0.address, token1.address, 1234)
+        factory.createPool(token0.address, token1.address, invalidFee)
       ).to.be.revertedWith('Invalid fee');
     });
   });
@@ -122,11 +123,16 @@ describe('TuraPool', () => {
       );
 
       // Add initial liquidity to avoid IL errors
+      const amount = ethers.utils.parseEther('1.0');
+      await token0.mint(owner.address, amount);
+      await token1.mint(owner.address, amount);
+      await token0.connect(owner).approve(pool.address, amount);
+      await token1.connect(owner).approve(pool.address, amount);
       await pool.mint(
         owner.address,
         -887272,
         887272,
-        ethers.utils.parseEther('1.0')
+        amount
       );
     });
 
