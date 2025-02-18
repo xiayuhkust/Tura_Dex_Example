@@ -84,8 +84,8 @@ describe('UniswapV3Pool', () => {
         beforeEach(async () => {
             // Add initial liquidity
             // Setup initial amounts - using realistic Tura amounts
-            const userAmount = ethers.utils.parseEther('0.001'); // 0.001 Tura for testing
-            const lpAmount = ethers.utils.parseEther('0.0005'); // 0.0005 Tura for LP
+            const userAmount = ethers.utils.parseEther('0.0001'); // 0.0001 Tura for testing
+            const lpAmount = ethers.utils.parseEther('0.00005'); // 0.00005 Tura for LP
             
             // Mint tokens first
             await token0.mint(owner.address, userAmount.mul(2));
@@ -172,7 +172,7 @@ describe('UniswapV3Pool', () => {
         });
 
         it('executes swap one for zero', async () => {
-            const swapAmount = ethers.utils.parseEther('0.0001'); // 0.0001 Tura for swap testing (trader has ~40)
+            const swapAmount = ethers.utils.parseEther('0.00001'); // 0.00001 Tura for swap testing (trader has ~40)
             // Approve tokens first
             await token1.connect(other).approve(pool.address, swapAmount);
             
@@ -212,7 +212,7 @@ describe('UniswapV3Pool', () => {
         });
 
         it('collects fees', async () => {
-            const swapAmount = ethers.utils.parseEther('0.0001'); // 0.0001 Tura for swap testing (trader has ~40)
+            const swapAmount = ethers.utils.parseEther('0.00001'); // 0.00001 Tura for swap testing (trader has ~40)
             
             // Approve tokens for swap
             await token0.connect(other).approve(pool.address, swapAmount);
