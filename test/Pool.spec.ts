@@ -117,7 +117,13 @@ describe('UniswapV3Pool', () => {
         });
 
         it('creates a position and updates liquidity', async () => {
-            const liquidityAmount = 1000;
+            const liquidityAmount = ethers.utils.parseEther('0.01'); // Small amount for testing
+            
+            // Mint tokens first
+            await token0.mint(owner.address, liquidityAmount);
+            await token1.mint(owner.address, liquidityAmount);
+            
+            // Add liquidity
             await pool.mint(owner.address, MIN_TICK, MAX_TICK, liquidityAmount);
 
             const position = await pool.getPosition(owner.address, MIN_TICK, MAX_TICK);
@@ -130,6 +136,12 @@ describe('UniswapV3Pool', () => {
         beforeEach(async () => {
             const { lpAmount } = await setupTestPool();
             await pool.initialize(SQRT_PRICE_X96);
+            
+            // Mint tokens for LP
+            await token0.mint(owner.address, lpAmount);
+            await token1.mint(owner.address, lpAmount);
+            
+            // Add liquidity
             await pool.mint(owner.address, MIN_TICK, MAX_TICK, lpAmount);
         });
 
