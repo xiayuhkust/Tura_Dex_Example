@@ -16,7 +16,7 @@ describe('TuraPool', () => {
 
   const FEE_AMOUNT = 3000; // 0.3%
   const INITIAL_PRICE = '1000000000000000000'; // 1.0
-  const INITIAL_LIQUIDITY = '100000000000000'; // 0.0001 - Small amount for Tura testing
+  const INITIAL_LIQUIDITY = '10000000000000'; // 0.00001 - Extremely small amount for Tura testing
 
   beforeEach(async () => {
     [owner, user1, user2] = await ethers.getSigners();
@@ -66,11 +66,15 @@ describe('TuraPool', () => {
       const poolToken1 = await pool.token1();
       const poolFee = await pool.fee();
       
-      const sortedTokens = token0.address.toLowerCase() < token1.address.toLowerCase() 
-        ? [token0.address.toLowerCase(), token1.address.toLowerCase()]
-        : [token1.address.toLowerCase(), token0.address.toLowerCase()];
-      expect(poolToken0.toLowerCase()).to.equal(sortedTokens[0]);
-      expect(poolToken1.toLowerCase()).to.equal(sortedTokens[1]);
+      // Get pool tokens
+      const poolToken0 = await pool.token0();
+      const poolToken1 = await pool.token1();
+      const poolFee = await pool.fee();
+
+      // Verify pool was created with correct tokens and fee
+      expect(poolToken0.toLowerCase()).to.equal(sortedToken0.address.toLowerCase());
+      expect(poolToken1.toLowerCase()).to.equal(sortedToken1.address.toLowerCase());
+      expect(poolFee).to.equal(FEE_AMOUNT);
       expect(poolFee).to.equal(FEE_AMOUNT);
       expect(await pool.token1()).to.equal(token1.address);
       expect(await pool.fee()).to.equal(FEE_AMOUNT);

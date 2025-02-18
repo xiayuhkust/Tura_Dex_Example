@@ -17,7 +17,7 @@ describe('TuraLiquidity', () => {
 
   const FEE_AMOUNTS = [3000, 5000, 10000]; // 0.3%, 0.5%, 1%
   const INITIAL_PRICE = '1000000000000000000'; // 1.0
-  const INITIAL_LIQUIDITY = '100000000000000'; // 0.0001 - Small amount for Tura testing
+  const INITIAL_LIQUIDITY = '10000000000000'; // 0.00001 - Extremely small amount for Tura testing
   const TICK_RANGES = [
     { lower: -887272, upper: 887272 }, // Full range
     { lower: -443636, upper: 443636 }, // Half range
