@@ -20,8 +20,10 @@ describe('TuraPool', () => {
     MEDIUM: 3000,  // 0.3%
     HIGH: 10000    // 1%
   };
+  
+  const BASE_AMOUNT = ethers.utils.parseUnits('1', 12); // 1e12 base units
   const INITIAL_PRICE = '79228162514264337593543950336'; // 1.0 in Q96
-  const INITIAL_LIQUIDITY = ethers.utils.parseUnits('1', 12); // 1 token for testing
+  const INITIAL_LIQUIDITY = BASE_AMOUNT.mul(100); // 100x base amount for testing
 
   beforeEach(async () => {
     [owner, user1, user2] = await ethers.getSigners();
@@ -48,10 +50,10 @@ describe('TuraPool', () => {
     pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
 
     // Mint tokens and approve for all users
-    const testAmount = ethers.utils.parseUnits('1', 12); // Small amount for testing (1e12)
+    const mintAmount = BASE_AMOUNT.mul(10000); // Large buffer for testing
     for (const token of [token0, token1]) {
       for (const user of [owner, user1, user2]) {
-        await token.mint(user.address, testAmount.mul(1000)); // Give extra tokens for testing
+        await token.mint(user.address, mintAmount);
         await token.connect(user).approve(poolAddress, ethers.constants.MaxUint256);
       }
     }
@@ -66,16 +68,16 @@ describe('TuraPool', () => {
     let testPool: Contract;
 
     it('should create pool with correct tokens and fee', async () => {
-      // Create pool with different fee tier to avoid duplicate
-      await factory.createPool(token0.address, token1.address, FEE_AMOUNTS.LOW);
+      // Create pool with high fee tier to avoid duplicate
+      await factory.createPool(token0.address, token1.address, FEE_AMOUNTS.HIGH);
       testPool = await ethers.getContractAt(
         'UniswapV3Pool',
-        await factory.getPool(token0.address, token1.address, FEE_AMOUNTS.LOW)
+        await factory.getPool(token0.address, token1.address, FEE_AMOUNTS.HIGH)
       );
 
       expect((await testPool.token0()).toLowerCase()).to.equal(token0.address.toLowerCase());
       expect((await testPool.token1()).toLowerCase()).to.equal(token1.address.toLowerCase());
-      expect(await testPool.fee()).to.equal(FEE_AMOUNTS.MEDIUM);
+      expect(await testPool.fee()).to.equal(FEE_AMOUNTS.HIGH);
 
       // Approve tokens for this pool
       await Promise.all(
@@ -142,25 +144,19 @@ describe('TuraPool', () => {
     });
 
     it('should add initial liquidity', async () => {
-      const amount = ethers.utils.parseUnits('1', 12); // 1e12 units
+      const liquidityAmount = BASE_AMOUNT.mul(100); // 100x base amount for testing
       
       // Initialize pool first
       if ((await pool.slot0()).sqrtPriceX96 == 0) {
         await pool.initialize(INITIAL_PRICE);
       }
 
-      // Mint and approve tokens
-      await token0.mint(owner.address, amount);
-      await token1.mint(owner.address, amount);
-      await token0.approve(pool.address, amount);
-      await token1.approve(pool.address, amount);
-      
       // Add liquidity
       await pool.mint(
         owner.address,
         -887272,
         887272,
-        amount
+        liquidityAmount
       );
 
       // Verify liquidity
@@ -193,21 +189,24 @@ describe('TuraPool', () => {
     });
 
     it('should collect fees after swaps', async () => {
+      const liquidityAmount = BASE_AMOUNT.mul(100); // 100x base amount for testing
+      const swapAmount = BASE_AMOUNT.mul(10); // 10x base amount for swap
+      
       // Add initial liquidity
       await pool.mint(
         owner.address,
         -887272,
         887272,
-        INITIAL_LIQUIDITY
+        liquidityAmount
       );
 
       // Perform swap
-      await token0.transfer(user1.address, INITIAL_LIQUIDITY);
-      await token0.connect(user1).approve(pool.address, INITIAL_LIQUIDITY);
+      await token0.mint(user1.address, swapAmount.mul(100)); // Extra buffer
+      await token0.connect(user1).approve(pool.address, ethers.constants.MaxUint256);
       
       await pool.connect(user1).swap(
         true,
-        ethers.BigNumber.from(INITIAL_LIQUIDITY).div(2),
+        swapAmount,
         owner.address
       );
 
