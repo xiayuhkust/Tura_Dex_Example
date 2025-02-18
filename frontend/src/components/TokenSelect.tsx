@@ -48,7 +48,7 @@ export function TokenSelect({
               onChange={(e) => onChange(e.target.value)}
               placeholder="0.0"
               border="none"
-              fontSize="2xl"
+              fontSize={{ base: "lg", sm: "xl" }}
               _focus={{ border: 'none' }}
               type="number"
               min="0"
@@ -58,7 +58,9 @@ export function TokenSelect({
               variant="outline"
               borderColor="whiteAlpha.400"
               _hover={{ bg: 'whiteAlpha.200' }}
-              px="4"
+              px="3"
+              minW="120px"
+              maxW="150px"
               onClick={onOpen}
               isDisabled={isDisabled}
             >
@@ -71,7 +73,18 @@ export function TokenSelect({
                     fallback={<Box boxSize="6" borderRadius="full" bg="brand.primary" />}
                   />
                 )}
-                <Text>{selectedToken ? selectedToken.symbol : 'Select Token'}</Text>
+                <Text
+                  isTruncated
+                  maxW="120px"
+                  fontSize={{ base: "sm", md: "md" }}
+                  fontWeight="medium"
+                >
+                  {selectedToken 
+                    ? selectedToken.symbol === 'WETH' 
+                      ? 'Tura' 
+                      : selectedToken.symbol 
+                    : 'Select Token'}
+                </Text>
               </HStack>
             </Button>
           </HStack>
