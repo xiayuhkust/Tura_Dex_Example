@@ -289,7 +289,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             // Transfer tokens - take full amount from sender, send amount after fees to recipient
             require(IERC20(token0).transferFrom(msg.sender, address(this), uint256(state.amountSpecified)), 'T0');
             if (-amount1 > 0) {
-                require(IERC20(token1).transfer(recipient, uint256(-amount1)), 'T1');
+                require(IERC20(token1).transfer(recipient, uint256(state.amountAfterFee)), 'T1');
             }
             
             // Update protocol fees and fee growth
@@ -306,8 +306,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             if (state.currentLiquidity > 0) {
                 uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
-
-                // Update position fees for liquidity provider (owner)
                 bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
                 IPosition.Info storage position = positions[positionKey];
                 if (position.liquidity > 0) {
