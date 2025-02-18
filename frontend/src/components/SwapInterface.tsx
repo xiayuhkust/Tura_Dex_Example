@@ -6,16 +6,7 @@ import { TokenSelect } from './TokenSelect'
 import { TradeDetails } from './TradeDetails'
 import { usePriceImpact } from '../hooks/usePriceImpact'
 
-interface Token {
-  address: string
-  symbol: string
-  name: string
-  balance?: string
-  logoURI?: string
-  lastUsed?: number
-  price?: string
-  priceChange24h?: string
-}
+import { Token } from '../hooks/usePriceImpact'
 
 export function SwapInterface() {
   const { active, account, connect } = useWeb3()

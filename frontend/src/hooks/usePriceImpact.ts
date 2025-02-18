@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-interface Token {
+export interface Token {
   address: string
   symbol: string
   name: string
