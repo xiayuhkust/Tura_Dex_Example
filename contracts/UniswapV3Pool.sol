@@ -291,7 +291,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
     function _handleSwap(
         bool zeroForOne,
-        uint128 currentLiquidity,
         SwapState memory state,
         address recipient
     ) private returns (int256 amount0, int256 amount1) {
@@ -453,6 +452,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
         // Execute swap
         (amount0, amount1) = _handleSwap(zeroForOne, state, recipient);
+        
+        // Update state
+        _slot0.unlocked = true;
 
         // Update pool state
         _slot0.tick = state.nextTick;
