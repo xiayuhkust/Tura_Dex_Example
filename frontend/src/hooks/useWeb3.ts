@@ -1,7 +1,9 @@
 import { useWeb3React } from '@web3-react/core'
 import { InjectedConnector } from '@web3-react/injected-connector'
 import { useToast } from '@chakra-ui/react'
+import type { UseToastOptions } from '@chakra-ui/react'
 import { useCallback, useEffect } from 'react'
+import React from 'react'
 import { MetaMaskToast } from '../components/MetaMaskToast'
 
 const CHAIN_ID = Number(import.meta.env.VITE_TURA_CHAIN_ID || "1337")
@@ -38,15 +40,18 @@ export function useWeb3() {
   const connect = useCallback(async () => {
     try {
       if (typeof window.ethereum === 'undefined') {
-        toast({
+        const toastOptions: UseToastOptions = {
           title: 'MetaMask Required',
           description: 'Please install MetaMask to connect your wallet. Visit metamask.io to get started.',
           status: 'warning',
           duration: null,
           isClosable: true,
           position: 'top',
-          render: ({ onClose }) => <MetaMaskToast onClose={onClose} />
-        })
+          render: ({ onClose }: { onClose: () => void }): React.ReactNode => (
+            <MetaMaskToast onClose={onClose} />
+          )
+        }
+        toast(toastOptions)
         return
       }
 
