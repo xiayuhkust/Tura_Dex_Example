@@ -77,14 +77,14 @@ describe('UniswapV3Pool', () => {
         await token1.connect(other).approve(pool.address, ethers.constants.MaxUint256);
 
         // Setup initial amounts - using minimal amounts for Tura testing
-        const userAmount = ethers.utils.parseEther('0.00001'); // 0.00001 Tura for testing (~40 Tura total)
-        const lpAmount = ethers.utils.parseEther('0.0001'); // 0.0001 Tura for LP (~2900 Tura total)
+        const lpAmount = ethers.utils.parseEther('0.1'); // 0.1 Tura for LP (~2900 Tura total)
+        const userAmount = ethers.utils.parseEther('0.01'); // 0.01 Tura for testing (~40 Tura total)
         
-        // Mint tokens first
-        await token0.mint(owner.address, lpAmount);
-        await token1.mint(owner.address, lpAmount);
-        await token0.mint(other.address, userAmount);
-        await token1.mint(other.address, userAmount);
+        // Mint tokens first - mint extra for fees
+        await token0.mint(owner.address, lpAmount.mul(2));
+        await token1.mint(owner.address, lpAmount.mul(2));
+        await token0.mint(other.address, userAmount.mul(2));
+        await token1.mint(other.address, userAmount.mul(2));
 
         return { userAmount, lpAmount };
     }
@@ -125,8 +125,7 @@ describe('UniswapV3Pool', () => {
         });
 
         it('executes swap zero for one', async () => {
-            const swapAmount = ethers.utils.parseEther('0.000000001'); // Small enough for ~40 Tura balance
-            await token0.mint(other.address, swapAmount);
+            const swapAmount = ethers.utils.parseEther('0.01'); // Small enough for ~40 Tura balance
             await token0.connect(other).approve(pool.address, swapAmount);
 
             await pool.connect(other).swap(true, swapAmount, other.address);
@@ -137,8 +136,7 @@ describe('UniswapV3Pool', () => {
         });
 
         it('executes swap one for zero', async () => {
-            const swapAmount = ethers.utils.parseEther('0.000000001'); // Small enough for ~40 Tura balance
-            await token1.mint(other.address, swapAmount);
+            const swapAmount = ethers.utils.parseEther('0.01'); // Small enough for ~40 Tura balance
             await token1.connect(other).approve(pool.address, swapAmount);
 
             await pool.connect(other).swap(false, swapAmount, other.address);
@@ -149,8 +147,7 @@ describe('UniswapV3Pool', () => {
         });
 
         it('collects fees', async () => {
-            const swapAmount = ethers.utils.parseEther('0.000000001'); // Small enough for ~40 Tura balance
-            await token0.mint(other.address, swapAmount);
+            const swapAmount = ethers.utils.parseEther('0.01'); // Small enough for ~40 Tura balance
             await token0.connect(other).approve(pool.address, swapAmount);
             await pool.connect(other).swap(true, swapAmount, other.address);
 
@@ -162,7 +159,7 @@ describe('UniswapV3Pool', () => {
             
             // Check final balance
             const finalBalance0 = await token0.balanceOf(owner.address);
-            const expectedFees = ethers.utils.parseEther('0.0000000000003'); // 0.3% of swap amount
+            const expectedFees = ethers.utils.parseEther('0.00003'); // 0.3% of swap amount
             
             expect(finalBalance0.sub(initialBalance0)).to.equal(expectedFees, "Fee collection incorrect");
         });
