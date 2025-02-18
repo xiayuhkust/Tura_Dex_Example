@@ -45,11 +45,24 @@ describe('TuraLiquidity', () => {
     const UniswapV3Factory = await ethers.getContractFactory('UniswapV3Factory');
     factory = await UniswapV3Factory.deploy();
 
+    // Sort tokens for pool creation
+    const [sortedToken0, sortedToken1] = token0.address.toLowerCase() < token1.address.toLowerCase()
+      ? [token0, token1]
+      : [token1, token0];
+
     // Create pool with 0.3% fee
-    await factory.createPool(token0.address, token1.address, FEE_AMOUNTS[0]);
-    const poolAddress = await factory.getPool(token0.address, token1.address, FEE_AMOUNTS[0]);
+    await factory.createPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNTS[0]);
+    const poolAddress = await factory.getPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNTS[0]);
     pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
     await pool.initialize(INITIAL_PRICE);
+
+    // Approve tokens for all tests
+    await sortedToken0.approve(pool.address, ethers.constants.MaxUint256);
+    await sortedToken1.approve(pool.address, ethers.constants.MaxUint256);
+    await sortedToken0.connect(user1).approve(pool.address, ethers.constants.MaxUint256);
+    await sortedToken1.connect(user1).approve(pool.address, ethers.constants.MaxUint256);
+    await sortedToken0.connect(user2).approve(pool.address, ethers.constants.MaxUint256);
+    await sortedToken1.connect(user2).approve(pool.address, ethers.constants.MaxUint256);
   });
 
   describe('Liquidity Provision', () => {

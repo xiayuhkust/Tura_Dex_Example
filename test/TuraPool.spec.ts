@@ -41,10 +41,23 @@ describe('TuraPool', () => {
     // Deploy factory
     factory = await UniswapV3Factory.deploy();
 
+    // Sort tokens for pool creation
+    const [sortedToken0, sortedToken1] = token0.address.toLowerCase() < token1.address.toLowerCase()
+      ? [token0, token1]
+      : [token1, token0];
+
     // Create pool
-    await factory.createPool(token0.address, token1.address, FEE_AMOUNT);
-    const poolAddress = await factory.getPool(token0.address, token1.address, FEE_AMOUNT);
+    await factory.createPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNT);
+    const poolAddress = await factory.getPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNT);
     pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
+
+    // Approve tokens for all tests
+    await sortedToken0.approve(pool.address, ethers.constants.MaxUint256);
+    await sortedToken1.approve(pool.address, ethers.constants.MaxUint256);
+    await sortedToken0.connect(user1).approve(pool.address, ethers.constants.MaxUint256);
+    await sortedToken1.connect(user1).approve(pool.address, ethers.constants.MaxUint256);
+    await sortedToken0.connect(user2).approve(pool.address, ethers.constants.MaxUint256);
+    await sortedToken1.connect(user2).approve(pool.address, ethers.constants.MaxUint256);
   });
 
   describe('Pool Creation', () => {
