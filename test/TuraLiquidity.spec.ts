@@ -16,7 +16,7 @@ describe('TuraLiquidity', () => {
   let pool: Contract;
 
   const FEE_AMOUNTS = [3000, 5000, 10000]; // 0.3%, 0.5%, 1%
-  const INITIAL_PRICE = '1000000000000000000'; // 1.0
+  const INITIAL_PRICE = '79228162514264337593543950336'; // 1.0 in Q96
   const INITIAL_LIQUIDITY = '100000000'; // Even smaller amount for testing
   const TICK_RANGES = [
     { lower: -887272, upper: 887272 }, // Full range

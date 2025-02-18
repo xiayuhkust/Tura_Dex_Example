@@ -15,7 +15,7 @@ describe('TuraPool', () => {
   let pool: Contract;
 
   const FEE_AMOUNT = 3000; // 0.3%
-  const INITIAL_PRICE = '1000000000000000000'; // 1.0
+  const INITIAL_PRICE = '79228162514264337593543950336'; // 1.0 in Q96
   const INITIAL_LIQUIDITY = '100000000'; // Even smaller amount for testing
 
   beforeEach(async () => {
