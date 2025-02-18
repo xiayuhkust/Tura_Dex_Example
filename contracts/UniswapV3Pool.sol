@@ -321,9 +321,11 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(FullMath.mulDiv(feeAmount, Q128, liquidity));
                 
                 // Update position fees
-                bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
-                IPosition.Info storage position = positions[positionKey];
-                position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
+                {
+                    bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
+                    IPosition.Info storage position = positions[positionKey];
+                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
+                }
             }
         } else {
             // Calculate amounts
@@ -376,9 +378,11 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(FullMath.mulDiv(feeAmount, Q128, liquidity));
                 
                 // Update position fees
-                bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
-                IPosition.Info storage position = positions[positionKey];
-                position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(feeAmount));
+                {
+                    bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
+                    IPosition.Info storage position = positions[positionKey];
+                    position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(feeAmount));
+                }
             }
         }
     }
