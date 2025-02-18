@@ -28,18 +28,18 @@ describe('TuraLiquidity', () => {
     [owner, user1, user2] = await ethers.getSigners();
 
     // Deploy test tokens
-    const TestToken = await ethers.getContractFactory('TestToken');
-    token0 = await TestToken.deploy('Test Token 0', 'TT0');
-    token1 = await TestToken.deploy('Test Token 1', 'TT1');
+    const TestERC20 = await ethers.getContractFactory('TestERC20');
+    token0 = await TestERC20.deploy('Test Token 0', 'TT0', 18);
+    token1 = await TestERC20.deploy('Test Token 1', 'TT1', 18);
 
     // Deploy factory
-    const TuraFactory = await ethers.getContractFactory('TuraFactory');
-    factory = await TuraFactory.deploy();
+    const UniswapV3Factory = await ethers.getContractFactory('UniswapV3Factory');
+    factory = await UniswapV3Factory.deploy();
 
     // Create pool with 0.3% fee
     await factory.createPool(token0.address, token1.address, FEE_AMOUNTS[0]);
     const poolAddress = await factory.getPool(token0.address, token1.address, FEE_AMOUNTS[0]);
-    pool = await ethers.getContractAt('TuraPool', poolAddress);
+    pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
     await pool.initialize(INITIAL_PRICE);
   });
 

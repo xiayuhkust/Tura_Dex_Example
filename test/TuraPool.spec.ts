@@ -22,20 +22,20 @@ describe('TuraPool', () => {
     [owner, user1, user2] = await hre.ethers.getSigners();
 
     // Get contract factories
-    const TestToken = await hre.ethers.getContractFactory('TestToken');
-    const TuraFactory = await hre.ethers.getContractFactory('TuraFactory');
+    const TestERC20 = await hre.ethers.getContractFactory('TestERC20');
+    const UniswapV3Factory = await hre.ethers.getContractFactory('UniswapV3Factory');
 
     // Deploy test tokens
-    token0 = await TestToken.deploy('Test Token 0', 'TT0');
-    token1 = await TestToken.deploy('Test Token 1', 'TT1');
+    token0 = await TestERC20.deploy('Test Token 0', 'TT0', 18);
+    token1 = await TestERC20.deploy('Test Token 1', 'TT1', 18);
 
     // Deploy factory
-    factory = await TuraFactory.deploy();
+    factory = await UniswapV3Factory.deploy();
 
     // Create pool
     await factory.createPool(token0.address, token1.address, FEE_AMOUNT);
     const poolAddress = await factory.getPool(token0.address, token1.address, FEE_AMOUNT);
-    pool = await hre.ethers.getContractAt('TuraPool', poolAddress);
+    pool = await hre.ethers.getContractAt('UniswapV3Pool', poolAddress);
   });
 
   describe('Pool Creation', () => {
