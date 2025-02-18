@@ -16,7 +16,9 @@ library SqrtPriceMath {
         if (sqrtRatioAX96 > sqrtRatioBX96)
             (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
 
-        uint256 numerator1 = uint256(liquidity) << 96;
+        // Scale down liquidity to avoid overflow
+        uint128 scaledLiquidity = liquidity / 1e6;
+        uint256 numerator1 = uint256(scaledLiquidity) << 96;
         uint256 numerator2 = sqrtRatioBX96 - sqrtRatioAX96;
 
         require(sqrtRatioAX96 > 0);
@@ -35,13 +37,16 @@ library SqrtPriceMath {
         if (sqrtRatioAX96 > sqrtRatioBX96)
             (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
 
+        // Scale down liquidity to avoid overflow
+        uint128 scaledLiquidity = liquidity / 1e6;
+
         return roundUp
             ? FullMath.mulDivRoundingUp(
-                liquidity,
+                scaledLiquidity,
                 sqrtRatioBX96 - sqrtRatioAX96,
                 2**96
             )
-            : FullMath.mulDiv(liquidity, sqrtRatioBX96 - sqrtRatioAX96, 2**96);
+            : FullMath.mulDiv(scaledLiquidity, sqrtRatioBX96 - sqrtRatioAX96, 2**96);
     }
 
     function getNextSqrtPriceFromAmount0RoundingUp(
