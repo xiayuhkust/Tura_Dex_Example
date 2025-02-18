@@ -14,9 +14,14 @@ describe('TuraPool', () => {
   let token1: Contract;
   let pool: Contract;
 
-  const FEE_AMOUNT = 3000; // 0.3%
+  // Fee amounts in basis points (0.05% = 500, 0.3% = 3000, 1% = 10000)
+  const FEE_AMOUNTS = {
+    LOW: 500,    // 0.05%
+    MEDIUM: 3000,  // 0.3%
+    HIGH: 10000    // 1%
+  };
   const INITIAL_PRICE = '79228162514264337593543950336'; // 1.0 in Q96
-  const INITIAL_LIQUIDITY = '1000000'; // Very small amount for testing
+  const INITIAL_LIQUIDITY = ethers.utils.parseEther('1.0'); // 1.0 tokens
 
   beforeEach(async () => {
     [owner, user1, user2] = await ethers.getSigners();
@@ -53,10 +58,10 @@ describe('TuraPool', () => {
     let testPool: Contract;
 
     it('should create pool with correct tokens and fee', async () => {
-      await factory.createPool(token0.address, token1.address, FEE_AMOUNT);
+      await factory.createPool(token0.address, token1.address, FEE_AMOUNTS.MEDIUM);
       testPool = await ethers.getContractAt(
         'UniswapV3Pool',
-        await factory.getPool(token0.address, token1.address, FEE_AMOUNT)
+        await factory.getPool(token0.address, token1.address, FEE_AMOUNTS.MEDIUM)
       );
 
       expect((await testPool.token0()).toLowerCase()).to.equal(token0.address.toLowerCase());
@@ -73,11 +78,10 @@ describe('TuraPool', () => {
     });
 
     it('should initialize pool with valid price', async () => {
-      const uniqueFee = FEE_AMOUNT + 100;
-      await factory.createPool(token0.address, token1.address, uniqueFee);
+      await factory.createPool(token0.address, token1.address, FEE_AMOUNTS.LOW);
       testPool = await ethers.getContractAt(
         'UniswapV3Pool',
-        await factory.getPool(token0.address, token1.address, uniqueFee)
+        await factory.getPool(token0.address, token1.address, FEE_AMOUNTS.LOW)
       );
       
       await testPool.initialize(INITIAL_PRICE);
@@ -103,10 +107,9 @@ describe('TuraPool', () => {
 
   describe('Liquidity Provision', () => {
     beforeEach(async () => {
-      // Create new pool with unique fee for each test
-      const uniqueFee = FEE_AMOUNT + Math.floor(Math.random() * 1000);
-      await factory.createPool(token0.address, token1.address, uniqueFee);
-      const poolAddress = await factory.getPool(token0.address, token1.address, uniqueFee);
+      // Create new pool with high fee for liquidity tests
+      await factory.createPool(token0.address, token1.address, FEE_AMOUNTS.HIGH);
+      const poolAddress = await factory.getPool(token0.address, token1.address, FEE_AMOUNTS.HIGH);
       pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
       await pool.initialize(INITIAL_PRICE);
 
