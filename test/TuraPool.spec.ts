@@ -29,35 +29,25 @@ describe('TuraPool', () => {
     token0 = await TestERC20.deploy('Test Token 0', 'TT0', 18);
     token1 = await TestERC20.deploy('Test Token 1', 'TT1', 18);
 
-    // Mint initial tokens to owner and users
-    const mintAmount = ethers.utils.parseEther('1.0'); // Mint more tokens than needed
-    await token0.mint(owner.address, mintAmount);
-    await token1.mint(owner.address, mintAmount);
-    await token0.mint(user1.address, mintAmount);
-    await token1.mint(user1.address, mintAmount);
-    await token0.mint(user2.address, mintAmount);
-    await token1.mint(user2.address, mintAmount);
-
-    // Deploy factory
-    factory = await UniswapV3Factory.deploy();
-
     // Sort tokens for pool creation
     const [sortedToken0, sortedToken1] = token0.address.toLowerCase() < token1.address.toLowerCase()
       ? [token0, token1]
       : [token1, token0];
 
-    // Create pool
+    // Deploy factory and create pool
+    factory = await UniswapV3Factory.deploy();
     await factory.createPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNT);
     const poolAddress = await factory.getPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNT);
     pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
 
-    // Approve tokens for all tests
-    await sortedToken0.approve(pool.address, ethers.constants.MaxUint256);
-    await sortedToken1.approve(pool.address, ethers.constants.MaxUint256);
-    await sortedToken0.connect(user1).approve(pool.address, ethers.constants.MaxUint256);
-    await sortedToken1.connect(user1).approve(pool.address, ethers.constants.MaxUint256);
-    await sortedToken0.connect(user2).approve(pool.address, ethers.constants.MaxUint256);
-    await sortedToken1.connect(user2).approve(pool.address, ethers.constants.MaxUint256);
+    // Mint initial tokens and approve for all users
+    const mintAmount = ethers.utils.parseEther('1000000'); // Large amount for testing
+    for (const token of [sortedToken0, sortedToken1]) {
+      for (const user of [owner, user1, user2]) {
+        await token.mint(user.address, mintAmount);
+        await token.connect(user).approve(pool.address, ethers.constants.MaxUint256);
+      }
+    }
   });
 
   describe('Pool Creation', () => {
