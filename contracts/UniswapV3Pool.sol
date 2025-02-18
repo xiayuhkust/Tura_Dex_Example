@@ -307,34 +307,18 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                     feeGrowthInside0X128 = feeGrowthInside0X128.sub(upperTick.feeGrowthOutside0X128);
                 }
                 
-                // Calculate fee amount
-                uint256 feeAmount = state.amountSpecified.mul(3).div(1000); // 0.3% fee
-                state.amountAfterFee = state.amountSpecified.sub(feeAmount);
-
-                // Calculate swap amounts
-                amount0 = int256(state.amountAfterFee);
-                amount1 = -int256(state.amountAfterFee);
-
                 // Update protocol fees and fee growth
                 if (state.currentLiquidity > 0) {
                     protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
                     feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity));
 
                     // Update position fees
-                    bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
+                    bytes32 positionKey = keccak256(abi.encodePacked(msg.sender, MIN_TICK, MAX_TICK));
                     IPosition.Info storage position = positions[positionKey];
                     if (position.liquidity > 0) {
-                        position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
+                        position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
                         position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
                     }
-                }
-                
-                // Update position fees
-                {
-                    bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
-                    IPosition.Info storage position = positions[positionKey];
-                    position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
-                    position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
                 }
             }
         } else {
@@ -369,24 +353,16 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                     feeGrowthInside1X128 = feeGrowthInside1X128.sub(upperTick.feeGrowthOutside1X128);
                 }
                 
-                // Calculate fee amount
-                uint256 feeAmount = state.amountSpecified.mul(3).div(1000); // 0.3% fee
-                state.amountAfterFee = state.amountSpecified.sub(feeAmount);
-
-                // Calculate swap amounts
-                amount0 = -int256(state.amountAfterFee);
-                amount1 = int256(state.amountAfterFee);
-
                 // Update protocol fees and fee growth
                 if (state.currentLiquidity > 0) {
                     protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
                     feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity));
 
                     // Update position fees
-                    bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
+                    bytes32 positionKey = keccak256(abi.encodePacked(msg.sender, MIN_TICK, MAX_TICK));
                     IPosition.Info storage position = positions[positionKey];
                     if (position.liquidity > 0) {
-                        position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(feeAmount));
+                        position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
                         position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
                     }
                 }
@@ -423,8 +399,25 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.recipient = recipient;
         state.sender = msg.sender;
         state.currentLiquidity = liquidity;
-        state.feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
-        state.amountAfterFee = amountSpecified.sub(state.feeAmount);
+        
+        // Calculate fees
+        uint256 feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
+        uint256 amountAfterFee = amountSpecified.sub(feeAmount);
+        
+        // Update position fees
+        bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
+        IPosition.Info storage position = positions[positionKey];
+        if (position.liquidity > 0) {
+            if (zeroForOne) {
+                position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
+            } else {
+                position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(feeAmount));
+            }
+        }
+        
+        // Update state
+        state.feeAmount = feeAmount;
+        state.amountAfterFee = amountAfterFee;
         state.nextPrice = sqrtPriceX96;
         state.nextTick = currentTick;
 
