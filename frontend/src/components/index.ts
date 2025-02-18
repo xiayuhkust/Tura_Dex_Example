@@ -8,6 +8,7 @@ export * from './LoadingSpinner'
 export * from './TransactionConfirmation'
 export * from './SwapInterface'
 export * from './MetaMaskToast'
+export * from './AddLiquidityModal'
 // NetworkErrorToast is imported directly where needed
 
 // Types

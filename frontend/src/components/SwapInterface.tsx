@@ -4,6 +4,7 @@ import { useWeb3 } from '../hooks/useWeb3'
 import { usePriceImpact } from '../hooks/usePriceImpact'
 import type { Token } from '../hooks'
 import { TokenSelect, TradeDetails, Settings, LoadingSpinner } from './index'
+import { AddLiquidityModal } from './AddLiquidityModal'
 import { useError } from '../hooks'
 
 export function SwapInterface() {
@@ -16,6 +17,7 @@ export function SwapInterface() {
   const [outputToken, setOutputToken] = useState<Token>()
   const [estimatedGas] = useState<string>('~0.0001 ETH')
   const [isLoading, setIsLoading] = useState(false)
+  const [showAddLiquidity, setShowAddLiquidity] = useState(false)
   const toast = useToast()
 
   const { handleError } = useError()
@@ -89,6 +91,15 @@ export function SwapInterface() {
             >
               AgentSwap
             </Text>
+            <Button
+              onClick={() => setShowAddLiquidity(true)}
+              variant="outline"
+              size="sm"
+              color="brand.primary"
+              _hover={{ bg: 'whiteAlpha.200' }}
+            >
+              Add Liquidity
+            </Button>
             <Settings
               slippageTolerance={slippageTolerance}
               onSlippageToleranceChange={setSlippageTolerance}
@@ -178,6 +189,7 @@ export function SwapInterface() {
           )}
         </VStack>
       </VStack>
+      <AddLiquidityModal isOpen={showAddLiquidity} onClose={() => setShowAddLiquidity(false)} />
     </Box>
   )
 }
