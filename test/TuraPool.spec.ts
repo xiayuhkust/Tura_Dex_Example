@@ -56,34 +56,6 @@ describe('TuraPool', () => {
       )
     );
 
-    // Deploy factory and create pool
-    factory = await UniswapV3Factory.deploy();
-    await factory.deployed();
-    
-    await factory.createPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNT);
-    const poolAddress = await factory.getPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNT);
-    pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
-    
-    // Initialize pool with 1.0 price
-    await pool.initialize(INITIAL_PRICE);
-
-    // Deploy factory and create pool
-    factory = await UniswapV3Factory.deploy();
-    await factory.createPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNT);
-    const poolAddress = await factory.getPool(sortedToken0.address, sortedToken1.address, FEE_AMOUNT);
-    pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
-
-    // Mint initial tokens and approve for all users
-    const mintAmount = ethers.utils.parseEther('1000000'); // Large amount for testing
-    for (const token of [sortedToken0, sortedToken1]) {
-      for (const user of [owner, user1, user2]) {
-        await token.mint(user.address, mintAmount);
-        await token.connect(user).approve(pool.address, ethers.constants.MaxUint256);
-        console.log(`Balance for ${user.address}: ${await token.balanceOf(user.address)}`);
-        console.log(`Allowance for ${user.address}: ${await token.allowance(user.address, pool.address)}`);
-      }
-    }
-
     // Note: Pool initialization is handled in individual tests that need it
   });
 
