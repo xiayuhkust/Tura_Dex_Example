@@ -399,27 +399,23 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.recipient = recipient;
         state.sender = msg.sender;
         state.currentLiquidity = liquidity;
+        state.nextPrice = sqrtPriceX96;
+        state.nextTick = currentTick;
         
         // Calculate fees
-        uint256 feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
-        uint256 amountAfterFee = amountSpecified.sub(feeAmount);
+        state.feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
+        state.amountAfterFee = amountSpecified.sub(state.feeAmount);
         
         // Update position fees
-        bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
+        bytes32 positionKey = keccak256(abi.encodePacked(msg.sender, MIN_TICK, MAX_TICK));
         IPosition.Info storage position = positions[positionKey];
         if (position.liquidity > 0) {
             if (zeroForOne) {
-                position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
+                position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
             } else {
-                position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(feeAmount));
+                position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
             }
         }
-        
-        // Update state
-        state.feeAmount = feeAmount;
-        state.amountAfterFee = amountAfterFee;
-        state.nextPrice = sqrtPriceX96;
-        state.nextTick = currentTick;
 
         // Execute swap
         (amount0, amount1) = _handleSwap(zeroForOne, state, recipient);
@@ -436,20 +432,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         uint160 sqrtPriceLimitX96 = zeroForOne
             ? TickMath.MIN_SQRT_RATIO + 1
             : TickMath.MAX_SQRT_RATIO - 1;
-
-        // Initialize swap state and calculate fees
-        uint256 feeAmount = FullMath.mulDiv(amountSpecified, uint256(fee), 1000000);
-        uint256 amountAfterFee = amountSpecified - feeAmount;
-        SwapState memory swapState = SwapState({
-            amountSpecified: amountSpecified,
-            feeAmount: feeAmount,
-            amountAfterFee: amountAfterFee,
-            currentLiquidity: liquidity,
-            recipient: recipient,
-            nextTick: currentTick,
-            nextPrice: sqrtPriceX96,
-            sender: msg.sender
-        });
 
         // Update protocol fees
         if (zeroForOne) {
