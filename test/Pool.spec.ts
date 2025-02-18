@@ -62,8 +62,8 @@ describe('UniswapV3Pool', () => {
     describe('minting', () => {
         beforeEach(async () => {
             // Setup initial amounts - using minimal amounts for Tura testing
-            const userAmount = ethers.utils.parseEther('0.00000001'); // 0.00000001 Tura for testing
-            const lpAmount = ethers.utils.parseEther('0.000000005'); // 0.000000005 Tura for LP
+            const userAmount = ethers.utils.parseEther('0.000000001'); // 0.000000001 Tura for testing
+            const lpAmount = ethers.utils.parseEther('0.0000000005'); // 0.0000000005 Tura for LP
             
             // Mint tokens first
             await token0.mint(owner.address, userAmount.mul(2));
@@ -105,8 +105,8 @@ describe('UniswapV3Pool', () => {
     describe('swapping', () => {
         beforeEach(async () => {
             // Setup initial amounts - using minimal amounts for Tura testing
-            const userAmount = ethers.utils.parseEther('0.00000001'); // 0.00000001 Tura for testing
-            const lpAmount = ethers.utils.parseEther('0.000000005'); // 0.000000005 Tura for LP
+            const userAmount = ethers.utils.parseEther('0.000000001'); // 0.000000001 Tura for testing
+            const lpAmount = ethers.utils.parseEther('0.0000000005'); // 0.0000000005 Tura for LP
             
             // Mint tokens first
             await token0.mint(owner.address, userAmount.mul(2));
