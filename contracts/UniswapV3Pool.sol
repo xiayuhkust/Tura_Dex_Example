@@ -150,24 +150,13 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         IPosition.Info storage position = positions.get(recipient, tickLower, tickUpper);
         
         // Calculate fee growth inside the position's range
-        uint256 feeGrowthInside0X128;
-        uint256 feeGrowthInside1X128;
-        
-        {
-            Tick.Info storage lower = ticks[tickLower];
-            Tick.Info storage upper = ticks[tickUpper];
-            
-            // Calculate fee growth below
-            uint256 feeGrowthBelow0X128 = tickLower <= _slot0.tick ? lower.feeGrowthOutside0X128 : feeGrowthGlobal0X128 - lower.feeGrowthOutside0X128;
-            uint256 feeGrowthBelow1X128 = tickLower <= _slot0.tick ? lower.feeGrowthOutside1X128 : feeGrowthGlobal1X128 - lower.feeGrowthOutside1X128;
-            
-            // Calculate fee growth above
-            uint256 feeGrowthAbove0X128 = tickUpper <= _slot0.tick ? upper.feeGrowthOutside0X128 : feeGrowthGlobal0X128 - upper.feeGrowthOutside0X128;
-            uint256 feeGrowthAbove1X128 = tickUpper <= _slot0.tick ? upper.feeGrowthOutside1X128 : feeGrowthGlobal1X128 - upper.feeGrowthOutside1X128;
-            
-            feeGrowthInside0X128 = feeGrowthGlobal0X128 - feeGrowthBelow0X128 - feeGrowthAbove0X128;
-            feeGrowthInside1X128 = feeGrowthGlobal1X128 - feeGrowthBelow1X128 - feeGrowthAbove1X128;
-        }
+        (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) = _calculateFeeGrowthInside(
+            tickLower,
+            tickUpper,
+            _slot0.tick,
+            feeGrowthGlobal0X128,
+            feeGrowthGlobal1X128
+        );
         
         position.liquidity = uint128(uint256(position.liquidity).add(uint256(amount)));
         position.feeGrowthInside0LastX128 = feeGrowthInside0X128;
@@ -315,6 +304,28 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         int24 nextTick;
         address recipient;
         address sender;
+    }
+
+    function _calculateFeeGrowthInside(
+        int24 tickLower,
+        int24 tickUpper,
+        int24 currentTick,
+        uint256 feeGrowthGlobal0X128,
+        uint256 feeGrowthGlobal1X128
+    ) internal view returns (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) {
+        Tick.Info storage lower = ticks[tickLower];
+        Tick.Info storage upper = ticks[tickUpper];
+        
+        // Calculate fee growth below
+        uint256 feeGrowthBelow0X128 = tickLower <= currentTick ? lower.feeGrowthOutside0X128 : feeGrowthGlobal0X128 - lower.feeGrowthOutside0X128;
+        uint256 feeGrowthBelow1X128 = tickLower <= currentTick ? lower.feeGrowthOutside1X128 : feeGrowthGlobal1X128 - lower.feeGrowthOutside1X128;
+        
+        // Calculate fee growth above
+        uint256 feeGrowthAbove0X128 = tickUpper <= currentTick ? upper.feeGrowthOutside0X128 : feeGrowthGlobal0X128 - upper.feeGrowthOutside0X128;
+        uint256 feeGrowthAbove1X128 = tickUpper <= currentTick ? upper.feeGrowthOutside1X128 : feeGrowthGlobal1X128 - upper.feeGrowthOutside1X128;
+        
+        feeGrowthInside0X128 = feeGrowthGlobal0X128 - feeGrowthBelow0X128 - feeGrowthAbove0X128;
+        feeGrowthInside1X128 = feeGrowthGlobal1X128 - feeGrowthBelow1X128 - feeGrowthAbove1X128;
     }
 
     function _calculateFees(uint256 amount, bool zeroForOne, uint128 currentLiquidity) private pure returns (uint256 feeAmount, uint256 amountAfterFee) {
