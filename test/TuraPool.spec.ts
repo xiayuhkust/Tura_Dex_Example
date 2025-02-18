@@ -32,19 +32,10 @@ describe('TuraPool', () => {
     
     await Promise.all([token0.deployed(), token1.deployed(), factory.deployed()]);
 
-    // Sort tokens and create pool
+    // Sort tokens
     if (token0.address.toLowerCase() > token1.address.toLowerCase()) {
       [token0, token1] = [token1, token0];
     }
-
-    await factory.createPool(token0.address, token1.address, FEE_AMOUNT);
-    pool = await ethers.getContractAt(
-      'UniswapV3Pool',
-      await factory.getPool(token0.address, token1.address, FEE_AMOUNT)
-    );
-    
-    // Initialize pool and setup tokens
-    await pool.initialize(INITIAL_PRICE);
 
     // Mint tokens and approve for all users
     await Promise.all(
@@ -61,27 +52,26 @@ describe('TuraPool', () => {
 
   describe('Pool Creation', () => {
     it('should create pool with correct tokens and fee', async () => {
-      // Get sorted tokens for comparison
-      const [expectedToken0, expectedToken1] = token0.address.toLowerCase() < token1.address.toLowerCase()
-        ? [token0, token1]
-        : [token1, token0];
+      await factory.createPool(token0.address, token1.address, FEE_AMOUNT);
+      pool = await ethers.getContractAt(
+        'UniswapV3Pool',
+        await factory.getPool(token0.address, token1.address, FEE_AMOUNT)
+      );
 
-      // Verify pool was created with correct tokens and fee
-      expect((await pool.token0()).toLowerCase()).to.equal(expectedToken0.address.toLowerCase());
-      expect((await pool.token1()).toLowerCase()).to.equal(expectedToken1.address.toLowerCase());
+      expect((await pool.token0()).toLowerCase()).to.equal(token0.address.toLowerCase());
+      expect((await pool.token1()).toLowerCase()).to.equal(token1.address.toLowerCase());
       expect(await pool.fee()).to.equal(FEE_AMOUNT);
     });
 
     it('should initialize pool with valid price', async () => {
-      // Create new pool for this test to avoid already initialized error
-      await factory.createPool(token0.address, token1.address, FEE_AMOUNT);
-      const newPool = await ethers.getContractAt(
+      await factory.createPool(token0.address, token1.address, FEE_AMOUNT + 100);
+      pool = await ethers.getContractAt(
         'UniswapV3Pool',
-        await factory.getPool(token0.address, token1.address, FEE_AMOUNT)
+        await factory.getPool(token0.address, token1.address, FEE_AMOUNT + 100)
       );
       
-      await newPool.initialize(INITIAL_PRICE);
-      const { sqrtPriceX96, tick } = await newPool.slot0();
+      await pool.initialize(INITIAL_PRICE);
+      const { sqrtPriceX96, tick } = await pool.slot0();
       expect(sqrtPriceX96).to.not.equal(0);
       expect(tick).to.equal(0); // Initial tick should be 0 at price of 1.0
     });
@@ -95,13 +85,22 @@ describe('TuraPool', () => {
 
   describe('Liquidity Provision', () => {
     beforeEach(async () => {
-      // Create new pool for each test to avoid already initialized error
-      await factory.createPool(token0.address, token1.address, FEE_AMOUNT);
+      // Create new pool with unique fee for each test
+      const uniqueFee = FEE_AMOUNT + Math.floor(Math.random() * 1000);
+      await factory.createPool(token0.address, token1.address, uniqueFee);
       pool = await ethers.getContractAt(
         'UniswapV3Pool',
-        await factory.getPool(token0.address, token1.address, FEE_AMOUNT)
+        await factory.getPool(token0.address, token1.address, uniqueFee)
       );
       await pool.initialize(INITIAL_PRICE);
+
+      // Update token approvals for new pool
+      await Promise.all(
+        [owner, user1, user2].map(async user => {
+          await token0.connect(user).approve(pool.address, ethers.constants.MaxUint256);
+          await token1.connect(user).approve(pool.address, ethers.constants.MaxUint256);
+        })
+      );
     });
 
     it('should add initial liquidity', async () => {
