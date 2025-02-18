@@ -12,12 +12,6 @@ declare global {
   }
 }
 
-declare global {
-  interface Window {
-    ethereum?: any
-  }
-}
-
 const CHAIN_ID = Number(import.meta.env.VITE_TURA_CHAIN_ID || "1337")
 const NETWORK_NAME = 'Tura Network'
 
