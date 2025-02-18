@@ -104,10 +104,6 @@ describe('UniswapV3Pool', () => {
 
     describe('swapping', () => {
         beforeEach(async () => {
-            // Initialize pool first
-            await pool.initialize(SQRT_PRICE_X96);
-            
-            // Add initial liquidity
             // Setup initial amounts - using minimal amounts for Tura testing
             const userAmount = ethers.utils.parseEther('0.00000001'); // 0.00000001 Tura for testing
             const lpAmount = ethers.utils.parseEther('0.000000005'); // 0.000000005 Tura for LP
