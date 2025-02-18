@@ -167,19 +167,27 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         uint160 sqrtPriceCurrentX96 = _slot0.sqrtPriceX96;
 
         // Calculate amounts of token0 and token1 needed based on current price
+        uint256 amount0Desired;
+        uint256 amount1Desired;
+
         if (sqrtPriceCurrentX96 <= sqrtPriceLowerX96) {
             // Current price below range, only token0 needed
-            amount0 = uint256(amount);
-            amount1 = 0;
+            amount0Desired = SqrtPriceMath.getAmount0Delta(
+                sqrtPriceLowerX96,
+                sqrtPriceUpperX96,
+                amount,
+                true
+            );
+            amount1Desired = 0;
         } else if (sqrtPriceCurrentX96 < sqrtPriceUpperX96) {
             // Current price within range, need both tokens
-            amount0 = SqrtPriceMath.getAmount0Delta(
+            amount0Desired = SqrtPriceMath.getAmount0Delta(
                 sqrtPriceCurrentX96,
                 sqrtPriceUpperX96,
                 amount,
                 true
             );
-            amount1 = SqrtPriceMath.getAmount1Delta(
+            amount1Desired = SqrtPriceMath.getAmount1Delta(
                 sqrtPriceLowerX96,
                 sqrtPriceCurrentX96,
                 amount,
@@ -187,9 +195,21 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             );
         } else {
             // Current price above range, only token1 needed
-            amount0 = 0;
-            amount1 = uint256(amount);
+            amount0Desired = 0;
+            amount1Desired = SqrtPriceMath.getAmount1Delta(
+                sqrtPriceLowerX96,
+                sqrtPriceUpperX96,
+                amount,
+                true
+            );
         }
+
+        // Check token balances and transfer
+        uint256 balance0 = IERC20(token0).balanceOf(msg.sender);
+        uint256 balance1 = IERC20(token1).balanceOf(msg.sender);
+        
+        amount0 = amount0Desired > balance0 ? balance0 : amount0Desired;
+        amount1 = amount1Desired > balance1 ? balance1 : amount1Desired;
 
         // Transfer tokens to pool
         if (amount0 > 0) require(IERC20(token0).transferFrom(msg.sender, address(this), amount0), 'T0');

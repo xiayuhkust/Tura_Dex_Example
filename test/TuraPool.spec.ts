@@ -127,14 +127,18 @@ describe('TuraPool', () => {
       );
 
       // Initialize pool with initial price only
-      await pool.initialize(INITIAL_PRICE);
+      if ((await pool.slot0()).sqrtPriceX96 == 0) {
+        await pool.initialize(INITIAL_PRICE);
+      }
     });
 
     it('should add initial liquidity', async () => {
       const amount = ethers.utils.parseEther('1.0');
       
       // Initialize pool first
-      await pool.initialize(INITIAL_PRICE);
+      if ((await pool.slot0()).sqrtPriceX96 == 0) {
+        await pool.initialize(INITIAL_PRICE);
+      }
       
       // Add liquidity
       await pool.mint(
@@ -155,7 +159,9 @@ describe('TuraPool', () => {
       const tickUpper = 887272;
       
       // Initialize pool first
-      await pool.initialize(INITIAL_PRICE);
+      if ((await pool.slot0()).sqrtPriceX96 == 0) {
+        await pool.initialize(INITIAL_PRICE);
+      }
       
       // Add liquidity
       await pool.mint(

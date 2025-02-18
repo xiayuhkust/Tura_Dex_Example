@@ -63,7 +63,9 @@ describe('TuraLiquidity', () => {
       const { lower, upper } = TICK_RANGES[0];
       
       // Initialize pool first
-      await pool.initialize(INITIAL_PRICE);
+      if ((await pool.slot0()).sqrtPriceX96 == 0) {
+        await pool.initialize(INITIAL_PRICE);
+      }
       
       // Add liquidity
       await pool.mint(
@@ -81,7 +83,9 @@ describe('TuraLiquidity', () => {
 
     it('should add liquidity in multiple ranges', async () => {
       // Initialize pool first
-      await pool.initialize(INITIAL_PRICE);
+      if ((await pool.slot0()).sqrtPriceX96 == 0) {
+        await pool.initialize(INITIAL_PRICE);
+      }
       
       // Add liquidity in multiple ranges
       for (const range of TICK_RANGES) {
@@ -103,7 +107,9 @@ describe('TuraLiquidity', () => {
       const { lower, upper } = TICK_RANGES[0];
       
       // Initialize pool first
-      await pool.initialize(INITIAL_PRICE);
+      if ((await pool.slot0()).sqrtPriceX96 == 0) {
+        await pool.initialize(INITIAL_PRICE);
+      }
       
       // First LP adds liquidity
       await pool.connect(user1).mint(user1.address, lower, upper, INITIAL_LIQUIDITY);
@@ -124,7 +130,9 @@ describe('TuraLiquidity', () => {
       const { lower, upper } = TICK_RANGES[0];
       
       // Initialize pool first
-      await pool.initialize(INITIAL_PRICE);
+      if ((await pool.slot0()).sqrtPriceX96 == 0) {
+        await pool.initialize(INITIAL_PRICE);
+      }
       
       // Add initial liquidity
       const liquidityAmount = ethers.utils.parseEther('1.0'); // Larger amount for meaningful swaps
