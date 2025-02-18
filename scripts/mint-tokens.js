@@ -1,7 +1,9 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-  const amount = ethers.utils.parseEther("10000"); // 10000 tokens with 18 decimals (10000 * 10^18 units)
+  // Use parseUnits with 18 decimals to ensure correct token amount
+  const decimals = 18;
+  const amount = ethers.utils.parseUnits("10000", decimals); // 10000 tokens with 18 decimals (10000 * 10^18 units)
   const ownerAddress = "0x08Bb6eA809A2d6c13D57166Fa3ede48C0ae9a70e";
   
   // Get token contracts
