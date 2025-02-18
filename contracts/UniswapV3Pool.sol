@@ -64,6 +64,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
     function initialize(uint160 sqrtPriceX96) external override {
         require(_slot0.sqrtPriceX96 == 0, 'AI'); // Already initialized
+        require(sqrtPriceX96 > 0, 'IP'); // Invalid price
         
         int24 tick = TickMath.getTickAtSqrtRatio(sqrtPriceX96);
         
