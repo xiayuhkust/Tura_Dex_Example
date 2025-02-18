@@ -187,10 +187,10 @@ export function TokenListModal({ isOpen, onClose, onSelect }: TokenListModalProp
                             src={token.logoURI}
                             fallback={<Box boxSize="8" borderRadius="full" bg="brand.primary" />}
                           />
-                      <VStack align="start" spacing={0}>
-                        <Text color="white" fontWeight="bold">{token.symbol}</Text>
-                        <Text color="whiteAlpha.700" fontSize="sm">{token.name}</Text>
-                      </VStack>
+                          <VStack align="start" spacing={0}>
+                            <Text color="white" fontWeight="bold">{token.symbol}</Text>
+                            <Text color="whiteAlpha.700" fontSize="sm">{token.name}</Text>
+                          </VStack>
                     </HStack>
                     <VStack align="end" spacing={0}>
                       <Text color="whiteAlpha.900">{token.balance}</Text>
