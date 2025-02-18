@@ -265,6 +265,11 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         address sender;
     }
 
+    function _calculateFees(uint256 amount) private pure returns (uint256 feeAmount, uint256 amountAfterFee) {
+        feeAmount = amount.mul(3).div(1000); // 0.3% fee
+        amountAfterFee = amount.sub(feeAmount);
+    }
+
     function _handleSwap(
         bool zeroForOne,
         SwapState memory state,
@@ -307,19 +312,19 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 state.amountAfterFee = state.amountSpecified.sub(feeAmount);
 
                 // Calculate swap amounts
-                amount0 = int256(state.amountSpecified);
-                amount1 = -int256(state.amountAfterFee);
+                amount0 = int256(amountAfterFee);
+                amount1 = -int256(amountAfterFee);
 
                 // Update protocol fees and fee growth
                 if (liquidity > 0) {
-                    protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
-                    feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(FullMath.mulDiv(state.feeAmount, Q128, liquidity));
+                    protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
+                    feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(FullMath.mulDiv(feeAmount, Q128, liquidity));
 
                     // Update position fees
-                    bytes32 positionKey = keccak256(abi.encodePacked(recipient, MIN_TICK, MAX_TICK));
+                    bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
                     IPosition.Info storage position = positions[positionKey];
                     if (position.liquidity > 0) {
-                        position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
+                        position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
                         position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
                     }
                 }
@@ -369,19 +374,19 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 state.amountAfterFee = state.amountSpecified.sub(feeAmount);
 
                 // Calculate swap amounts
-                amount0 = -int256(state.amountAfterFee);
-                amount1 = int256(state.amountSpecified);
+                amount0 = -int256(amountAfterFee);
+                amount1 = int256(amountAfterFee);
 
                 // Update protocol fees and fee growth
                 if (liquidity > 0) {
-                    protocolFees1 = uint128(uint256(protocolFees1).add(state.feeAmount));
-                    feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(FullMath.mulDiv(state.feeAmount, Q128, liquidity));
+                    protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
+                    feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(FullMath.mulDiv(feeAmount, Q128, liquidity));
 
                     // Update position fees
-                    bytes32 positionKey = keccak256(abi.encodePacked(recipient, MIN_TICK, MAX_TICK));
+                    bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
                     IPosition.Info storage position = positions[positionKey];
                     if (position.liquidity > 0) {
-                        position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
+                        position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(feeAmount));
                         position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
                     }
                 }
@@ -403,8 +408,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         address recipient
     ) external override returns (int256 amount0, int256 amount1) {
         require(amountSpecified > 0, 'AS'); // Amount specified must be greater than 0
-        require(amountSpecified > 0, 'AS'); // Amount Specified
         require(_slot0.unlocked, 'LOK'); // Locked
+
+        // Calculate fees upfront
+        (uint256 feeAmount, uint256 amountAfterFee) = _calculateFees(amountSpecified);
 
         // Lock the pool and cache state
         Slot0 memory state = _slot0;
