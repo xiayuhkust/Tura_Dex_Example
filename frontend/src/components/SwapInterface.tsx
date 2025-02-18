@@ -1,11 +1,7 @@
 import { useState, useCallback } from 'react'
 import { Box, VStack, Text, Button, HStack, Divider, IconButton, useToast } from '@chakra-ui/react'
-import { useWeb3 } from '../hooks/useWeb3'
-import { TokenSelect } from './TokenSelect'
-import { TradeDetails } from './TradeDetails'
-import { Settings } from './Settings'
-import { LoadingSpinner } from './LoadingSpinner'
-import { usePriceImpact, Token } from '../hooks'
+import { useWeb3, usePriceImpact, Token } from '../hooks'
+import { TokenSelect, TradeDetails, Settings, LoadingSpinner } from '.'
 
 export function SwapInterface() {
   const { active, account, connect } = useWeb3()
@@ -18,6 +14,8 @@ export function SwapInterface() {
   const [estimatedGas] = useState<string>('~0.0001 ETH')
   const [isLoading, setIsLoading] = useState(false)
   const toast = useToast()
+
+  const { handleError } = useError()
 
   const handleSwap = useCallback(async () => {
     try {
@@ -32,17 +30,11 @@ export function SwapInterface() {
         isClosable: true,
       })
     } catch (error) {
-      toast({
-        title: 'Swap failed',
-        description: error instanceof Error ? error.message : 'An error occurred',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
+      handleError(error)
     } finally {
       setIsLoading(false)
     }
-  }, [toast])
+  }, [toast, handleError])
 
   const { priceImpact, warning } = usePriceImpact(
     inputToken,
