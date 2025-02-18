@@ -3,7 +3,6 @@ import { InjectedConnector } from '@web3-react/injected-connector'
 import { useToast } from '@chakra-ui/react'
 import type { UseToastOptions } from '@chakra-ui/react'
 import { useCallback, useEffect } from 'react'
-import React from 'react'
 import { MetaMaskToast } from '../components/MetaMaskToast'
 
 const CHAIN_ID = Number(import.meta.env.VITE_TURA_CHAIN_ID || "1337")
@@ -47,9 +46,9 @@ export function useWeb3() {
           duration: null,
           isClosable: true,
           position: 'top',
-          render: ({ onClose }: { onClose: () => void }): React.ReactNode => (
-            <MetaMaskToast onClose={onClose} />
-          )
+          render: ({ onClose }) => {
+            return <MetaMaskToast onClose={onClose} />
+          }
         }
         toast(toastOptions)
         return
