@@ -415,7 +415,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 : uint128(int128(liquidity) + liquidityNet);
         }
 
-        emit Swap(msg.sender, recipient, amount0, amount1, state.nextPrice, state.nextTick, liquidity);
+        emit Swap(msg.sender, recipient, amount0, amount1, state.nextPrice, liquidity, state.nextTick);
         return (amount0, amount1);
     }
 }
