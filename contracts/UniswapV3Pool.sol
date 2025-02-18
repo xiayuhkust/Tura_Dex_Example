@@ -339,6 +339,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     ) external override returns (int256 amount0, int256 amount1) {
         require(amountSpecified > 0, 'AS'); // Amount specified must be greater than 0
         require(_slot0.unlocked, 'LOK'); // Locked
+        require(_slot0.sqrtPriceX96 != 0, 'AI'); // Already initialized
 
         // Lock the pool
         _slot0.unlocked = false;
