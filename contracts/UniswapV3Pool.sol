@@ -277,7 +277,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     ) private returns (int256 amount0, int256 amount1) {
         if (zeroForOne) {
             // Calculate amounts
-            amount0 = int256(state.amountSpecified);
+            amount0 = int256(state.amountAfterFee);
             amount1 = -int256(state.amountAfterFee);
             
             // Transfer tokens
@@ -316,9 +316,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 amount1 = -int256(amountAfterFee);
 
                 // Update protocol fees and fee growth
-                if (liquidity > 0) {
+                if (state.currentLiquidity > 0) {
                     protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
-                    feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(FullMath.mulDiv(feeAmount, Q128, liquidity));
+                    feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(FullMath.mulDiv(feeAmount, Q128, state.currentLiquidity));
 
                     // Update position fees
                     bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
@@ -378,9 +378,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 amount1 = int256(amountAfterFee);
 
                 // Update protocol fees and fee growth
-                if (liquidity > 0) {
+                if (state.currentLiquidity > 0) {
                     protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
-                    feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(FullMath.mulDiv(feeAmount, Q128, liquidity));
+                    feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(FullMath.mulDiv(feeAmount, Q128, state.currentLiquidity));
 
                     // Update position fees
                     bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
@@ -410,12 +410,18 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         require(amountSpecified > 0, 'AS'); // Amount specified must be greater than 0
         require(_slot0.unlocked, 'LOK'); // Locked
 
-        // Calculate fees upfront
-        (uint256 feeAmount, uint256 amountAfterFee) = _calculateFees(amountSpecified);
-
         // Lock the pool and cache state
-        Slot0 memory state = _slot0;
-        state.unlocked = false;
+        Slot0 memory slot = _slot0;
+        slot.unlocked = false;
+
+        // Initialize swap state
+        SwapState memory state;
+        state.amountSpecified = amountSpecified;
+        state.recipient = recipient;
+        state.sender = msg.sender;
+        state.currentLiquidity = liquidity;
+        state.feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
+        state.amountAfterFee = amountSpecified.sub(state.feeAmount);
         _slot0 = state;
 
         // Cache state variables
