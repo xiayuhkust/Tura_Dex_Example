@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Box, VStack, Text, Button, HStack, Divider, IconButton } from '@chakra-ui/react'
 import { Settings } from './Settings'
 import { useWeb3 } from '../hooks/useWeb3'
@@ -25,7 +25,7 @@ export function SwapInterface() {
   const [transactionDeadline, setTransactionDeadline] = useState(20)
   const [inputToken, setInputToken] = useState<Token>()
   const [outputToken, setOutputToken] = useState<Token>()
-  const [estimatedGas, setEstimatedGas] = useState<string>()
+  const [estimatedGas] = useState<string>('~0.0001 ETH')
 
   const { priceImpact, warning } = usePriceImpact(
     inputToken,

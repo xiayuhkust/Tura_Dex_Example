@@ -1,8 +1,4 @@
 import { useMemo } from 'react'
-// Price impact calculation utilities
-const formatAmount = (amount: string) => parseFloat(amount)
-const parseAmount = (amount: number) => amount.toString()
-
 interface Token {
   address: string
   symbol: string
