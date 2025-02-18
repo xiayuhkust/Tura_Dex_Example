@@ -103,79 +103,80 @@ export function SwapInterface() {
           )}
         </HStack>
 
-        {!active ? (
-          <Button 
-            onClick={connect} 
-            w="full" 
-            bg="brand.primary" 
-            _hover={{ opacity: 0.9 }}
-            size="lg"
-          >
-            Connect Wallet
-          </Button>
-        ) : (
-          <VStack w="full" spacing="4">
-            <TokenSelect
-              value={inputAmount}
-              onChange={setInputAmount}
-              label="You Pay"
-              selectedToken={inputToken}
-              onTokenSelect={setInputToken}
-            />
-            
-            <IconButton
-              aria-label="Switch tokens"
-              icon={<Text>↓</Text>}
-              variant="ghost"
-              color="brand.primary"
-              _hover={{ bg: 'whiteAlpha.200' }}
-              onClick={() => {
-                const tempToken = inputToken
-                setInputToken(outputToken)
-                setOutputToken(tempToken)
-                const tempAmount = inputAmount
-                setInputAmount(outputAmount)
-                setOutputAmount(tempAmount)
-              }}
-            />
-            
-            <TokenSelect
-              value={outputAmount}
-              onChange={setOutputAmount}
-              label="You Receive"
-              selectedToken={outputToken}
-              onTokenSelect={setOutputToken}
-            />
+        <VStack w="full" spacing="4">
+          <TokenSelect
+            value={inputAmount}
+            onChange={setInputAmount}
+            label="You Pay"
+            selectedToken={inputToken}
+            onTokenSelect={setInputToken}
+            isDisabled={!active}
+          />
+          
+          <IconButton
+            aria-label="Switch tokens"
+            icon={<Text>↓</Text>}
+            variant="ghost"
+            color="brand.primary"
+            _hover={{ bg: 'whiteAlpha.200' }}
+            isDisabled={!active}
+            onClick={() => {
+              const tempToken = inputToken
+              setInputToken(outputToken)
+              setOutputToken(tempToken)
+              const tempAmount = inputAmount
+              setInputAmount(outputAmount)
+              setOutputAmount(tempAmount)
+            }}
+          />
+          
+          <TokenSelect
+            value={outputAmount}
+            onChange={setOutputAmount}
+            label="You Receive"
+            selectedToken={outputToken}
+            onTokenSelect={setOutputToken}
+            isDisabled={!active}
+          />
 
-            <Divider borderColor="whiteAlpha.200" />
+          <Divider borderColor="whiteAlpha.200" />
 
-            <TradeDetails
-              inputToken={inputToken}
-              outputToken={outputToken}
-              inputAmount={inputAmount}
-              outputAmount={outputAmount}
-              priceImpact={priceImpact}
-              warning={warning}
-              slippageTolerance={slippageTolerance}
-              estimatedGas={estimatedGas}
-            />
+          <TradeDetails
+            inputToken={inputToken}
+            outputToken={outputToken}
+            inputAmount={inputAmount}
+            outputAmount={outputAmount}
+            priceImpact={priceImpact}
+            warning={warning}
+            slippageTolerance={slippageTolerance}
+            estimatedGas={estimatedGas}
+          />
 
-            {isLoading ? (
-              <LoadingSpinner message="Preparing swap..." />
-            ) : (
-              <Button
-                w="full"
-                size="lg"
-                bg="brand.primary"
-                _hover={{ opacity: 0.9 }}
-                isDisabled={!inputAmount || !outputAmount || warning?.level === 'error'}
-                onClick={handleSwap}
-              >
-                {warning?.level === 'error' ? 'Price Impact Too High' : 'Swap'}
-              </Button>
-            )}
-          </VStack>
-        )}
+          {!active ? (
+            <Button 
+              onClick={connect} 
+              w="full" 
+              bg="brand.primary" 
+              _hover={{ opacity: 0.9 }}
+              size="lg"
+            >
+              Connect Wallet to Trade
+            </Button>
+          ) : isLoading ? (
+            <LoadingSpinner message="Preparing swap..." />
+          ) : (
+            <Button
+              w="full"
+              size="lg"
+              bg="brand.primary"
+              _hover={{ opacity: 0.9 }}
+              isDisabled={!inputAmount || !outputAmount || warning?.level === 'error'}
+              onClick={handleSwap}
+            >
+              {warning?.level === 'error' ? 'Price Impact Too High' : 'Swap'}
+            </Button>
+          )}
+        </VStack>
       </VStack>
     </Box>
   )
