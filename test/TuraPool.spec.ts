@@ -21,7 +21,7 @@ describe('TuraPool', () => {
     HIGH: 10000    // 1%
   };
   const INITIAL_PRICE = '79228162514264337593543950336'; // 1.0 in Q96
-  const INITIAL_LIQUIDITY = ethers.utils.parseUnits('1', 6); // 1 token for testing
+  const INITIAL_LIQUIDITY = ethers.utils.parseUnits('1', 12); // 1 token for testing
 
   beforeEach(async () => {
     [owner, user1, user2] = await ethers.getSigners();
@@ -51,14 +51,10 @@ describe('TuraPool', () => {
       }
     }
 
-    // Create pool and approve it
-    await factory.createPool(token0.address, token1.address, FEE_AMOUNTS.MEDIUM);
-    const poolAddress = await factory.getPool(token0.address, token1.address, FEE_AMOUNTS.MEDIUM);
-    const pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
-
+    // Approve tokens for all users
     for (const token of [token0, token1]) {
       for (const user of [owner, user1, user2]) {
-        await token.connect(user).approve(poolAddress, ethers.constants.MaxUint256);
+        await token.connect(user).approve(factory.address, ethers.constants.MaxUint256);
       }
     }
 
