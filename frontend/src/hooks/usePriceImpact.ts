@@ -42,17 +42,17 @@ export function usePriceImpact(
       let warning = null
       if (priceImpact > 15) {
         warning = {
-          level: 'error',
+          level: 'error' as const,
           message: 'Price impact too high'
         }
       } else if (priceImpact > 5) {
         warning = {
-          level: 'warning',
+          level: 'warning' as const,
           message: 'High price impact'
         }
       } else if (priceImpact > 3) {
         warning = {
-          level: 'info',
+          level: 'info' as const,
           message: 'Notable price impact'
         }
       }
