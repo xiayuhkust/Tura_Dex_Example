@@ -422,10 +422,12 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.currentLiquidity = liquidity;
         state.feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
         state.amountAfterFee = amountSpecified.sub(state.feeAmount);
-        _slot0 = state;
+
+        // Lock the pool
+        _slot0.unlocked = false;
 
         // Cache state variables
-        uint160 sqrtPriceX96 = state.sqrtPriceX96;
+        uint160 sqrtPriceX96 = _slot0.sqrtPriceX96;
         int24 tick = state.tick;
         uint128 currentLiquidity = liquidity;
 
