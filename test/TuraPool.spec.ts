@@ -62,21 +62,14 @@ describe('TuraPool', () => {
 
   describe('Pool Creation', () => {
     it('should create pool with correct tokens and fee', async () => {
-      const poolToken0 = await pool.token0();
-      const poolToken1 = await pool.token1();
-      const poolFee = await pool.fee();
-      
-      // Get pool tokens
-      const poolToken0 = await pool.token0();
-      const poolToken1 = await pool.token1();
-      const poolFee = await pool.fee();
+      // Get sorted tokens for comparison
+      const [expectedToken0, expectedToken1] = token0.address.toLowerCase() < token1.address.toLowerCase()
+        ? [token0, token1]
+        : [token1, token0];
 
       // Verify pool was created with correct tokens and fee
-      expect(poolToken0.toLowerCase()).to.equal(sortedToken0.address.toLowerCase());
-      expect(poolToken1.toLowerCase()).to.equal(sortedToken1.address.toLowerCase());
-      expect(poolFee).to.equal(FEE_AMOUNT);
-      expect(poolFee).to.equal(FEE_AMOUNT);
-      expect(await pool.token1()).to.equal(token1.address);
+      expect((await pool.token0()).toLowerCase()).to.equal(expectedToken0.address.toLowerCase());
+      expect((await pool.token1()).toLowerCase()).to.equal(expectedToken1.address.toLowerCase());
       expect(await pool.fee()).to.equal(FEE_AMOUNT);
     });
 
