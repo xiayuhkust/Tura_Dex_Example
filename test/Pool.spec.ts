@@ -21,27 +21,40 @@ describe('UniswapV3Pool', () => {
     const MIN_TICK = -887272;
     const MAX_TICK = 887272;
     const BASE_AMOUNT = ethers.utils.parseUnits('1', 12); // 1e12 base units
+    const BUFFER_MULTIPLIER = 10000; // Buffer multiplier for token amounts
 
     beforeEach(async () => {
         [owner, other] = await ethers.getSigners();
+        
+        // Deploy new tokens for each test
+        const TokenFactory = await ethers.getContractFactory('TestERC20');
+        token0 = await TokenFactory.deploy('Token0', 'TK0', 18);
+        token1 = await TokenFactory.deploy('Token1', 'TK1', 18);
+
+        // Deploy factory
+        const FactoryFactory = await ethers.getContractFactory('UniswapV3Factory');
+        factory = await FactoryFactory.deploy();
+
+        // Create pool
+        await factory.createPool(token0.address, token1.address, FEE);
+        const poolAddress = await factory.getPool(token0.address, token1.address, FEE);
+        pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
+
+        // Mint tokens with extra buffer
+        const mintAmount = BASE_AMOUNT.mul(BUFFER_MULTIPLIER);
+        await token0.mint(owner.address, mintAmount);
+        await token1.mint(owner.address, mintAmount);
+        await token0.mint(other.address, mintAmount);
+        await token1.mint(other.address, mintAmount);
+
+        // Approve tokens
+        await token0.approve(pool.address, ethers.constants.MaxUint256);
+        await token1.approve(pool.address, ethers.constants.MaxUint256);
+        await token0.connect(other).approve(pool.address, ethers.constants.MaxUint256);
+        await token1.connect(other).approve(pool.address, ethers.constants.MaxUint256);
     });
 
     describe('initialization', () => {
-        beforeEach(async () => {
-            // Deploy new tokens for each test
-            const TokenFactory = await ethers.getContractFactory('TestERC20');
-            token0 = await TokenFactory.deploy('Token0', 'TK0', 18);
-            token1 = await TokenFactory.deploy('Token1', 'TK1', 18);
-
-            // Deploy factory
-            const FactoryFactory = await ethers.getContractFactory('UniswapV3Factory');
-            factory = await FactoryFactory.deploy();
-
-            // Create pool
-            await factory.createPool(token0.address, token1.address, FEE);
-            const poolAddress = await factory.getPool(token0.address, token1.address, FEE);
-            pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
-        });
 
         it('sets initial price', async () => {
             await pool.initialize(SQRT_PRICE_X96);
@@ -57,46 +70,12 @@ describe('UniswapV3Pool', () => {
     });
 
     async function setupTestPool() {
-        // Deploy new tokens for each test
-        const TokenFactory = await ethers.getContractFactory('TestERC20');
-        token0 = await TokenFactory.deploy('Token0', 'TK0', 18);
-        token1 = await TokenFactory.deploy('Token1', 'TK1', 18);
-
-        // Deploy factory
-        const FactoryFactory = await ethers.getContractFactory('UniswapV3Factory');
-        factory = await FactoryFactory.deploy();
-
-        // Create pool
-        await factory.createPool(token0.address, token1.address, FEE);
-        const poolAddress = await factory.getPool(token0.address, token1.address, FEE);
-        pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
-
-        // Approve tokens
-        await token0.approve(pool.address, ethers.constants.MaxUint256);
-        await token1.approve(pool.address, ethers.constants.MaxUint256);
-        await token0.connect(other).approve(pool.address, ethers.constants.MaxUint256);
-        await token1.connect(other).approve(pool.address, ethers.constants.MaxUint256);
-
-        // Setup initial amounts
-        const lpAmount = BASE_AMOUNT.mul(10); // 10x base amount for LP
-        const userAmount = BASE_AMOUNT; // Base amount for testing
-        
-        // Mint tokens with extra buffer
-        await token0.mint(owner.address, lpAmount.mul(100));
-        await token1.mint(owner.address, lpAmount.mul(100));
-        await token0.mint(other.address, userAmount.mul(100));
-        await token1.mint(other.address, userAmount.mul(100));
-
-        // Verify token balances
-        const ownerBalance0 = await token0.balanceOf(owner.address);
-        const ownerBalance1 = await token1.balanceOf(owner.address);
-        const otherBalance0 = await token0.balanceOf(other.address);
-        const otherBalance1 = await token1.balanceOf(other.address);
-
-        console.log('Owner balances:', ethers.utils.formatEther(ownerBalance0), ethers.utils.formatEther(ownerBalance1));
-        console.log('Other balances:', ethers.utils.formatEther(otherBalance0), ethers.utils.formatEther(otherBalance1));
-
-        return { userAmount, lpAmount };
+        // Initialize pool
+        await pool.initialize(SQRT_PRICE_X96);
+        return {
+            userAmount: BASE_AMOUNT,
+            lpAmount: BASE_AMOUNT.mul(100)
+        };
     }
 
     describe('minting', () => {
