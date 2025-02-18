@@ -73,8 +73,15 @@ describe('TuraPool', () => {
     });
 
     it('should initialize pool with valid price', async () => {
-      await pool.initialize(INITIAL_PRICE);
-      const { sqrtPriceX96, tick } = await pool.slot0();
+      // Create new pool for this test to avoid already initialized error
+      await factory.createPool(token0.address, token1.address, FEE_AMOUNT);
+      const newPool = await ethers.getContractAt(
+        'UniswapV3Pool',
+        await factory.getPool(token0.address, token1.address, FEE_AMOUNT)
+      );
+      
+      await newPool.initialize(INITIAL_PRICE);
+      const { sqrtPriceX96, tick } = await newPool.slot0();
       expect(sqrtPriceX96).to.not.equal(0);
       expect(tick).to.equal(0); // Initial tick should be 0 at price of 1.0
     });
@@ -88,6 +95,12 @@ describe('TuraPool', () => {
 
   describe('Liquidity Provision', () => {
     beforeEach(async () => {
+      // Create new pool for each test to avoid already initialized error
+      await factory.createPool(token0.address, token1.address, FEE_AMOUNT);
+      pool = await ethers.getContractAt(
+        'UniswapV3Pool',
+        await factory.getPool(token0.address, token1.address, FEE_AMOUNT)
+      );
       await pool.initialize(INITIAL_PRICE);
     });
 
