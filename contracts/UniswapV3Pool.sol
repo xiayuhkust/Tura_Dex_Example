@@ -131,9 +131,30 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
         // Update position
         IPosition.Info storage position = positions.get(recipient, tickLower, tickUpper);
+        
+        // Calculate fee growth inside the position's range
+        uint256 feeGrowthInside0X128;
+        uint256 feeGrowthInside1X128;
+        
+        {
+            Tick.Info storage lower = ticks[tickLower];
+            Tick.Info storage upper = ticks[tickUpper];
+            
+            // Calculate fee growth below
+            uint256 feeGrowthBelow0X128 = tickLower <= _slot0.tick ? lower.feeGrowthOutside0X128 : feeGrowthGlobal0X128 - lower.feeGrowthOutside0X128;
+            uint256 feeGrowthBelow1X128 = tickLower <= _slot0.tick ? lower.feeGrowthOutside1X128 : feeGrowthGlobal1X128 - lower.feeGrowthOutside1X128;
+            
+            // Calculate fee growth above
+            uint256 feeGrowthAbove0X128 = tickUpper <= _slot0.tick ? upper.feeGrowthOutside0X128 : feeGrowthGlobal0X128 - upper.feeGrowthOutside0X128;
+            uint256 feeGrowthAbove1X128 = tickUpper <= _slot0.tick ? upper.feeGrowthOutside1X128 : feeGrowthGlobal1X128 - upper.feeGrowthOutside1X128;
+            
+            feeGrowthInside0X128 = feeGrowthGlobal0X128 - feeGrowthBelow0X128 - feeGrowthAbove0X128;
+            feeGrowthInside1X128 = feeGrowthGlobal1X128 - feeGrowthBelow1X128 - feeGrowthAbove1X128;
+        }
+        
         position.liquidity = uint128(uint256(position.liquidity).add(uint256(amount)));
-        position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
-        position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
+        position.feeGrowthInside0LastX128 = feeGrowthInside0X128;
+        position.feeGrowthInside1LastX128 = feeGrowthInside1X128;
 
         // Update pool liquidity if position is in range
         if (_slot0.tick >= tickLower && _slot0.tick < tickUpper) {
@@ -146,11 +167,29 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         uint160 sqrtPriceCurrentX96 = _slot0.sqrtPriceX96;
 
         // Calculate amounts of token0 and token1 needed based on current price
-        uint256 sqrtRatioAX96 = sqrtPriceCurrentX96 < sqrtPriceLowerX96 ? sqrtPriceLowerX96 : sqrtPriceCurrentX96;
-        uint256 sqrtRatioBX96 = sqrtPriceCurrentX96 < sqrtPriceUpperX96 ? sqrtPriceCurrentX96 : sqrtPriceUpperX96;
-
-        amount0 = uint256(amount).mul(sqrtRatioBX96.sub(sqrtRatioAX96)).div(sqrtRatioBX96);
-        amount1 = uint256(amount).mul(sqrtRatioAX96).div(sqrtRatioBX96);
+        if (sqrtPriceCurrentX96 <= sqrtPriceLowerX96) {
+            // Current price below range, only token0 needed
+            amount0 = uint256(amount);
+            amount1 = 0;
+        } else if (sqrtPriceCurrentX96 < sqrtPriceUpperX96) {
+            // Current price within range, need both tokens
+            amount0 = SqrtPriceMath.getAmount0Delta(
+                sqrtPriceCurrentX96,
+                sqrtPriceUpperX96,
+                amount,
+                true
+            );
+            amount1 = SqrtPriceMath.getAmount1Delta(
+                sqrtPriceLowerX96,
+                sqrtPriceCurrentX96,
+                amount,
+                true
+            );
+        } else {
+            // Current price above range, only token1 needed
+            amount0 = 0;
+            amount1 = uint256(amount);
+        }
 
         // Transfer tokens to pool
         if (amount0 > 0) require(IERC20(token0).transferFrom(msg.sender, address(this), amount0), 'T0');
