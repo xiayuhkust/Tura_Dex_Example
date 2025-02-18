@@ -63,6 +63,17 @@ describe('UniswapV3Pool', () => {
 
     describe('minting', () => {
         beforeEach(async () => {
+            // Create new pool for each test
+            await factory.createPool(token0.address, token1.address, FEE);
+            const poolAddress = await factory.getPool(token0.address, token1.address, FEE);
+            pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
+
+            // Approve tokens
+            await token0.approve(pool.address, ethers.constants.MaxUint256);
+            await token1.approve(pool.address, ethers.constants.MaxUint256);
+            await token0.connect(other).approve(pool.address, ethers.constants.MaxUint256);
+            await token1.connect(other).approve(pool.address, ethers.constants.MaxUint256);
+
             // Setup initial amounts - using minimal amounts for Tura testing
             const userAmount = ethers.utils.parseEther('0.00000001'); // 0.00000001 Tura for testing (~40 Tura total)
             const lpAmount = ethers.utils.parseEther('0.000000005'); // 0.000000005 Tura for LP (~2900 Tura total)
@@ -101,6 +112,17 @@ describe('UniswapV3Pool', () => {
 
     describe('swapping', () => {
         beforeEach(async () => {
+            // Create new pool for each test
+            await factory.createPool(token0.address, token1.address, FEE);
+            const poolAddress = await factory.getPool(token0.address, token1.address, FEE);
+            pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
+
+            // Approve tokens
+            await token0.approve(pool.address, ethers.constants.MaxUint256);
+            await token1.approve(pool.address, ethers.constants.MaxUint256);
+            await token0.connect(other).approve(pool.address, ethers.constants.MaxUint256);
+            await token1.connect(other).approve(pool.address, ethers.constants.MaxUint256);
+
             // Setup initial amounts - using minimal amounts for Tura testing
             const userAmount = ethers.utils.parseEther('0.00000001'); // 0.00000001 Tura for testing (~40 Tura total)
             const lpAmount = ethers.utils.parseEther('0.000000005'); // 0.000000005 Tura for LP (~2900 Tura total)
