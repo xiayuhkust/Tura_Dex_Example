@@ -12,8 +12,8 @@ import './factory/interfaces/IPosition.sol';
 import './factory/libraries/Position.sol';
 import './factory/libraries/SqrtPriceMath.sol';
 import './factory/libraries/Tick.sol';
-import './libraries/FixedPoint128.sol';
-import './libraries/FullMath.sol';
+import './factory/libraries/FullMath.sol';
+import './factory/libraries/FixedPoint128.sol';
 
 contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     using Tick for mapping(int24 => Tick.Info);
@@ -277,14 +277,14 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         
         // Update protocol fees and fee growth
         if (zeroForOne) {
-            protocolFees0 = protocolFees0.add(feeAmount);
+            protocolFees0 = uint128(uint256(protocolFees0).add(feeAmount));
             feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(
-                FullMath.mulDiv(feeAmount, FixedPoint128.Q128, liquidity)
+                FullMath.mulDiv(feeAmount, FixedPoint128.Q128, currentLiquidity)
             );
         } else {
-            protocolFees1 = protocolFees1.add(feeAmount);
+            protocolFees1 = uint128(uint256(protocolFees1).add(feeAmount));
             feeGrowthGlobal1X128 = feeGrowthGlobal1X128.add(
-                FullMath.mulDiv(feeAmount, FixedPoint128.Q128, liquidity)
+                FullMath.mulDiv(feeAmount, FixedPoint128.Q128, currentLiquidity)
             );
         }
     }
