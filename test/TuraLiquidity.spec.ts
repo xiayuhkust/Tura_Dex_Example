@@ -32,9 +32,14 @@ describe('TuraLiquidity', () => {
     token0 = await TestERC20.deploy('Test Token 0', 'TT0', 18);
     token1 = await TestERC20.deploy('Test Token 1', 'TT1', 18);
 
-    // Mint initial tokens to owner
-    await token0.mint(owner.address, INITIAL_LIQUIDITY);
-    await token1.mint(owner.address, INITIAL_LIQUIDITY);
+    // Mint initial tokens to owner and users
+    const mintAmount = ethers.utils.parseEther('1.0'); // Mint more tokens than needed
+    await token0.mint(owner.address, mintAmount);
+    await token1.mint(owner.address, mintAmount);
+    await token0.mint(user1.address, mintAmount);
+    await token1.mint(user1.address, mintAmount);
+    await token0.mint(user2.address, mintAmount);
+    await token1.mint(user2.address, mintAmount);
 
     // Deploy factory
     const UniswapV3Factory = await ethers.getContractFactory('UniswapV3Factory');
