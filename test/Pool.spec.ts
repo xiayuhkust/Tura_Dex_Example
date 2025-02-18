@@ -93,6 +93,10 @@ describe('UniswapV3Pool', () => {
             await token0.approve(pool.address, userAmount.mul(2));
             await token1.approve(pool.address, userAmount.mul(2));
             
+            // Transfer tokens to pool for initial liquidity
+            await token0.transfer(pool.address, lpAmount);
+            await token1.transfer(pool.address, lpAmount);
+            
             // Add initial liquidity
             await pool.mint(owner.address, MIN_TICK, MAX_TICK, lpAmount);
             
