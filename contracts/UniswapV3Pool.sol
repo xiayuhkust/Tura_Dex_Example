@@ -308,6 +308,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                     position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(feeAmount));
                     position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
                 }
+            }
                 }
             }
         } else {
