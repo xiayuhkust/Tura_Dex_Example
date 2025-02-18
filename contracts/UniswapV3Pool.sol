@@ -392,6 +392,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.feeAmount = amountSpecified.mul(3).div(1000); // 0.3% fee
         state.amountAfterFee = amountSpecified.sub(state.feeAmount); // Output amount is input minus fees
         state.currentLiquidity = uint128(liquidity); // Store current liquidity for fee calculation
+        state.sender = msg.sender; // Store sender for fee tracking
 
         // Execute swap
         (amount0, amount1) = _handleSwap(zeroForOne, state, recipient);
