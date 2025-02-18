@@ -46,6 +46,13 @@ describe('UniswapV3Pool', () => {
     });
 
     describe('initialization', () => {
+        beforeEach(async () => {
+            // Reset pool for each test
+            await factory.createPool(token0.address, token1.address, FEE);
+            const poolAddress = await factory.getPool(token0.address, token1.address, FEE);
+            pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
+        });
+
         it('sets initial price', async () => {
             await pool.initialize(SQRT_PRICE_X96);
             const { sqrtPriceX96, tick } = await pool.slot0();
