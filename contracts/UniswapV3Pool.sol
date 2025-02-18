@@ -43,7 +43,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     uint256 public override feeGrowthGlobal1X128;
 
     // Track the current tick
-    int24 public currentTick;
+    int24 private _currentTick;
 
     constructor(
         address _factory,
@@ -371,7 +371,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 {
                     bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
                     IPosition.Info storage position = positions[positionKey];
-                    position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(feeAmount));
+                    position.tokensOwed1 = uint128(uint256(position.tokensOwed1).add(state.feeAmount));
                     position.feeGrowthInside1LastX128 = feeGrowthGlobal1X128;
                 }
             }
@@ -391,7 +391,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
         // Cache state variables
         uint160 sqrtPriceX96 = _slot0.sqrtPriceX96;
-        int24 currentTick = _slot0.tick;
+        _currentTick = _slot0.tick;
 
         // Initialize swap state
         SwapState memory state;
@@ -465,7 +465,7 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
 
         // Calculate next tick and update liquidity
         state.nextTick = TickMath.getTickAtSqrtRatio(state.nextPrice);
-        if (currentTick != state.nextTick) {
+        if (_currentTick != state.nextTick) {
             int128 liquidityNet = ticks.cross(
                 state.nextTick,
                 feeGrowthGlobal0X128,
