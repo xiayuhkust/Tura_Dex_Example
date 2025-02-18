@@ -318,14 +318,12 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
     }
 
     function _calculateFees(uint256 amount, bool zeroForOne, uint128 currentLiquidity) private pure returns (uint256 feeAmount, uint256 amountAfterFee) {
-        // Scale down amount for testing
-        uint256 scaledAmount = amount / 1e12;
         // Calculate fee amount first (0.3% = 3/1000)
-        feeAmount = FullMath.mulDiv(scaledAmount, 3, 1000);
+        feeAmount = FullMath.mulDiv(amount, 3, 1000);
         // Calculate output amount as remainder (99.7%)
-        amountAfterFee = scaledAmount.sub(feeAmount);
+        amountAfterFee = amount.sub(feeAmount);
         // Verify calculations
-        require(feeAmount.add(amountAfterFee) == scaledAmount, "Invalid fee calculation");
+        require(feeAmount.add(amountAfterFee) == amount, "Invalid fee calculation");
     }
 
     function _handleSwap(
@@ -391,10 +389,9 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         state.nextPrice = sqrtPriceX96;
         state.nextTick = _currentTick;
 
-        // Calculate fees (fee is in millionths, so 3000 = 0.3%)
-        (state.feeAmount, state.amountAfterFee) = _calculateFees(amountSpecified, zeroForOne, state.currentLiquidity);
-        state.currentLiquidity = uint128(liquidity); // Store current liquidity for fee calculation
-        state.sender = msg.sender; // Store sender for fee tracking
+        // Store current liquidity and sender for fee tracking
+        state.currentLiquidity = uint128(liquidity);
+        state.sender = msg.sender;
 
         // Ensure we have enough liquidity
         require(state.currentLiquidity > 0, "IL"); // Insufficient liquidity
