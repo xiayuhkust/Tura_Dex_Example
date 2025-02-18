@@ -1,4 +1,4 @@
-import hre from 'hardhat';
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { Contract } from '@ethersproject/contracts';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
@@ -19,7 +19,7 @@ describe('TuraPool', () => {
   const INITIAL_LIQUIDITY = '100000000000000'; // 0.0001 - Small amount for Tura testing
 
   beforeEach(async () => {
-    [owner, user1, user2] = await hre.ethers.getSigners();
+    [owner, user1, user2] = await ethers.getSigners();
 
     // Get contract factories
     const TestERC20 = await hre.ethers.getContractFactory('TestERC20');
@@ -44,7 +44,7 @@ describe('TuraPool', () => {
     // Create pool
     await factory.createPool(token0.address, token1.address, FEE_AMOUNT);
     const poolAddress = await factory.getPool(token0.address, token1.address, FEE_AMOUNT);
-    pool = await hre.ethers.getContractAt('UniswapV3Pool', poolAddress);
+    pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
   });
 
   describe('Pool Creation', () => {
