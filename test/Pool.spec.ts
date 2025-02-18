@@ -56,22 +56,24 @@ describe('UniswapV3Pool', () => {
     });
 
     describe('initialization', () => {
-        beforeEach(async () => {
-            await pool.initialize(SQRT_PRICE_X96);
-        });
-
         it('sets initial price', async () => {
+            await pool.initialize(SQRT_PRICE_X96);
             const { sqrtPriceX96, tick } = await pool.slot0();
             expect(sqrtPriceX96).to.equal(SQRT_PRICE_X96);
             expect(tick).to.equal(0);
         });
 
         it('reverts if already initialized', async () => {
+            await pool.initialize(SQRT_PRICE_X96);
             await expect(pool.initialize(SQRT_PRICE_X96)).to.be.revertedWith('AI');
         });
     });
 
     describe('minting', () => {
+        beforeEach(async () => {
+            await pool.initialize(SQRT_PRICE_X96);
+        });
+
         it('fails with zero liquidity', async () => {
             await expect(
                 pool.mint(owner.address, MIN_TICK, MAX_TICK, 0)
