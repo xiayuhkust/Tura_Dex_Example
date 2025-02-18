@@ -125,6 +125,10 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             amount
         );
 
+        // Scale amounts back up after calculation
+        amount0 = amount0 * 1e18;
+        amount1 = amount1 * 1e18;
+
         // Log token amounts and balances for debugging
         console.log("Token amounts required - amount0:", amount0);
         console.log("Token amounts required - amount1:", amount1);
