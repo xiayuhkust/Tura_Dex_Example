@@ -3,8 +3,8 @@ import { Box, VStack, Text, Button, HStack, Divider, IconButton } from '@chakra-
 import { useWeb3 } from '../hooks/useWeb3'
 import { TokenSelect } from './TokenSelect'
 import { TradeDetails } from './TradeDetails'
-import { usePriceImpact, Token } from '../hooks/usePriceImpact'
 import { Settings } from './Settings'
+import { usePriceImpact, Token } from '../hooks/usePriceImpact'
 
 export function SwapInterface() {
   const { active, account, connect } = useWeb3()

@@ -16,16 +16,7 @@ import {
 import { useTokenBalances } from '../hooks/useTokenBalances'
 import { useRecentTokens } from '../hooks/useRecentTokens'
 
-interface Token {
-  address: string
-  symbol: string
-  name: string
-  balance?: string
-  logoURI?: string
-  lastUsed?: number
-  price?: string
-  priceChange24h?: string
-}
+import { Token } from '../hooks/usePriceImpact'
 
 const DEMO_TOKENS: Token[] = [
   {
