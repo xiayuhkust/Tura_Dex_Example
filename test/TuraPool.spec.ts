@@ -127,11 +127,11 @@ describe('TuraPool', () => {
       pool = await ethers.getContractAt('UniswapV3Pool', poolAddress);
 
       // Mint tokens and approve for all users
-      const amount = ethers.utils.parseEther('10.0'); // Increase amount for sufficient liquidity
+      const mintAmount = BASE_AMOUNT.mul(10000); // Large buffer for testing
       await Promise.all(
         [owner, user1, user2].flatMap(user => [
-          token0.mint(user.address, amount),
-          token1.mint(user.address, amount),
+          token0.mint(user.address, mintAmount),
+          token1.mint(user.address, mintAmount),
           token0.connect(user).approve(poolAddress, ethers.constants.MaxUint256),
           token1.connect(user).approve(poolAddress, ethers.constants.MaxUint256)
         ])
@@ -150,6 +150,13 @@ describe('TuraPool', () => {
       if ((await pool.slot0()).sqrtPriceX96 == 0) {
         await pool.initialize(INITIAL_PRICE);
       }
+
+      // Mint tokens with extra buffer
+      const mintAmount = BASE_AMOUNT.mul(10000); // Large buffer for testing
+      await token0.mint(owner.address, mintAmount);
+      await token1.mint(owner.address, mintAmount);
+      await token0.approve(pool.address, ethers.constants.MaxUint256);
+      await token1.approve(pool.address, ethers.constants.MaxUint256);
 
       // Add liquidity
       await pool.mint(
