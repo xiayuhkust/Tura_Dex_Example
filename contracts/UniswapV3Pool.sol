@@ -272,6 +272,8 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         amountAfterFee = amount.mul(997).div(1000);
         // Verify calculations
         require(feeAmount.add(amountAfterFee) == amount, "Invalid fee calculation");
+        // Ensure fee amount is correct
+        require(feeAmount == amount.mul(3).div(1000), "Invalid fee amount");
     }
 
     function _handleSwap(
@@ -292,6 +294,14 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
             
             // Update protocol fees and fee growth
             protocolFees0 = uint128(uint256(protocolFees0).add(state.feeAmount));
+            
+            // Update position fees for liquidity provider (owner)
+            bytes32 positionKey = keccak256(abi.encodePacked(owner, MIN_TICK, MAX_TICK));
+            IPosition.Info storage position = positions[positionKey];
+            if (position.liquidity > 0) {
+                position.tokensOwed0 = uint128(uint256(position.tokensOwed0).add(state.feeAmount));
+                position.feeGrowthInside0LastX128 = feeGrowthGlobal0X128;
+            }
             if (state.currentLiquidity > 0) {
                 uint256 feePerLiquidity = FullMath.mulDiv(state.feeAmount, Q128, state.currentLiquidity);
                 feeGrowthGlobal0X128 = feeGrowthGlobal0X128.add(feePerLiquidity);
