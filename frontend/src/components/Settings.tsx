@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -33,6 +33,8 @@ export function Settings({
   transactionDeadline,
   onTransactionDeadlineChange
 }: SettingsProps) {
+  // Use transaction deadline in custom deadline input
+  const formattedDeadline = transactionDeadline.toString()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [customSlippage, setCustomSlippage] = useState('')
   const [customDeadline, setCustomDeadline] = useState('')
@@ -128,7 +130,7 @@ export function Settings({
                   <Input
                     size="sm"
                     placeholder="Minutes"
-                    value={customDeadline}
+                    value={customDeadline || formattedDeadline}
                     onChange={(e) => handleDeadlineChange(e.target.value)}
                     w="80px"
                   />

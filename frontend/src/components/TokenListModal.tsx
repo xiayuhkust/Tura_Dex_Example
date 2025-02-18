@@ -191,10 +191,10 @@ export function TokenListModal({ isOpen, onClose, onSelect }: TokenListModalProp
                             <Text color="white" fontWeight="bold">{token.symbol}</Text>
                             <Text color="whiteAlpha.700" fontSize="sm">{token.name}</Text>
                           </VStack>
-                    </HStack>
-                    <VStack align="end" spacing={0}>
-                      <Text color="whiteAlpha.900">{token.balance}</Text>
-                      <HStack spacing={1}>
+                        </HStack>
+                        <VStack align="end" spacing={0}>
+                          <Text color="whiteAlpha.900">{token.balance}</Text>
+                          <HStack spacing={1}>
                         <Text color="whiteAlpha.700" fontSize="sm">${token.price}</Text>
                         <Text 
                           color={parseFloat(token.priceChange24h || '0') >= 0 ? 'green.400' : 'red.400'} 
