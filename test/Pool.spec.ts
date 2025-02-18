@@ -87,6 +87,10 @@ describe('UniswapV3Pool', () => {
             const userAmount = ethers.utils.parseEther('1'); // 1 Tura for testing
             const lpAmount = ethers.utils.parseEther('0.5'); // 0.5 Tura for LP
             
+            // Mint tokens first
+            await token0.mint(owner.address, userAmount.mul(2));
+            await token1.mint(owner.address, userAmount.mul(2));
+            
             // Verify initial balances
             const initialBalance0 = await token0.balanceOf(owner.address);
             const initialBalance1 = await token1.balanceOf(owner.address);
