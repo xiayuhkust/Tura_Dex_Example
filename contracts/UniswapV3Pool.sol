@@ -304,10 +304,6 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
                 true
             );
         }
-
-        // Scale amounts based on liquidity
-        amount0 = FullMath.mulDiv(amount0, liquidity, uint256(1 << 96));
-        amount1 = FullMath.mulDiv(amount1, liquidity, uint256(1 << 96));
     }
 
 

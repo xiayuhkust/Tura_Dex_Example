@@ -21,7 +21,7 @@ describe('TuraPool', () => {
     HIGH: 10000    // 1%
   };
   const INITIAL_PRICE = '79228162514264337593543950336'; // 1.0 in Q96
-  const INITIAL_LIQUIDITY = ethers.utils.parseUnits('0.01', 18); // Small initial liquidity
+  const INITIAL_LIQUIDITY = ethers.utils.parseUnits('0.0001', 18); // Very small initial liquidity
 
   beforeEach(async () => {
     [owner, user1, user2] = await ethers.getSigners();
