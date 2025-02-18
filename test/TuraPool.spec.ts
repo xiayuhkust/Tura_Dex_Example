@@ -125,17 +125,17 @@ describe('TuraPool', () => {
         ])
       );
 
-      // Add initial liquidity to avoid IL errors
-      await pool.mint(
-        owner.address,
-        -887272,
-        887272,
-        ethers.utils.parseEther('1.0')
-      );
+      // Initialize pool with initial price only
+      await pool.initialize(INITIAL_PRICE);
     });
 
     it('should add initial liquidity', async () => {
       const amount = ethers.utils.parseEther('1.0');
+      
+      // Get initial liquidity
+      const initialLiquidity = await pool.liquidity();
+      
+      // Add liquidity
       await pool.mint(
         owner.address,
         -887272,
@@ -143,21 +143,31 @@ describe('TuraPool', () => {
         amount
       );
 
-      expect(await pool.liquidity()).to.equal(amount);
+      // Verify liquidity increased by the correct amount
+      const finalLiquidity = await pool.liquidity();
+      expect(finalLiquidity.sub(initialLiquidity)).to.equal(amount);
     });
 
     it('should track positions correctly', async () => {
       const amount = ethers.utils.parseEther('1.0');
+      const tickLower = -887272;
+      const tickUpper = 887272;
+      
+      // Get initial position
+      const positionKey = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [owner.address, tickLower, tickUpper]));
+      const initialPosition = await pool.positions(positionKey);
+      
+      // Add liquidity
       await pool.mint(
         owner.address,
-        -887272,
-        887272,
+        tickLower,
+        tickUpper,
         amount
       );
 
-      const positionKey = keccak256(defaultAbiCoder.encode(['address', 'int24', 'int24'], [owner.address, -887272, 887272]));
-      const position = await pool.positions(positionKey);
-      expect(position.liquidity).to.equal(amount);
+      // Verify position liquidity increased by the correct amount
+      const finalPosition = await pool.positions(positionKey);
+      expect(finalPosition.liquidity.sub(initialPosition.liquidity)).to.equal(amount);
     });
 
     it('should collect fees after swaps', async () => {
