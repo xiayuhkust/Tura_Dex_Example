@@ -126,19 +126,15 @@ contract UniswapV3Pool is IUniswapV3Pool, ReentrancyGuard {
         );
 
         // Log token amounts and balances for debugging
-        console.log("Token amounts required:", {
-            amount0: amount0.toString(),
-            amount1: amount1.toString(),
-            liquidity: amount.toString()
-        });
+        console.log("Token amounts required - amount0:", amount0);
+        console.log("Token amounts required - amount1:", amount1);
+        console.log("Token amounts required - liquidity:", amount);
 
         // Check token balances
         uint256 balance0 = IERC20(token0).balanceOf(msg.sender);
         uint256 balance1 = IERC20(token1).balanceOf(msg.sender);
-        console.log("Token balances:", {
-            balance0: balance0.toString(),
-            balance1: balance1.toString()
-        });
+        console.log("Token balances - balance0:", balance0);
+        console.log("Token balances - balance1:", balance1);
 
         // Transfer tokens before updating state
         if (amount0 > 0) require(IERC20(token0).transferFrom(msg.sender, address(this), amount0), 'T0');
