@@ -5,91 +5,126 @@ import {
   Text,
   Divider,
   useToast,
-  Box
+  Box,
+  Select
 } from '@chakra-ui/react'
 import { TokenSelect } from './TokenSelect'
 import { useWeb3 } from '../hooks/useWeb3'
 import { useError } from '../hooks/useError'
 import type { Token } from '../hooks'
 import { ethers } from 'ethers'
-import { CONTRACT_ADDRESSES } from '../config'
+import { CONTRACT_ADDRESSES, FEE_TIERS, type FeeTier } from '../config'
 
-export function AddLiquidityModal() {
+interface AddLiquidityModalProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+interface PoolState {
+  fee: FeeTier
+  token0Amount: string
+  token1Amount: string
+  token0: Token | undefined
+  token1: Token | undefined
+}
+
+export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
   const { active, library, account } = useWeb3()
   const [isLoading, setIsLoading] = useState(false)
   const [token0, setToken0] = useState<Token>()
   const [token1, setToken1] = useState<Token>()
   const [amount0, setAmount0] = useState('')
   const [amount1, setAmount1] = useState('')
+  const [fee, setFee] = useState<FeeTier>(FEE_TIERS.MEDIUM)
   const toast = useToast()
   const { handleError } = useError()
 
+  const poolState: PoolState = {
+    fee,
+    token0Amount: amount0,
+    token1Amount: amount1,
+    token0,
+    token1
+  }
+
   const handleCreatePool = useCallback(async () => {
-    if (!active) {
-      handleError(new Error('Please connect your wallet first'))
+    if (!active || !library || !token0 || !token1 || !amount0 || !amount1) {
+      handleError(new Error('Please fill in all fields'))
       return
     }
 
-    if (!token0 || !token1) {
-      handleError(new Error('Please select both tokens'))
-      return
-    }
-
-    if (!amount0 || !amount1) {
-      handleError(new Error('Please enter amounts for both tokens'))
+    if (token0.address === token1.address) {
+      handleError(new Error('Cannot create pool with same token'))
       return
     }
 
     try {
       setIsLoading(true)
+      
+      // Create pool
       const factoryContract = new ethers.Contract(
         CONTRACT_ADDRESSES.FACTORY,
+        ['function createPool(address,address,uint24) external returns (address)'],
+        library.getSigner()
+      )
+      
+      const poolAddress = await factoryContract.createPool(token0.address, token1.address, fee)
+      console.log('Pool created at:', poolAddress)
+      
+      // Initialize pool
+      const poolContract = new ethers.Contract(
+        poolAddress,
         [
-          'function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool)'
+          'function initialize(uint160 sqrtPriceX96) external',
+          'function mint(address,int24,int24,uint128,bytes) external returns (uint256,uint256)'
         ],
         library.getSigner()
       )
-
-      // Validate token addresses
-      if (token0.address === token1.address) {
-        throw new Error('Cannot create pool with same token')
-      }
       
-      // Add token approval
+      // Calculate initial sqrt price
+      const amount0Decimal = ethers.utils.parseUnits(amount0, token0.decimals)
+      const amount1Decimal = ethers.utils.parseUnits(amount1, token1.decimals)
+      const price = amount1Decimal.mul(ethers.constants.WeiPerEther).div(amount0Decimal)
+      const sqrtPriceX96 = ethers.BigNumber.from(
+        Math.floor(Math.sqrt(price.toNumber()) * 2**96)
+      )
+      
+      await poolContract.initialize(sqrtPriceX96)
+      console.log('Pool initialized with price:', price.toString())
+      
+      // Approve tokens
       const token0Contract = new ethers.Contract(
         token0.address,
-        [
-          'function approve(address spender, uint256 amount) external returns (bool)'
-        ],
+        ['function approve(address,uint256) external returns (bool)'],
         library.getSigner()
       )
-
       const token1Contract = new ethers.Contract(
         token1.address,
-        [
-          'function approve(address spender, uint256 amount) external returns (bool)'
-        ],
+        ['function approve(address,uint256) external returns (bool)'],
         library.getSigner()
       )
-
-      // Approve tokens
-      await token0Contract.approve(factoryContract.address, ethers.utils.parseEther(amount0))
-      await token1Contract.approve(factoryContract.address, ethers.utils.parseEther(amount1))
-
-      // Create pool
-      const fee = 3000 // 0.3%
-      await factoryContract.createPool(token0.address, token1.address, fee)
+      
+      await token0Contract.approve(poolAddress, amount0Decimal)
+      await token1Contract.approve(poolAddress, amount1Decimal)
+      console.log('Tokens approved for pool')
+      
+      // Add initial liquidity
+      const tickSpacing = fee === FEE_TIERS.LOWEST ? 10 : fee === FEE_TIERS.MEDIUM ? 60 : 200
+      const tickLower = -887272 // MIN_TICK for maximum range
+      const tickUpper = 887272  // MAX_TICK for maximum range
+      
+      await poolContract.mint(
+        account,
+        tickLower,
+        tickUpper,
+        amount0Decimal,
+        ethers.utils.defaultAbiCoder.encode(['address'], [account])
+      )
+      console.log('Initial liquidity added')
 
       toast({
         title: 'Pool Created',
-        description: 'Liquidity pool has been created successfully',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      })
-      toast({
-        title: 'Pool Created',
-        description: 'Liquidity pool has been created successfully',
+        description: 'Liquidity pool has been created and initialized successfully',
         status: 'success',
         duration: 5000,
         isClosable: true,
@@ -99,7 +134,7 @@ export function AddLiquidityModal() {
     } finally {
       setIsLoading(false)
     }
-  }, [active, token0, token1, amount0, amount1, library, account, handleError, toast])
+  }, [active, library, token0, token1, amount0, amount1, fee, account, handleError, toast])
 
   if (!library || !account) {
     return (
@@ -119,23 +154,43 @@ export function AddLiquidityModal() {
           Select two tokens and enter the amounts to provide initial liquidity
         </Text>
             
-            <TokenSelect
-              value={amount0}
-              onChange={setAmount0}
-              label="Token 1"
-              selectedToken={token0}
-              onTokenSelect={setToken0}
-              isDisabled={!active}
-            />
-            
-            <TokenSelect
-              value={amount1}
-              onChange={setAmount1}
-              label="Token 2"
-              selectedToken={token1}
-              onTokenSelect={setToken1}
-              isDisabled={!active}
-            />
+            <VStack w="full" spacing={4}>
+              <TokenSelect
+                value={amount0}
+                onChange={setAmount0}
+                label="Token 1"
+                selectedToken={token0}
+                onTokenSelect={setToken0}
+                isDisabled={!active}
+              />
+              
+              <TokenSelect
+                value={amount1}
+                onChange={setAmount1}
+                label="Token 2"
+                selectedToken={token1}
+                onTokenSelect={setToken1}
+                isDisabled={!active}
+              />
+
+              <VStack w="full" spacing={2}>
+                <Text color="whiteAlpha.700" fontSize="sm" alignSelf="start">
+                  Fee Tier
+                </Text>
+                <Select
+                  value={fee}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFee(parseInt(e.target.value) as FeeTier)}
+                  bg="whiteAlpha.100"
+                  border="none"
+                  _focus={{ ring: 1, ringColor: 'brand.primary' }}
+                  _hover={{ bg: 'whiteAlpha.200' }}
+                >
+                  <option value={FEE_TIERS.LOWEST}>0.05% fee (best for stable pairs)</option>
+                  <option value={FEE_TIERS.MEDIUM}>0.3% fee (best for most pairs)</option>
+                  <option value={FEE_TIERS.HIGHEST}>1% fee (best for exotic pairs)</option>
+                </Select>
+              </VStack>
+            </VStack>
 
             <Divider borderColor="whiteAlpha.200" />
 

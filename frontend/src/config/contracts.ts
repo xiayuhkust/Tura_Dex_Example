@@ -1,9 +1,21 @@
 /**
- * Contract addresses for the Tura DEX.
+ * Contract addresses and constants for the Tura DEX.
  * All addresses are verified against deployment_records.md
  */
 
 const addressRegex = /^0x[a-fA-F0-9]{40}$/
+
+/**
+ * Standard Uniswap V3 fee tiers
+ * Values are in hundredths of a bip (0.0001%)
+ */
+export const FEE_TIERS = {
+  LOWEST: 500,    // 0.05% - Best for stable pairs
+  MEDIUM: 3000,   // 0.3%  - Best for most pairs
+  HIGHEST: 10000  // 1%    - Best for exotic pairs
+} as const
+
+export type FeeTier = typeof FEE_TIERS[keyof typeof FEE_TIERS]
 
 export const CONTRACT_ADDRESSES = {
   // Core contracts
