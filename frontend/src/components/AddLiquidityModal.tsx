@@ -16,7 +16,7 @@ import { ethers } from 'ethers'
 import { CONTRACT_ADDRESSES, FEE_TIERS, type FeeTier } from '../config'
 
 export function AddLiquidityModal() {
-  const { active, library, account } = useWeb3()
+  const { active, library, account, connect } = useWeb3()
   const [isLoading, setIsLoading] = useState(false)
   const [token0, setToken0] = useState<Token | undefined>()
   const [token1, setToken1] = useState<Token | undefined>()
@@ -28,6 +28,14 @@ export function AddLiquidityModal() {
   const [fee, setFee] = useState<FeeTier>(FEE_TIERS.MEDIUM)
   const toast = useToast()
   const { handleError } = useError()
+
+  const handleConnect = useCallback(async () => {
+    try {
+      await connect()
+    } catch (error) {
+      handleError(error)
+    }
+  }, [connect, handleError])
 
   // Validate pool creation parameters
   const isValidPool = useMemo(() => {
@@ -42,6 +50,16 @@ export function AddLiquidityModal() {
   const handleCreatePool = useCallback(async () => {
     if (!active || !library || !token0 || !token1 || !amount0 || !amount1) {
       handleError(new Error('Please fill in all fields'))
+      return
+    }
+
+    if (!ethers.utils.isAddress(token0.address) || !ethers.utils.isAddress(token1.address)) {
+      handleError(new Error('Invalid token addresses'))
+      return
+    }
+
+    if (token0.address.toLowerCase() === token1.address.toLowerCase()) {
+      handleError(new Error('Cannot create pool with the same token'))
       return
     }
 
@@ -132,11 +150,17 @@ export function AddLiquidityModal() {
         duration: 5000,
         isClosable: true,
       })
-    } catch (error: any) {
-      if (error.code === 'CALL_EXCEPTION') {
-        handleError(new Error('Pool creation failed. The pool may already exist or the tokens/fee are invalid.'))
-      } else if (error.code === 'UNPREDICTABLE_GAS_LIMIT') {
-        handleError(new Error('Failed to estimate gas. The pool may already exist.'))
+    } catch (error: unknown) {
+      if (typeof error === 'object' && error !== null && 'code' in error) {
+        // Handle specific contract errors
+        const txError = error as { code: string; message?: string; reason?: string }
+        if (txError.code === 'CALL_EXCEPTION') {
+          handleError(new Error('Pool creation failed. The pool may already exist or the tokens/fee are invalid.'))
+        } else if (txError.code === 'UNPREDICTABLE_GAS_LIMIT') {
+          handleError(new Error('Failed to estimate gas. The pool may already exist.'))
+        } else {
+          handleError(error)
+        }
       } else {
         handleError(error)
       }
@@ -148,7 +172,18 @@ export function AddLiquidityModal() {
   if (!library || !account) {
     return (
       <Box maxW={{ base: "95%", sm: "md" }} mx="auto" mt={{ base: "4", sm: "10" }} p={6} bg="brand.surface" borderRadius="xl">
-        <Text color="whiteAlpha.700">Please connect your wallet to create a pool</Text>
+        <VStack spacing={4}>
+          <Text color="whiteAlpha.700">Please connect your wallet to create a pool</Text>
+          <Button
+            w="full"
+            size="lg"
+            bg="brand.primary"
+            _hover={{ opacity: 0.9 }}
+            onClick={handleConnect}
+          >
+            Connect Wallet
+          </Button>
+        </VStack>
       </Box>
     )
   }

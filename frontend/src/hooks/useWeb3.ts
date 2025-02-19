@@ -46,7 +46,7 @@ export function useWeb3() {
 
   const connect = useCallback(async () => {
     try {
-      if (typeof window.ethereum === 'undefined') {
+      if (typeof window.ethereum === 'undefined' || !window.ethereum.isMetaMask) {
         const toastOptions: UseToastOptions = {
           title: 'MetaMask Required',
           description: 'Please install MetaMask to connect your wallet. Visit metamask.io to get started.',
@@ -70,6 +70,7 @@ export function useWeb3() {
       const chainId = await provider.request({ method: 'eth_chainId' })
       
       if (Number(chainId) !== CHAIN_ID) {
+        console.log('Switching to network:', CHAIN_ID)
         try {
           await provider.request({
             method: 'wallet_switchEthereumChain',
