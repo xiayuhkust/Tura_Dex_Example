@@ -81,33 +81,32 @@ export function SwapInterface() {
       <VStack spacing={{ base: "4", sm: "6" }}>
         <VStack w="full" spacing={4}>
           <HStack w="full" justify="space-between">
-            <Text 
-              fontSize={{ base: "xl", sm: "2xl" }} 
-              fontWeight="bold" 
-              bgGradient="linear(to-r, brand.primary, brand.secondary)" 
-              bgClip="text"
-            >
-              AgentSwap
-            </Text>
+            <HStack>
+              <Text 
+                fontSize={{ base: "xl", sm: "2xl" }} 
+                fontWeight="bold" 
+                bgGradient="linear(to-r, brand.primary, brand.secondary)" 
+                bgClip="text"
+              >
+                AgentSwap
+              </Text>
 
-            <Settings
-              slippageTolerance={slippageTolerance}
-              onSlippageToleranceChange={setSlippageTolerance}
-              transactionDeadline={transactionDeadline}
-              onTransactionDeadlineChange={setTransactionDeadline}
-            />
-          </HStack>
-          {active && (
-            <Text fontSize={{ base: "xs", sm: "sm" }} color="whiteAlpha.700">
-              {account?.slice(0, 6)}...{account?.slice(-4)}
-            </Text>
-          )}
+              <Settings
+                slippageTolerance={slippageTolerance}
+                onSlippageToleranceChange={setSlippageTolerance}
+                transactionDeadline={transactionDeadline}
+                onTransactionDeadlineChange={setTransactionDeadline}
+              />
+            </HStack>
+            {active && (
+              <Text fontSize={{ base: "xs", sm: "sm" }} color="whiteAlpha.700">
+                {account?.slice(0, 6)}...{account?.slice(-4)}
+              </Text>
+            )}
           </HStack>
 
           <WrapUnwrap />
           <Divider borderColor="whiteAlpha.200" />
-
-          <VStack w="full" spacing="4">
           <TokenSelect
             value={inputAmount}
             onChange={setInputAmount}
