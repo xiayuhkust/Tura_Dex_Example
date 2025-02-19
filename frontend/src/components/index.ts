@@ -10,6 +10,7 @@ export * from './SwapInterface'
 export * from './MetaMaskToast'
 export * from './AddLiquidityModal'
 export * from './NavigationBar'
+export * from './WrapUnwrap'
 // NetworkErrorToast is imported directly where needed
 
 // Types

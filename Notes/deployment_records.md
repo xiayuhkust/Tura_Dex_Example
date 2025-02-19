@@ -2,18 +2,20 @@
 
 ## Network Information
 - Chain ID: 1337
-- RPC URL: http://43.135.26.222:8000
+- RPC URL: https://rpc-beta1.turablockchain.com
 - Owner Address: 0x08Bb6eA809A2d6c13D57166Fa3ede48C0ae9a70e
 
 ## Core Contracts
 
-### WETH9
+### WETH (TuraWETH)
 - Address: 0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be
-- Description: Wrapped ETH implementation for Tura chain
+- Symbol: WTURA
+- Description: Wrapped Tura implementation
 - Features:
   * ERC20 compliant
-  * Deposit/Withdraw native ETH
+  * Deposit/Withdraw native Tura
   * 18 decimals
+- Deployment Date: February 19, 2025
 
 ### Test Tokens
 1. Test Token 1 (TT1)

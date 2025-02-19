@@ -2,13 +2,13 @@ import type { Token } from '../hooks'
 
 export const DEMO_TOKENS: Token[] = [
   {
-    address: '0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be',
-    symbol: 'Tura',
-    name: 'Wrapped ETH (Tura)',
+    address: '0x981Ad9e1565bb8325c9C9bBf80758529E7C50994',
+    symbol: 'WTURA',
+    name: 'Wrapped Tura',
     balance: '0.0',
     logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png',
-    price: '2,500.00',
-    priceChange24h: '+2.5'
+    price: '1.00',
+    priceChange24h: '0.0'
   },
   {
     address: '0x51317d5134B62C44558013d6d915F3807682Ab16',

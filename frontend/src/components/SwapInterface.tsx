@@ -3,7 +3,7 @@ import { Box, VStack, Text, Button, HStack, Divider, IconButton, useToast } from
 import { useWeb3 } from '../hooks/useWeb3'
 import { usePriceImpact } from '../hooks/usePriceImpact'
 import type { Token } from '../hooks'
-import { TokenSelect, TradeDetails, Settings, LoadingSpinner } from './index'
+import { TokenSelect, TradeDetails, Settings, LoadingSpinner, WrapUnwrap } from './index'
 import { useError } from '../hooks'
 
 export function SwapInterface() {
@@ -79,32 +79,34 @@ export function SwapInterface() {
       boxShadow="xl"
     >
       <VStack spacing={{ base: "4", sm: "6" }}>
-        <HStack w="full" justify="space-between">
-          <HStack>
-            <Text 
-              fontSize={{ base: "xl", sm: "2xl" }} 
-              fontWeight="bold" 
-              bgGradient="linear(to-r, brand.primary, brand.secondary)" 
-              bgClip="text"
-            >
-              AgentSwap
-            </Text>
+        <VStack w="full" spacing={4}>
+          <HStack w="full" justify="space-between">
+            <HStack>
+              <Text 
+                fontSize={{ base: "xl", sm: "2xl" }} 
+                fontWeight="bold" 
+                bgGradient="linear(to-r, brand.primary, brand.secondary)" 
+                bgClip="text"
+              >
+                AgentSwap
+              </Text>
 
-            <Settings
-              slippageTolerance={slippageTolerance}
-              onSlippageToleranceChange={setSlippageTolerance}
-              transactionDeadline={transactionDeadline}
-              onTransactionDeadlineChange={setTransactionDeadline}
-            />
+              <Settings
+                slippageTolerance={slippageTolerance}
+                onSlippageToleranceChange={setSlippageTolerance}
+                transactionDeadline={transactionDeadline}
+                onTransactionDeadlineChange={setTransactionDeadline}
+              />
+            </HStack>
+            {active && (
+              <Text fontSize={{ base: "xs", sm: "sm" }} color="whiteAlpha.700">
+                {account?.slice(0, 6)}...{account?.slice(-4)}
+              </Text>
+            )}
           </HStack>
-          {active && (
-            <Text fontSize={{ base: "xs", sm: "sm" }} color="whiteAlpha.700">
-              {account?.slice(0, 6)}...{account?.slice(-4)}
-            </Text>
-          )}
-        </HStack>
 
-        <VStack w="full" spacing="4">
+          <WrapUnwrap />
+          <Divider borderColor="whiteAlpha.200" />
           <TokenSelect
             value={inputAmount}
             onChange={setInputAmount}

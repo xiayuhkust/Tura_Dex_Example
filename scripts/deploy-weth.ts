@@ -1,14 +1,15 @@
-import { ethers, network } from "hardhat";
+const hre = require("hardhat");
 
 async function main() {
-  console.log("Deploying WETH9 contract...");
+  console.log("Deploying TuraWETH contract...");
 
-  const WETH9 = await ethers.getContractFactory("WETH9");
-  const weth = await WETH9.deploy();
-  await weth.waitForDeployment();
+  const [deployer] = await hre.ethers.getSigners();
+  const TuraWETH = await hre.ethers.getContractFactory("TuraWETH");
+  const weth = await TuraWETH.deploy();
+  await weth.deployed();
 
-  const wethAddress = await weth.getAddress();
-  console.log("WETH9 deployed to:", wethAddress);
+  console.log("TuraWETH deployed to:", weth.address);
+  console.log("Deployed by:", deployer.address);
 }
 
 main()
