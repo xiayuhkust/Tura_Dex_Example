@@ -9,6 +9,7 @@ export * from './TransactionConfirmation'
 export * from './SwapInterface'
 export * from './MetaMaskToast'
 export * from './AddLiquidityModal'
+export * from './NavigationBar'
 // NetworkErrorToast is imported directly where needed
 
 // Types
