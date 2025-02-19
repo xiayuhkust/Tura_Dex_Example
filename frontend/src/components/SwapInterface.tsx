@@ -3,7 +3,7 @@ import { Box, VStack, Text, Button, HStack, Divider, IconButton, useToast } from
 import { useWeb3 } from '../hooks/useWeb3'
 import { usePriceImpact } from '../hooks/usePriceImpact'
 import type { Token } from '../hooks'
-import { TokenSelect, TradeDetails, Settings, LoadingSpinner } from './index'
+import { TokenSelect, TradeDetails, Settings, LoadingSpinner, WrapUnwrap } from './index'
 import { useError } from '../hooks'
 
 export function SwapInterface() {
@@ -89,6 +89,9 @@ export function SwapInterface() {
             >
               AgentSwap
             </Text>
+
+            <WrapUnwrap />
+            <Divider my={4} borderColor="whiteAlpha.200" />
 
             <Settings
               slippageTolerance={slippageTolerance}
