@@ -54,6 +54,28 @@ export function AddLiquidityModal() {
         throw new Error('Cannot create pool with same token')
       }
       
+      // Add token approval
+      const token0Contract = new ethers.Contract(
+        token0.address,
+        [
+          'function approve(address spender, uint256 amount) external returns (bool)'
+        ],
+        library.getSigner()
+      )
+
+      const token1Contract = new ethers.Contract(
+        token1.address,
+        [
+          'function approve(address spender, uint256 amount) external returns (bool)'
+        ],
+        library.getSigner()
+      )
+
+      // Approve tokens
+      await token0Contract.approve(factoryContract.address, ethers.utils.parseEther(amount0))
+      await token1Contract.approve(factoryContract.address, ethers.utils.parseEther(amount1))
+
+      // Create pool
       const fee = 3000 // 0.3%
       await factoryContract.createPool(token0.address, token1.address, fee)
 
