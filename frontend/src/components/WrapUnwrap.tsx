@@ -22,7 +22,7 @@ export function WrapUnwrap() {
   const [isLoading, setIsLoading] = useState(false)
   const { active, library } = useWeb3()
   const balances = useTokenBalances([wethAddress])
-  const [isBalanceLoading, setIsBalanceLoading] = useState(true)
+  const [, setIsBalanceLoading] = useState(true)
   const toast = useToast()
   const { handleError } = useError()
 
