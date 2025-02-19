@@ -4,7 +4,7 @@ async function main() {
   console.log("Deploying UniswapV3Factory...");
 
   // Deploy factory
-  const UniswapV3Factory = await ethers.getContractFactory("UniswapV3Factory");
+  const UniswapV3Factory = await ethers.getContractFactory("contracts/UniswapV3Factory.sol:UniswapV3Factory");
   const factory = await UniswapV3Factory.deploy();
   await factory.deployed();
   console.log("UniswapV3Factory deployed to:", factory.address);
