@@ -1,4 +1,4 @@
-import { Box, Button, HStack, Text } from '@chakra-ui/react'
+import { Box, Button, HStack } from '@chakra-ui/react'
 import { useRouter } from 'next/router'
 import { WalletButton } from './WalletButton'
 
