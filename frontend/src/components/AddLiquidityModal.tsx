@@ -13,6 +13,7 @@ import { useError } from '../hooks/useError'
 import type { Token } from '../types/Token'
 import { ethers } from 'ethers'
 import { CONTRACT_ADDRESSES, FEE_TIERS, type FeeTier } from '../config'
+import { parseTokenAmount, formatTokenAmount, formatFeeAmount } from '../utils/numbers'
 
 export function AddLiquidityModal() {
   const { active, library, account, connect } = useWeb3()
@@ -101,9 +102,9 @@ export function AddLiquidityModal() {
         library.getSigner()
       )
       
-      // Convert amounts to BigNumber
-      const amount0Decimal = ethers.utils.parseUnits(amount0, token0.decimals)
-      const amount1Decimal = ethers.utils.parseUnits(amount1, token1.decimals)
+      // Convert amounts to BigNumber safely
+      const amount0Decimal = parseTokenAmount(amount0, token0)
+      const amount1Decimal = parseTokenAmount(amount1, token1)
       
       // Approve tokens
       const token0Contract = new ethers.Contract(
@@ -130,7 +131,7 @@ export function AddLiquidityModal() {
         account,
         tickLower,
         tickUpper,
-        ethers.BigNumber.from(amount0Decimal),
+        amount0Decimal,
         '0x'
       )
       
@@ -216,9 +217,9 @@ export function AddLiquidityModal() {
                   _focus={{ ring: 1, ringColor: 'brand.primary' }}
                   _hover={{ bg: 'whiteAlpha.200' }}
                 >
-                  <option value={FEE_TIERS.LOWEST}>0.05%</option>
-                  <option value={FEE_TIERS.LOW}>0.3%</option>
-                  <option value={FEE_TIERS.MEDIUM}>1%</option>
+                  <option value={FEE_TIERS.LOWEST}>{formatFeeAmount(FEE_TIERS.LOWEST)}</option>
+                  <option value={FEE_TIERS.LOW}>{formatFeeAmount(FEE_TIERS.LOW)}</option>
+                  <option value={FEE_TIERS.MEDIUM}>{formatFeeAmount(FEE_TIERS.MEDIUM)}</option>
                 </Select>
               </Box>
             </VStack>
