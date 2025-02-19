@@ -27,8 +27,12 @@ export function WrapUnwrap() {
     setIsLoading(true)
     try {
       const weth = new ethers.Contract(
-        import.meta.env.VITE_WETH_ADDRESS,
-        ['function deposit()', 'function withdraw(uint)'],
+        import.meta.env.VITE_WETH_ADDRESS || '0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be',
+        [
+          'function deposit() public payable',
+          'function withdraw(uint256) public',
+          'function balanceOf(address) external view returns (uint256)'
+        ],
         library.getSigner()
       )
       
