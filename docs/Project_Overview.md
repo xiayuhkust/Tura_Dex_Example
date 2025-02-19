@@ -12,8 +12,8 @@ Located in `contracts/backup`:
   - Location: `contracts/backup/core/TuraWETH.sol`
 
 - **TestToken.sol**: Test tokens (TT1, TT2) for development
-  - TT1 Address: 0x51317d5134B62C44558013d6d915F3807682Ab16
-  - TT2 Address: 0xa79aEb156a8a267f73C844df1877D32CBa2053f3
+  - TT1 Address: 0x3F26F01Fa9A5506c9109B5Ad15343363909fc0b9
+  - TT2 Address: 0x8FDCE0D41f0A99B5f9FbcFAfd481ffcA61d01122
   - Location: `contracts/backup/core/TestToken.sol`
 
 #### V3 Contracts
