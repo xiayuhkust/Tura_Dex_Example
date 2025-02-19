@@ -4,6 +4,7 @@ import { ContractReceipt, Event } from "@ethersproject/contracts";
 async function main() {
   console.log("Testing pool creation with V3 factory...");
 
+  const OWNER_ADDRESS = "0x08Bb6eA809A2d6c13D57166Fa3ede48C0ae9a70e";
   const ADDRESSES = {
     FACTORY: '0xC2EdBdd3394dA769De72986d06b0C28Ba991341d',
     TT1: '0x3F26F01Fa9A5506c9109B5Ad15343363909fc0b9',
@@ -17,10 +18,13 @@ async function main() {
   const tt1 = await ethers.getContractAt("contracts/interfaces/IERC20Minimal.sol:IERC20Minimal", ADDRESSES.TT1);
   const tt2 = await ethers.getContractAt("contracts/interfaces/IERC20Minimal.sol:IERC20Minimal", ADDRESSES.TT2);
 
-  // Check initial balances
+  // Get owner account
   const [owner] = await ethers.getSigners();
-  const initialTT1Balance = await tt1.balanceOf(owner.address);
-  const initialTT2Balance = await tt2.balanceOf(owner.address);
+  console.log("Using owner account:", owner.address);
+
+  // Check initial balances
+  const initialTT1Balance = await tt1.balanceOf(OWNER_ADDRESS);
+  const initialTT2Balance = await tt2.balanceOf(OWNER_ADDRESS);
   console.log("Initial TT1 balance:", ethers.utils.formatEther(initialTT1Balance));
   console.log("Initial TT2 balance:", ethers.utils.formatEther(initialTT2Balance));
 
@@ -47,8 +51,8 @@ async function main() {
   });
 
   // Check final balances
-  const finalTT1Balance = await tt1.balanceOf(owner.address);
-  const finalTT2Balance = await tt2.balanceOf(owner.address);
+  const finalTT1Balance = await tt1.balanceOf(OWNER_ADDRESS);
+  const finalTT2Balance = await tt2.balanceOf(OWNER_ADDRESS);
   console.log("Final TT1 balance:", ethers.utils.formatEther(finalTT1Balance));
   console.log("Final TT2 balance:", ethers.utils.formatEther(finalTT2Balance));
   console.log("TT1 balance change:", ethers.utils.formatEther(finalTT1Balance.sub(initialTT1Balance)));
