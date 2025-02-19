@@ -7,13 +7,15 @@
 
 ## Core Contracts
 
-### WETH9
+### WETH (TuraWETH)
 - Address: 0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be
-- Description: Wrapped ETH implementation for Tura chain
+- Symbol: WTURA
+- Description: Wrapped Tura implementation
 - Features:
   * ERC20 compliant
-  * Deposit/Withdraw native ETH
+  * Deposit/Withdraw native Tura
   * 18 decimals
+- Deployment Date: February 19, 2025
 
 ### Test Tokens
 1. Test Token 1 (TT1)
