@@ -90,23 +90,29 @@ export function AddLiquidityModal() {
       const poolAddress = poolCreatedEvent?.args?.pool
       console.log('Pool created at:', poolAddress)
       
-      // Initialize pool
+      // Initialize pool with sqrt price
       const poolContract = new ethers.Contract(
         poolAddress,
         [
           'function initialize(uint160) external',
           'function mint(address,int24,int24,uint128,bytes) external returns (uint256,uint256)',
           'function token0() external view returns (address)',
-          'function token1() external view returns (address)'
+          'function token1() external view returns (address)',
+          'function slot0() external view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)'
         ],
         library.getSigner()
       )
+
+      // Initialize with price of 1
+      const sqrtPriceX96 = ethers.BigNumber.from('1').shl(96)
+      await poolContract.initialize(sqrtPriceX96)
+      console.log('Pool initialized with sqrt price:', sqrtPriceX96.toString())
       
       // Convert amounts to BigNumber safely
       const amount0Decimal = parseTokenAmount(amount0, token0)
       const amount1Decimal = parseTokenAmount(amount1, token1)
       
-      // Approve tokens
+      // Approve tokens with exact amounts
       const token0Contract = new ethers.Contract(
         token0.address,
         ['function approve(address,uint256) external returns (bool)'],
@@ -118,26 +124,32 @@ export function AddLiquidityModal() {
         library.getSigner()
       )
       
-      await token0Contract.approve(poolAddress, amount0Decimal)
-      await token1Contract.approve(poolAddress, amount1Decimal)
-      console.log('Tokens approved for pool')
+      const approve0Tx = await token0Contract.approve(poolAddress, amount0Decimal)
+      await approve0Tx.wait()
+      console.log('Token0 approved:', amount0Decimal.toString())
+
+      const approve1Tx = await token1Contract.approve(poolAddress, amount1Decimal)
+      await approve1Tx.wait()
+      console.log('Token1 approved:', amount1Decimal.toString())
       
       // Add initial liquidity with calculated tick spacing
       const tickSpacing = useMemo(() => fee === FEE_TIERS.LOWEST ? 10 : fee === FEE_TIERS.MEDIUM ? 60 : 200, [fee]);
       const tickLower = -887272 / tickSpacing * tickSpacing; // MIN_TICK aligned to tick spacing
       const tickUpper = 887272 / tickSpacing * tickSpacing;  // MAX_TICK aligned to tick spacing
       
-      await poolContract.mint(
+      const mintTx = await poolContract.mint(
         account,
         tickLower,
         tickUpper,
         amount0Decimal,
         '0x'
       )
+      await mintTx.wait()
+      console.log('Liquidity added successfully')
       
       toast({
         title: 'Success',
-        description: 'Pool created successfully',
+        description: 'Pool created and liquidity added successfully',
         status: 'success',
         duration: 5000,
         isClosable: true,
