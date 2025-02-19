@@ -7,8 +7,8 @@ async function main() {
   const ownerAddress = "0x08Bb6eA809A2d6c13D57166Fa3ede48C0ae9a70e";
   
   // Get token contracts
-  const tt1 = await ethers.getContractAt("TestToken", "0xf7430841c1917Fee24B04dBbd0b809F36E5Ad716");
-  const tt2 = await ethers.getContractAt("TestToken", "0x3Cbc85319E3D9d6b29DDe06f591017e9f9666652");
+  const tt1 = await ethers.getContractAt("TestToken", "0x3F26F01Fa9A5506c9109B5Ad15343363909fc0b9");
+  const tt2 = await ethers.getContractAt("TestToken", "0x8FDCE0D41f0A99B5f9FbcFAfd481ffcA61d01122");
   
   console.log("Minting TT1...");
   const tx1 = await tt1.mint(ownerAddress, amount);
