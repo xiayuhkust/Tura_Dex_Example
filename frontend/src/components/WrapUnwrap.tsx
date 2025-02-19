@@ -17,7 +17,7 @@ export function WrapUnwrap() {
   const [amount, setAmount] = useState('')
   const [isWrapping, setIsWrapping] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
-  const { active, library, account } = useWeb3()
+  const { active, library } = useWeb3()
   const toast = useToast()
   const { handleError } = useError()
 

@@ -2,7 +2,7 @@ import type { Token } from '../hooks'
 
 export const DEMO_TOKENS: Token[] = [
   {
-    address: '0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be',
+    address: '0x981Ad9e1565bb8325c9C9bBf80758529E7C50994',
     symbol: 'WTURA',
     name: 'Wrapped Tura',
     balance: '0.0',
