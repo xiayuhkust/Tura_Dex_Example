@@ -15,8 +15,8 @@ import {
 } from '@chakra-ui/react'
 import { useTokenBalances } from '../hooks/useTokenBalances'
 import { useRecentTokens } from '../hooks/useRecentTokens'
-import { useTokenMetadata } from '../hooks/useTokenMetadata'
-import type { Token } from '../hooks'
+// Remove unused import
+import type { Token } from '../types/Token'
 import { CONTRACT_ADDRESSES } from '../config'
 import { DEMO_TOKENS } from '../utils/tokens'
 
@@ -78,7 +78,7 @@ export function TokenListModal({ isOpen, onClose, onSelect }: TokenListModalProp
                 <Box>
                   <Text color="whiteAlpha.600" mb={2}>Recently Used</Text>
                   <VStack align="stretch" spacing={2}>
-                    {recentTokens.map((token: Token) => (
+                    {recentTokens.map((token) => (
                       <Box
                         key={token.address}
                         p={3}
@@ -87,7 +87,11 @@ export function TokenListModal({ isOpen, onClose, onSelect }: TokenListModalProp
                         cursor="pointer"
                         _hover={{ bg: 'whiteAlpha.200' }}
                         onClick={() => {
-                          const updatedToken = { ...token, lastUsed: Date.now() }
+                          const updatedToken: Token = { 
+                            ...token, 
+                            lastUsed: Date.now(),
+                            decimals: 18 // All test tokens use 18 decimals
+                          }
                           onSelect(updatedToken)
                           addRecentToken(updatedToken)
                           onClose()
