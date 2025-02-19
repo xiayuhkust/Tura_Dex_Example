@@ -1,16 +1,7 @@
 import { Box, Button, Input, Text, HStack, VStack, useDisclosure, Image } from '@chakra-ui/react'
 import { TokenListModal } from './TokenListModal'
 
-interface Token {
-  address: string
-  symbol: string
-  name: string
-  balance?: string
-  logoURI?: string
-  lastUsed?: number
-  price?: string
-  priceChange24h?: string
-}
+import type { Token } from '../types/Token'
 
 export interface TokenSelectProps {
   value: string
@@ -93,7 +84,9 @@ export function TokenSelect({
       <TokenListModal 
         isOpen={isOpen} 
         onClose={onClose} 
-        onSelect={(token) => onTokenSelect?.(token)} 
+        onSelect={(token: Token) => {
+    if (onTokenSelect) onTokenSelect(token);
+  }} 
       />
     </>
   )

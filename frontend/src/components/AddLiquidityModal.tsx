@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import {
   VStack,
   Button,
@@ -11,41 +11,33 @@ import {
 import { TokenSelect } from './TokenSelect'
 import { useWeb3 } from '../hooks/useWeb3'
 import { useError } from '../hooks/useError'
-import type { Token } from '../hooks'
+import type { Token } from '../types/Token'
 import { ethers } from 'ethers'
 import { CONTRACT_ADDRESSES, FEE_TIERS, type FeeTier } from '../config'
 
-interface AddLiquidityModalProps {
-  isOpen: boolean
-  onClose: () => void
-}
-
-interface PoolState {
-  fee: FeeTier
-  token0Amount: string
-  token1Amount: string
-  token0: Token | undefined
-  token1: Token | undefined
-}
-
-export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
+export function AddLiquidityModal() {
   const { active, library, account } = useWeb3()
   const [isLoading, setIsLoading] = useState(false)
-  const [token0, setToken0] = useState<Token>()
-  const [token1, setToken1] = useState<Token>()
+  const [token0, setToken0] = useState<Token | undefined>()
+  const [token1, setToken1] = useState<Token | undefined>()
+  
+  const handleToken0Select = (token: Token) => setToken0(token)
+  const handleToken1Select = (token: Token) => setToken1(token)
   const [amount0, setAmount0] = useState('')
   const [amount1, setAmount1] = useState('')
   const [fee, setFee] = useState<FeeTier>(FEE_TIERS.MEDIUM)
   const toast = useToast()
   const { handleError } = useError()
 
-  const poolState: PoolState = {
-    fee,
-    token0Amount: amount0,
-    token1Amount: amount1,
-    token0,
-    token1
-  }
+  // Validate pool creation parameters
+  const isValidPool = useMemo(() => {
+    if (!token0 || !token1 || !amount0 || !amount1) return false;
+    if (token0.address === token1.address) return false;
+    return true;
+  }, [token0, token1, amount0, amount1]);
+
+  // Disable create button if pool is invalid
+  const isCreateDisabled = !active || !isValidPool;
 
   const handleCreatePool = useCallback(async () => {
     if (!active || !library || !token0 || !token1 || !amount0 || !amount1) {
@@ -58,17 +50,28 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
       return
     }
 
+    if (!ethers.utils.isAddress(token0.address) || !ethers.utils.isAddress(token1.address)) {
+      handleError(new Error('Invalid token addresses'))
+      return
+    }
+
     try {
       setIsLoading(true)
       
       // Create pool
       const factoryContract = new ethers.Contract(
         CONTRACT_ADDRESSES.FACTORY,
-        ['function createPool(address,address,uint24) external returns (address)'],
+        [
+          'function createPool(address,address,uint24) external returns (address)',
+          'event PoolCreated(address indexed token0, address indexed token1, uint24 indexed fee, int24 tickSpacing, address pool)'
+        ],
         library.getSigner()
       )
       
-      const poolAddress = await factoryContract.createPool(token0.address, token1.address, fee)
+      const tx = await factoryContract.createPool(token0.address, token1.address, fee)
+      const receipt = await tx.wait()
+      const poolCreatedEvent = receipt.events?.find((e: { event: string }) => e.event === 'PoolCreated')
+      const poolAddress = poolCreatedEvent?.args?.pool
       console.log('Pool created at:', poolAddress)
       
       // Initialize pool
@@ -108,10 +111,10 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
       await token1Contract.approve(poolAddress, amount1Decimal)
       console.log('Tokens approved for pool')
       
-      // Add initial liquidity
-      const tickSpacing = fee === FEE_TIERS.LOWEST ? 10 : fee === FEE_TIERS.MEDIUM ? 60 : 200
-      const tickLower = -887272 // MIN_TICK for maximum range
-      const tickUpper = 887272  // MAX_TICK for maximum range
+      // Add initial liquidity with calculated tick spacing
+      const tickSpacing = useMemo(() => fee === FEE_TIERS.LOWEST ? 10 : fee === FEE_TIERS.MEDIUM ? 60 : 200, [fee]);
+      const tickLower = -887272 / tickSpacing * tickSpacing; // MIN_TICK aligned to tick spacing
+      const tickUpper = 887272 / tickSpacing * tickSpacing;  // MAX_TICK aligned to tick spacing
       
       await poolContract.mint(
         account,
@@ -129,8 +132,14 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
         duration: 5000,
         isClosable: true,
       })
-    } catch (error) {
-      handleError(error)
+    } catch (error: any) {
+      if (error.code === 'CALL_EXCEPTION') {
+        handleError(new Error('Pool creation failed. The pool may already exist or the tokens/fee are invalid.'))
+      } else if (error.code === 'UNPREDICTABLE_GAS_LIMIT') {
+        handleError(new Error('Failed to estimate gas. The pool may already exist.'))
+      } else {
+        handleError(error)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -160,7 +169,7 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
                 onChange={setAmount0}
                 label="Token 1"
                 selectedToken={token0}
-                onTokenSelect={setToken0}
+                onTokenSelect={handleToken0Select}
                 isDisabled={!active}
               />
               
@@ -169,7 +178,7 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
                 onChange={setAmount1}
                 label="Token 2"
                 selectedToken={token1}
-                onTokenSelect={setToken1}
+                onTokenSelect={handleToken1Select}
                 isDisabled={!active}
               />
 
@@ -179,7 +188,7 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
                 </Text>
                 <Select
                   value={fee}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFee(parseInt(e.target.value) as FeeTier)}
+                  onChange={(e: { target: { value: string } }) => setFee(parseInt(e.target.value) as FeeTier)}
                   bg="whiteAlpha.100"
                   border="none"
                   _focus={{ ring: 1, ringColor: 'brand.primary' }}
@@ -199,7 +208,7 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
               size="lg"
               bg="brand.primary"
               _hover={{ opacity: 0.9 }}
-              isDisabled={!active || !token0 || !token1 || !amount0 || !amount1}
+              isDisabled={isCreateDisabled}
               onClick={handleCreatePool}
               isLoading={isLoading}
             >
