@@ -13,6 +13,7 @@ import { useError } from '../hooks/useError'
 import type { Token } from '../types/Token'
 import { ethers } from 'ethers'
 import { CONTRACT_ADDRESSES, FEE_TIERS, type FeeTier } from '../config'
+import { parseTokenAmount, formatTokenAmount, formatFeeAmount } from '../utils/numbers'
 
 export function AddLiquidityModal() {
   const { active, library, account, connect } = useWeb3()
@@ -78,7 +79,20 @@ export function AddLiquidityModal() {
 
       const existingPool = await factoryContract.getPool(token0.address, token1.address, fee)
       if (existingPool !== ethers.constants.AddressZero) {
-        handleError(new Error('Pool already exists'))
+        // Check if pool is already initialized
+        const poolContract = new ethers.Contract(
+          existingPool,
+          [
+            'function slot0() external view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)'
+          ],
+          library
+        )
+        const slot0 = await poolContract.slot0()
+        if (!slot0.sqrtPriceX96.eq(0)) {
+          handleError(new Error('Pool already exists and is initialized'))
+          return
+        }
+        handleError(new Error('Pool already exists but needs initialization'))
         return
       }
       
@@ -89,23 +103,36 @@ export function AddLiquidityModal() {
       const poolAddress = poolCreatedEvent?.args?.pool
       console.log('Pool created at:', poolAddress)
       
-      // Initialize pool
+      // Initialize pool with sqrt price
       const poolContract = new ethers.Contract(
         poolAddress,
         [
           'function initialize(uint160) external',
           'function mint(address,int24,int24,uint128,bytes) external returns (uint256,uint256)',
           'function token0() external view returns (address)',
-          'function token1() external view returns (address)'
+          'function token1() external view returns (address)',
+          'function slot0() external view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)'
         ],
         library.getSigner()
       )
+
+      // Check if pool is already initialized
+      const slot0 = await poolContract.slot0()
+      if (!slot0.sqrtPriceX96.eq(0)) {
+        handleError(new Error('Pool already initialized'))
+        return
+      }
+
+      // Initialize with price of 1
+      const sqrtPriceX96 = ethers.BigNumber.from('1').shl(96)
+      await poolContract.initialize(sqrtPriceX96)
+      console.log('Pool initialized with sqrt price:', sqrtPriceX96.toString())
       
-      // Convert amounts to BigNumber
-      const amount0Decimal = ethers.utils.parseUnits(amount0, token0.decimals)
-      const amount1Decimal = ethers.utils.parseUnits(amount1, token1.decimals)
+      // Convert amounts to BigNumber safely
+      const amount0Decimal = parseTokenAmount(amount0, token0)
+      const amount1Decimal = parseTokenAmount(amount1, token1)
       
-      // Approve tokens
+      // Approve tokens with exact amounts
       const token0Contract = new ethers.Contract(
         token0.address,
         ['function approve(address,uint256) external returns (bool)'],
@@ -117,26 +144,32 @@ export function AddLiquidityModal() {
         library.getSigner()
       )
       
-      await token0Contract.approve(poolAddress, amount0Decimal)
-      await token1Contract.approve(poolAddress, amount1Decimal)
-      console.log('Tokens approved for pool')
+      const approve0Tx = await token0Contract.approve(poolAddress, amount0Decimal)
+      await approve0Tx.wait()
+      console.log('Token0 approved:', amount0Decimal.toString())
+
+      const approve1Tx = await token1Contract.approve(poolAddress, amount1Decimal)
+      await approve1Tx.wait()
+      console.log('Token1 approved:', amount1Decimal.toString())
       
       // Add initial liquidity with calculated tick spacing
       const tickSpacing = useMemo(() => fee === FEE_TIERS.LOWEST ? 10 : fee === FEE_TIERS.MEDIUM ? 60 : 200, [fee]);
       const tickLower = -887272 / tickSpacing * tickSpacing; // MIN_TICK aligned to tick spacing
       const tickUpper = 887272 / tickSpacing * tickSpacing;  // MAX_TICK aligned to tick spacing
       
-      await poolContract.mint(
+      const mintTx = await poolContract.mint(
         account,
         tickLower,
         tickUpper,
-        ethers.BigNumber.from(amount0Decimal),
+        amount0Decimal,
         '0x'
       )
+      await mintTx.wait()
+      console.log('Liquidity added successfully')
       
       toast({
         title: 'Success',
-        description: 'Pool created successfully',
+        description: 'Pool created and liquidity added successfully',
         status: 'success',
         duration: 5000,
         isClosable: true,
@@ -216,9 +249,9 @@ export function AddLiquidityModal() {
                   _focus={{ ring: 1, ringColor: 'brand.primary' }}
                   _hover={{ bg: 'whiteAlpha.200' }}
                 >
-                  <option value={FEE_TIERS.LOWEST}>0.05%</option>
-                  <option value={FEE_TIERS.LOW}>0.3%</option>
-                  <option value={FEE_TIERS.MEDIUM}>1%</option>
+                  <option value={FEE_TIERS.LOWEST}>{formatFeeAmount(FEE_TIERS.LOWEST)}</option>
+                  <option value={FEE_TIERS.LOW}>{formatFeeAmount(FEE_TIERS.LOW)}</option>
+                  <option value={FEE_TIERS.MEDIUM}>{formatFeeAmount(FEE_TIERS.MEDIUM)}</option>
                 </Select>
               </Box>
             </VStack>
