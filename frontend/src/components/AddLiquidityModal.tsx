@@ -12,6 +12,7 @@ import { useWeb3 } from '../hooks/useWeb3'
 import { useError } from '../hooks/useError'
 import type { Token } from '../hooks'
 import { ethers } from 'ethers'
+import { CONTRACT_ADDRESSES } from '../config'
 
 export function AddLiquidityModal() {
   const { active, library, account } = useWeb3()
@@ -42,7 +43,7 @@ export function AddLiquidityModal() {
     try {
       setIsLoading(true)
       const factoryContract = new ethers.Contract(
-        import.meta.env.VITE_FACTORY_ADDRESS || '0x511CE2380a70bE66FAf44a5baaBf11E92D654905',
+        CONTRACT_ADDRESSES.FACTORY,
         [
           'function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool)'
         ],
