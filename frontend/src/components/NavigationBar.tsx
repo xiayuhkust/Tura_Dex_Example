@@ -1,4 +1,4 @@
-import React from 'react'
+// No React import needed for modern React
 import { HStack, Button, Box } from '@chakra-ui/react'
 import { Link, useLocation } from 'react-router-dom'
 
