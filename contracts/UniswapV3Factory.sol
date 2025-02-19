@@ -2,8 +2,8 @@
 pragma solidity =0.7.6;
 
 import './interfaces/IUniswapV3Factory.sol';
-import './backup/v3/UniswapV3Pool.sol';
-import './backup/v3/UniswapV3PoolDeployer.sol';
+import './UniswapV3Pool.sol';
+import './UniswapV3PoolDeployer.sol';
 import './NoDelegateCall.sol';
 
 /// @title Canonical Uniswap V3 factory
