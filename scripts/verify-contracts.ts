@@ -27,7 +27,7 @@ async function main() {
   // Create test pool
   console.log('\nCreating test pool...');
   const weth = await ethers.getContractAt('WETH9', '0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be');
-  const testToken = await ethers.getContractAt('TestToken', '0xf7430841c1917Fee24B04dBbd0b809F36E5Ad716');
+  const testToken = await ethers.getContractAt('TestToken', '0x3F26F01Fa9A5506c9109B5Ad15343363909fc0b9');
   
   // Create pool if it doesn't exist
   const poolAddress = await factory.getPool(weth.address, testToken.address, 3000);
