@@ -11,6 +11,7 @@ import {
 } from '@chakra-ui/react'
 import { useWeb3 } from '../hooks/useWeb3'
 import { useError } from '../hooks/useError'
+import { ethers } from 'ethers'
 
 export function WrapUnwrap() {
   const [amount, setAmount] = useState('')
@@ -25,20 +26,20 @@ export function WrapUnwrap() {
     
     setIsLoading(true)
     try {
-      const weth = new library.eth.Contract(
+      const weth = new ethers.Contract(
+        import.meta.env.VITE_WETH_ADDRESS,
         ['function deposit()', 'function withdraw(uint)'],
-        import.meta.env.VITE_WETH_ADDRESS
+        library.getSigner()
       )
       
       if (isWrapping) {
-        await weth.methods.deposit().send({
-          from: account,
-          value: library.utils.toWei(amount, 'ether')
+        await weth.deposit({
+          value: ethers.utils.parseEther(amount)
         })
       } else {
-        await weth.methods.withdraw(
-          library.utils.toWei(amount, 'ether')
-        ).send({ from: account })
+        await weth.withdraw(
+          ethers.utils.parseEther(amount)
+        )
       }
       
       toast({
