@@ -2,7 +2,7 @@
 
 ## Network Information
 - Chain ID: 1337
-- RPC URL: http://43.135.26.222:8000
+- RPC URL: https://rpc-beta1.turablockchain.com
 - Owner Address: 0x08Bb6eA809A2d6c13D57166Fa3ede48C0ae9a70e
 
 ## Core Contracts
