@@ -11,6 +11,7 @@ import { TokenSelect } from './TokenSelect'
 import { useWeb3 } from '../hooks/useWeb3'
 import { useError } from '../hooks/useError'
 import type { Token } from '../hooks'
+import { ethers } from 'ethers'
 
 export function AddLiquidityModal() {
   const { active, library, account } = useWeb3()
@@ -40,9 +41,12 @@ export function AddLiquidityModal() {
 
     try {
       setIsLoading(true)
-      const factoryContract = new (library as any).eth.Contract(
-        ['function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool)'],
-        '0x1F98431c8aD98523631AE4a59f267346ea31F984' // UniswapV3Factory address
+      const factoryContract = new ethers.Contract(
+        import.meta.env.VITE_FACTORY_ADDRESS || '0x511CE2380a70bE66FAf44a5baaBf11E92D654905',
+        [
+          'function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool)'
+        ],
+        library.getSigner()
       )
 
       // Validate token addresses
@@ -53,13 +57,6 @@ export function AddLiquidityModal() {
       const fee = 3000 // 0.3%
       await factoryContract.methods.createPool(token0.address, token1.address, fee).send({ from: account })
 
-      toast({
-        title: 'Pool Created',
-        description: 'Liquidity pool has been created successfully',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      })
       toast({
         title: 'Pool Created',
         description: 'Liquidity pool has been created successfully',
