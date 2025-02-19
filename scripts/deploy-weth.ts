@@ -1,10 +1,10 @@
-import { ethers } from "hardhat";
+const hre = require("hardhat");
 
 async function main() {
   console.log("Deploying TuraWETH contract...");
 
-  const [deployer] = await ethers.getSigners();
-  const TuraWETH = await ethers.getContractFactory("TuraWETH");
+  const [deployer] = await hre.ethers.getSigners();
+  const TuraWETH = await hre.ethers.getContractFactory("TuraWETH");
   const weth = await TuraWETH.deploy();
   await weth.deployed();
 
