@@ -123,8 +123,11 @@ export function AddLiquidityModal() {
         return
       }
 
-      // Initialize with price of 1
-      const sqrtPriceX96 = ethers.BigNumber.from('1').shl(96)
+      // Calculate initial sqrt price based on token amounts
+      const price = parseFloat(amount1) / parseFloat(amount0)
+      const sqrtPriceX96 = ethers.BigNumber.from(
+        Math.floor(Math.sqrt(price) * 2 ** 96)
+      )
       await poolContract.initialize(sqrtPriceX96)
       console.log('Pool initialized with sqrt price:', sqrtPriceX96.toString())
       
@@ -152,28 +155,50 @@ export function AddLiquidityModal() {
       await approve1Tx.wait()
       console.log('Token1 approved:', amount1Decimal.toString())
       
-      // Add initial liquidity with calculated tick spacing
-      const tickSpacing = useMemo(() => fee === FEE_TIERS.LOWEST ? 10 : fee === FEE_TIERS.MEDIUM ? 60 : 200, [fee]);
-      const tickLower = -887272 / tickSpacing * tickSpacing; // MIN_TICK aligned to tick spacing
-      const tickUpper = 887272 / tickSpacing * tickSpacing;  // MAX_TICK aligned to tick spacing
+      // Calculate tick range based on current price
+      const tickSpacing = fee === FEE_TIERS.LOWEST ? 10 : fee === FEE_TIERS.MEDIUM ? 60 : 200
+      const currentTick = Math.floor(Math.log(price) / Math.log(1.0001))
+      const tickLower = Math.floor(currentTick / tickSpacing) * tickSpacing
+      const tickUpper = tickLower + tickSpacing
       
-      const mintTx = await poolContract.mint(
-        account,
-        tickLower,
-        tickUpper,
-        amount0Decimal,
-        '0x'
+      // Calculate liquidity amount based on token amounts and price
+      const liquidity = Math.min(
+        amount0Decimal.mul(ethers.BigNumber.from(2).pow(96)).div(sqrtPriceX96),
+        amount1Decimal.mul(sqrtPriceX96).div(ethers.BigNumber.from(2).pow(96))
       )
-      await mintTx.wait()
-      console.log('Liquidity added successfully')
       
-      toast({
-        title: 'Success',
-        description: 'Pool created and liquidity added successfully',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      })
+      try {
+        const mintTx = await poolContract.mint(
+          account,
+          tickLower,
+          tickUpper,
+          liquidity,
+          '0x'
+        )
+        await mintTx.wait()
+        console.log('Liquidity added successfully')
+        
+        toast({
+          title: 'Success',
+          description: 'Pool created and liquidity added successfully',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        })
+      } catch (error: unknown) {
+        if (typeof error === 'object' && error !== null && 'code' in error) {
+          const txError = error as { code: string; message?: string }
+          if (txError.code === 'UNPREDICTABLE_GAS_LIMIT') {
+            handleError(new Error('Failed to add liquidity. Please check token amounts and approvals.'))
+          } else if (txError.code === 'CALL_EXCEPTION') {
+            handleError(new Error('Failed to add liquidity. The pool may be at capacity or the tick range is invalid.'))
+          } else {
+            handleError(error)
+          }
+        } else {
+          handleError(error)
+        }
+      }
     } catch (error: unknown) {
       if (typeof error === 'object' && error !== null && 'code' in error) {
         // Handle specific contract errors
