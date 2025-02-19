@@ -20,7 +20,7 @@ export type FeeTier = typeof FEE_TIERS[keyof typeof FEE_TIERS]
 export const CONTRACT_ADDRESSES = {
   // Core contracts
   WETH: '0xc8F7d7989a409472945b00177396f4e9b8601DF3',  // Updated and verified TuraWETH
-  FACTORY: '0x511CE2380a70bE66FAf44a5baaBf11E92D654905',
+  FACTORY: '0xC2EdBdd3394dA769De72986d06b0C28Ba991341d',  // Updated V3 Factory with proper event emission
   ROUTER: '0xB492Bf5FBfA79364149CC76B77b8bd78BecD1416',
   
   // Test tokens
