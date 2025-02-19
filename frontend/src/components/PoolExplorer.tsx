@@ -23,6 +23,7 @@ interface Pool {
   fee: number
   token0Symbol: string
   token1Symbol: string
+  liquidity: string
 }
 
 export function PoolExplorer() {
@@ -49,19 +50,28 @@ export function PoolExplorer() {
         const filter = factoryContract.filters.PoolCreated()
         const events = await factoryContract.queryFilter(filter)
 
-        // Get token symbols
+        // Get token symbols and liquidity
         const erc20Interface = [
           'function symbol() view returns (string)',
           'function name() view returns (string)'
         ]
 
+        const poolInterface = [
+          'function liquidity() external view returns (uint128)',
+          'function token0() external view returns (address)',
+          'function token1() external view returns (address)',
+          'function fee() external view returns (uint24)'
+        ]
+
         const poolsData = await Promise.all(events.map(async (event) => {
           const token0Contract = new ethers.Contract(event.args.token0, erc20Interface, library)
           const token1Contract = new ethers.Contract(event.args.token1, erc20Interface, library)
+          const poolContract = new ethers.Contract(event.args.pool, poolInterface, library)
 
-          const [token0Symbol, token1Symbol] = await Promise.all([
+          const [token0Symbol, token1Symbol, liquidity] = await Promise.all([
             token0Contract.symbol(),
-            token1Contract.symbol()
+            token1Contract.symbol(),
+            poolContract.liquidity()
           ])
 
           return {
@@ -70,7 +80,8 @@ export function PoolExplorer() {
             token1: event.args.token1,
             fee: event.args.fee,
             token0Symbol,
-            token1Symbol
+            token1Symbol,
+            liquidity: liquidity.toString()
           }
         }))
 
@@ -113,6 +124,7 @@ export function PoolExplorer() {
               <Th color="whiteAlpha.700">Pool</Th>
               <Th color="whiteAlpha.700">Tokens</Th>
               <Th color="whiteAlpha.700">Fee</Th>
+              <Th color="whiteAlpha.700">Liquidity</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -126,6 +138,9 @@ export function PoolExplorer() {
                 </Td>
                 <Td color="whiteAlpha.900">
                   <Text>{formatFeeAmount(pool.fee)}</Text>
+                </Td>
+                <Td color="whiteAlpha.900">
+                  <Text>{pool.liquidity}</Text>
                 </Td>
               </Tr>
             ))}
