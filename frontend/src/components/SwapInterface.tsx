@@ -79,8 +79,8 @@ export function SwapInterface() {
       boxShadow="xl"
     >
       <VStack spacing={{ base: "4", sm: "6" }}>
-        <HStack w="full" justify="space-between">
-          <HStack>
+        <VStack w="full" spacing={4}>
+          <HStack w="full" justify="space-between">
             <Text 
               fontSize={{ base: "xl", sm: "2xl" }} 
               fontWeight="bold" 
@@ -89,9 +89,6 @@ export function SwapInterface() {
             >
               AgentSwap
             </Text>
-
-            <WrapUnwrap />
-            <Divider my={4} borderColor="whiteAlpha.200" />
 
             <Settings
               slippageTolerance={slippageTolerance}
@@ -105,9 +102,12 @@ export function SwapInterface() {
               {account?.slice(0, 6)}...{account?.slice(-4)}
             </Text>
           )}
-        </HStack>
+          </HStack>
 
-        <VStack w="full" spacing="4">
+          <WrapUnwrap />
+          <Divider borderColor="whiteAlpha.200" />
+
+          <VStack w="full" spacing="4">
           <TokenSelect
             value={inputAmount}
             onChange={setInputAmount}
