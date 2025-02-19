@@ -2,11 +2,10 @@ import { useState, useCallback, useMemo } from 'react'
 import {
   VStack,
   Button,
-  Text,
-  Divider,
-  useToast,
   Box,
-  Select
+  Text,
+  Select,
+  useToast,
 } from '@chakra-ui/react'
 import { TokenSelect } from './TokenSelect'
 import { useWeb3 } from '../hooks/useWeb3'
@@ -16,7 +15,7 @@ import { ethers } from 'ethers'
 import { CONTRACT_ADDRESSES, FEE_TIERS, type FeeTier } from '../config'
 
 export function AddLiquidityModal() {
-  const { active, library, account } = useWeb3()
+  const { active, library, account, connect } = useWeb3()
   const [isLoading, setIsLoading] = useState(false)
   const [token0, setToken0] = useState<Token | undefined>()
   const [token1, setToken1] = useState<Token | undefined>()
@@ -28,6 +27,14 @@ export function AddLiquidityModal() {
   const [fee, setFee] = useState<FeeTier>(FEE_TIERS.MEDIUM)
   const toast = useToast()
   const { handleError } = useError()
+
+  const handleConnect = useCallback(async () => {
+    try {
+      await connect()
+    } catch (error) {
+      handleError(error)
+    }
+  }, [connect, handleError])
 
   // Validate pool creation parameters
   const isValidPool = useMemo(() => {
@@ -41,12 +48,7 @@ export function AddLiquidityModal() {
 
   const handleCreatePool = useCallback(async () => {
     if (!active || !library || !token0 || !token1 || !amount0 || !amount1) {
-      handleError(new Error('Please fill in all fields'))
-      return
-    }
-
-    if (token0.address === token1.address) {
-      handleError(new Error('Cannot create pool with same token'))
+      handleError(new Error('Please connect wallet and select tokens'))
       return
     }
 
@@ -55,19 +57,32 @@ export function AddLiquidityModal() {
       return
     }
 
+    if (token0.address.toLowerCase() === token1.address.toLowerCase()) {
+      handleError(new Error('Cannot create pool with the same token'))
+      return
+    }
+
+    setIsLoading(true)
+
     try {
-      setIsLoading(true)
-      
-      // Create pool
+      // Check if pool exists
       const factoryContract = new ethers.Contract(
         CONTRACT_ADDRESSES.FACTORY,
         [
+          'function getPool(address,address,uint24) external view returns (address)',
           'function createPool(address,address,uint24) external returns (address)',
           'event PoolCreated(address indexed token0, address indexed token1, uint24 indexed fee, int24 tickSpacing, address pool)'
         ],
         library.getSigner()
       )
+
+      const existingPool = await factoryContract.getPool(token0.address, token1.address, fee)
+      if (existingPool !== ethers.constants.AddressZero) {
+        handleError(new Error('Pool already exists'))
+        return
+      }
       
+      // Create pool
       const tx = await factoryContract.createPool(token0.address, token1.address, fee)
       const receipt = await tx.wait()
       const poolCreatedEvent = receipt.events?.find((e: { event: string }) => e.event === 'PoolCreated')
@@ -78,22 +93,17 @@ export function AddLiquidityModal() {
       const poolContract = new ethers.Contract(
         poolAddress,
         [
-          'function initialize(uint160 sqrtPriceX96) external',
-          'function mint(address,int24,int24,uint128,bytes) external returns (uint256,uint256)'
+          'function initialize(uint160) external',
+          'function mint(address,int24,int24,uint128,bytes) external returns (uint256,uint256)',
+          'function token0() external view returns (address)',
+          'function token1() external view returns (address)'
         ],
         library.getSigner()
       )
       
-      // Calculate initial sqrt price
+      // Convert amounts to BigNumber
       const amount0Decimal = ethers.utils.parseUnits(amount0, token0.decimals)
       const amount1Decimal = ethers.utils.parseUnits(amount1, token1.decimals)
-      const price = amount1Decimal.mul(ethers.constants.WeiPerEther).div(amount0Decimal)
-      const sqrtPriceX96 = ethers.BigNumber.from(
-        Math.floor(Math.sqrt(price.toNumber()) * 2**96)
-      )
-      
-      await poolContract.initialize(sqrtPriceX96)
-      console.log('Pool initialized with price:', price.toString())
       
       // Approve tokens
       const token0Contract = new ethers.Contract(
@@ -120,50 +130,62 @@ export function AddLiquidityModal() {
         account,
         tickLower,
         tickUpper,
-        amount0Decimal,
-        ethers.utils.defaultAbiCoder.encode(['address'], [account])
+        ethers.BigNumber.from(amount0Decimal),
+        '0x'
       )
-      console.log('Initial liquidity added')
-
+      
       toast({
-        title: 'Pool Created',
-        description: 'Liquidity pool has been created and initialized successfully',
+        title: 'Success',
+        description: 'Pool created successfully',
         status: 'success',
         duration: 5000,
         isClosable: true,
       })
-    } catch (error: any) {
-      if (error.code === 'CALL_EXCEPTION') {
-        handleError(new Error('Pool creation failed. The pool may already exist or the tokens/fee are invalid.'))
-      } else if (error.code === 'UNPREDICTABLE_GAS_LIMIT') {
-        handleError(new Error('Failed to estimate gas. The pool may already exist.'))
+    } catch (error: unknown) {
+      if (typeof error === 'object' && error !== null && 'code' in error) {
+        // Handle specific contract errors
+        const txError = error as { code: string; message?: string; reason?: string }
+        if (txError.code === 'CALL_EXCEPTION') {
+          handleError(new Error('Pool creation failed. The pool may already exist or the tokens/fee are invalid.'))
+        } else if (txError.code === 'UNPREDICTABLE_GAS_LIMIT') {
+          handleError(new Error('Failed to estimate gas. The pool may already exist.'))
+        } else if (txError.code === 'NUMERIC_FAULT') {
+          handleError(new Error('Numeric error occurred. Please check token amounts.'))
+        } else {
+          handleError(error)
+        }
       } else {
         handleError(error)
       }
     } finally {
       setIsLoading(false)
     }
-  }, [active, library, token0, token1, amount0, amount1, fee, account, handleError, toast])
+  }, [active, library, account, token0, token1, amount0, amount1, fee, handleError, toast])
 
   if (!library || !account) {
     return (
       <Box maxW={{ base: "95%", sm: "md" }} mx="auto" mt={{ base: "4", sm: "10" }} p={6} bg="brand.surface" borderRadius="xl">
-        <Text color="whiteAlpha.700">Please connect your wallet to create a pool</Text>
+        <VStack spacing={4}>
+          <Text color="whiteAlpha.700">Please connect your wallet to create a pool</Text>
+          <Button
+            w="full"
+            size="lg"
+            bg="brand.primary"
+            _hover={{ opacity: 0.9 }}
+            onClick={handleConnect}
+          >
+            Connect Wallet
+          </Button>
+        </VStack>
       </Box>
     )
   }
 
-
-
   return (
     <Box maxW={{ base: "95%", sm: "md" }} mx="auto" mt={{ base: "4", sm: "10" }} p={6} bg="brand.surface" borderRadius="xl">
-      <VStack spacing={4}>
-        <Text fontSize="2xl" fontWeight="bold" color="white">Create Liquidity Pool</Text>
-        <Text color="whiteAlpha.700" fontSize="sm" w="full">
-          Select two tokens and enter the amounts to provide initial liquidity
-        </Text>
-            
-            <VStack w="full" spacing={4}>
+      <VStack spacing={6}>
+        <Box w="full">
+          <VStack spacing={4} align="stretch">
               <TokenSelect
                 value={amount0}
                 onChange={setAmount0}
@@ -182,8 +204,8 @@ export function AddLiquidityModal() {
                 isDisabled={!active}
               />
 
-              <VStack w="full" spacing={2}>
-                <Text color="whiteAlpha.700" fontSize="sm" alignSelf="start">
+              <Box>
+                <Text color="whiteAlpha.600" mb={2}>
                   Fee Tier
                 </Text>
                 <Select
@@ -194,27 +216,26 @@ export function AddLiquidityModal() {
                   _focus={{ ring: 1, ringColor: 'brand.primary' }}
                   _hover={{ bg: 'whiteAlpha.200' }}
                 >
-                  <option value={FEE_TIERS.LOWEST}>0.05% fee (best for stable pairs)</option>
-                  <option value={FEE_TIERS.MEDIUM}>0.3% fee (best for most pairs)</option>
-                  <option value={FEE_TIERS.HIGHEST}>1% fee (best for exotic pairs)</option>
+                  <option value={FEE_TIERS.LOWEST}>0.05%</option>
+                  <option value={FEE_TIERS.LOW}>0.3%</option>
+                  <option value={FEE_TIERS.MEDIUM}>1%</option>
                 </Select>
-              </VStack>
+              </Box>
             </VStack>
+          </Box>
 
-            <Divider borderColor="whiteAlpha.200" />
-
-            <Button
-              w="full"
-              size="lg"
-              bg="brand.primary"
-              _hover={{ opacity: 0.9 }}
-              isDisabled={isCreateDisabled}
-              onClick={handleCreatePool}
-              isLoading={isLoading}
-            >
-              Create Pool
-            </Button>
-          </VStack>
-    </Box>
+          <Button
+            w="full"
+            size="lg"
+            bg="brand.primary"
+            _hover={{ opacity: 0.9 }}
+            isDisabled={isCreateDisabled}
+            onClick={handleCreatePool}
+            isLoading={isLoading}
+          >
+            Create Pool
+          </Button>
+        </VStack>
+      </Box>
   )
 }
