@@ -13,9 +13,10 @@ import { useWeb3 } from '../hooks/useWeb3'
 import { useError } from '../hooks/useError'
 import { ethers } from 'ethers'
 import { useTokenBalances } from '../hooks/useTokenBalances'
+import { CONTRACT_ADDRESSES } from '../config'
 
 export function WrapUnwrap() {
-  const wethAddress = import.meta.env.VITE_WETH_ADDRESS || '0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be'
+  const wethAddress = CONTRACT_ADDRESSES.WETH
   const [amount, setAmount] = useState('')
   const [isWrapping, setIsWrapping] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
@@ -30,7 +31,7 @@ export function WrapUnwrap() {
     setIsLoading(true)
     try {
       const weth = new ethers.Contract(
-        import.meta.env.VITE_WETH_ADDRESS || '0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be',
+        CONTRACT_ADDRESSES.WETH,
         [
           'function deposit() public payable',
           'function withdraw(uint256) public',
