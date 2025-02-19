@@ -15,8 +15,9 @@ import {
 } from '@chakra-ui/react'
 import { useTokenBalances } from '../hooks/useTokenBalances'
 import { useRecentTokens } from '../hooks/useRecentTokens'
+import { useTokenMetadata } from '../hooks/useTokenMetadata'
 import type { Token } from '../hooks'
-
+import { CONTRACT_ADDRESSES } from '../config'
 import { DEMO_TOKENS } from '../utils/tokens'
 
 interface TokenListModalProps {
@@ -34,6 +35,7 @@ export function TokenListModal({ isOpen, onClose, onSelect }: TokenListModalProp
   const tokensWithBalances = useMemo(() => 
     DEMO_TOKENS.map(token => ({
       ...token,
+      symbol: token.address === CONTRACT_ADDRESSES.WETH ? 'Tura' : token.symbol,
       balance: balances[token.address] || '0.0'
     }))
   , [balances])

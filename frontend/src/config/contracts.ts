@@ -7,7 +7,7 @@ const addressRegex = /^0x[a-fA-F0-9]{40}$/
 
 export const CONTRACT_ADDRESSES = {
   // Core contracts
-  WETH: '0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be',
+  WETH: '0xc8F7d7989a409472945b00177396f4e9b8601DF3',  // Updated and verified TuraWETH
   FACTORY: '0x511CE2380a70bE66FAf44a5baaBf11E92D654905',
   ROUTER: '0xB492Bf5FBfA79364149CC76B77b8bd78BecD1416',
   
