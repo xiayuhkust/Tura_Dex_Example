@@ -17,16 +17,18 @@
 
 ### Test Tokens
 1. Test Token 1 (TT1)
-   - Address: 0xf7430841c1917Fee24B04dBbd0b809F36E5Ad716
+   - Address: 0x51317d5134B62C44558013d6d915F3807682Ab16
    - Symbol: TT1
    - Initial Supply: 1,000,000 tokens
    - Decimals: 18
+   - Deployment Date: February 19, 2025
 
 2. Test Token 2 (TT2)
-   - Address: 0x3Cbc85319E3D9d6b29DDe06f591017e9f9666652
+   - Address: 0xa79aEb156a8a267f73C844df1877D32CBa2053f3
    - Symbol: TT2
    - Initial Supply: 1,000,000 tokens
    - Decimals: 18
+   - Deployment Date: February 19, 2025
 
 ### TuraFactory
 - Address: 0x511CE2380a70bE66FAf44a5baaBf11E92D654905

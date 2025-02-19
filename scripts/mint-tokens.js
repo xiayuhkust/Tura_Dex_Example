@@ -3,12 +3,12 @@ const { ethers } = require("hardhat");
 async function main() {
   // Use parseUnits with 18 decimals to ensure correct token amount
   const decimals = 18;
-  const amount = ethers.utils.parseUnits("10000", decimals); // 10000 tokens with 18 decimals (10000 * 10^18 units)
+  const amount = ethers.utils.parseUnits("100000", decimals); // 100000 tokens with 18 decimals (100000 * 10^18 units)
   const ownerAddress = "0x08Bb6eA809A2d6c13D57166Fa3ede48C0ae9a70e";
   
   // Get token contracts
-  const tt1 = await ethers.getContractAt("TestToken", "0xf7430841c1917Fee24B04dBbd0b809F36E5Ad716");
-  const tt2 = await ethers.getContractAt("TestToken", "0x3Cbc85319E3D9d6b29DDe06f591017e9f9666652");
+  const tt1 = await ethers.getContractAt("TestToken", "0x51317d5134B62C44558013d6d915F3807682Ab16");
+  const tt2 = await ethers.getContractAt("TestToken", "0xa79aEb156a8a267f73C844df1877D32CBa2053f3");
   
   console.log("Minting TT1...");
   const tx1 = await tt1.mint(ownerAddress, amount);

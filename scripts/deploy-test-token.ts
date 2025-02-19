@@ -6,14 +6,12 @@ async function main() {
   const TestToken = await ethers.getContractFactory("TestToken");
   
   const token1 = await TestToken.deploy("Test Token 1", "TT1");
-  await token1.waitForDeployment();
-  const token1Address = await token1.getAddress();
-  console.log("Test Token 1 deployed to:", token1Address);
+  await token1.deployed();
+  console.log("Test Token 1 deployed to:", token1.address);
 
   const token2 = await TestToken.deploy("Test Token 2", "TT2");
-  await token2.waitForDeployment();
-  const token2Address = await token2.getAddress();
-  console.log("Test Token 2 deployed to:", token2Address);
+  await token2.deployed();
+  console.log("Test Token 2 deployed to:", token2.address);
 }
 
 main()
