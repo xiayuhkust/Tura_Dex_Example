@@ -12,12 +12,15 @@ import {
 import { useWeb3 } from '../hooks/useWeb3'
 import { useError } from '../hooks/useError'
 import { ethers } from 'ethers'
+import { useTokenBalances } from '../hooks/useTokenBalances'
 
 export function WrapUnwrap() {
+  const wethAddress = import.meta.env.VITE_WETH_ADDRESS || '0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be'
   const [amount, setAmount] = useState('')
   const [isWrapping, setIsWrapping] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const { active, library } = useWeb3()
+  const balances = useTokenBalances([wethAddress])
   const toast = useToast()
   const { handleError } = useError()
 
@@ -48,9 +51,14 @@ export function WrapUnwrap() {
       
       toast({
         title: `${isWrapping ? 'Wrap' : 'Unwrap'} Successful`,
-        description: `${amount} ${isWrapping ? 'Tura → WTURA' : 'WTURA → Tura'}`,
+        description: `${amount} ${isWrapping ? 'Tura → WTURA' : 'WTURA → Tura'}
+To see WTURA in MetaMask:
+1. Click "Import Tokens"
+2. Enter address: ${wethAddress}
+3. Click "Add Custom Token"`,
         status: 'success',
-        duration: 5000,
+        duration: 10000,
+        isClosable: true,
       })
       setAmount('')
     } catch (error) {
