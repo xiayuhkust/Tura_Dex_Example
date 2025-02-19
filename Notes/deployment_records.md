@@ -30,21 +30,20 @@
    - Initial Supply: 1,000,000 tokens
    - Decimals: 18
 
-### TuraFactory
-- Address: 0x511CE2380a70bE66FAf44a5baaBf11E92D654905
+### UniswapV3Factory
+- Address: 0xC2EdBdd3394dA769De72986d06b0C28Ba991341d
+- Deployment Date: February 19, 2025
+- Implementation: Official Uniswap V3
+- Status: Active
+- Owner: 0x08Bb6eA809A2d6c13D57166Fa3ede48C0ae9a70e
 - Features:
-  * Pool creation
-  * Fee configuration
+  * Pool creation and management
+  * Fee tier configuration
   * Owner management
-- Default Fee Tiers:
-  * 0.3% (3000)
-  * 0.5% (5000)
-  * 1.0% (10000)
-- Math Libraries:
-  * TickMath: 0x2BCfd70627278DD03aCE47F210D3a92B98CFeBBb
-  * SqrtPriceMath: 0xa04272fE53Ec20569B4A8503115c697eF5f5B582
-  * Position: 0xB8eaDF519486e469A302b2DEDA73dAA3616d46CB
-  * FullMath: 0x685CAA8E97452AD3bC1345DD2227729fFe412b33
+- Fee Tiers:
+  * 0.05% (500) - Tick Spacing: 10
+  * 0.3% (3000) - Tick Spacing: 60
+  * 1.0% (10000) - Tick Spacing: 200
 
 ## Peripheral Contracts
 
