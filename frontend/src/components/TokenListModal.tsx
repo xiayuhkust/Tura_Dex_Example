@@ -29,10 +29,10 @@ export function TokenListModal({ isOpen, onClose, onSelect }: TokenListModalProp
   const [search, setSearch] = useState('')
   const { recentTokens, addRecentToken } = useRecentTokens()
   
-  const balances = useTokenBalances(DEMO_TOKENS.map(t => t.address))
+  const balances = useTokenBalances(DEMO_TOKENS.map((t: Token) => t.address))
   
   const tokensWithBalances = useMemo(() => 
-    DEMO_TOKENS.map(token => ({
+    DEMO_TOKENS.map((token: Token) => ({
       ...token,
       balance: balances[token.address] || '0.0'
     }))
@@ -40,14 +40,14 @@ export function TokenListModal({ isOpen, onClose, onSelect }: TokenListModalProp
   
   const filteredTokens = useMemo(() => {
     const searchLower = search.toLowerCase()
-    const filtered = tokensWithBalances.filter(token => 
+    const filtered = tokensWithBalances.filter((token: Token) => 
       token.symbol.toLowerCase().includes(searchLower) ||
       token.name.toLowerCase().includes(searchLower) ||
       token.address.toLowerCase().includes(searchLower)
     )
     
     // Sort by balance (descending) and then by name
-    return filtered.sort((a, b) => {
+    return filtered.sort((a: Token, b: Token) => {
       const balanceA = parseFloat(a.balance || '0')
       const balanceB = parseFloat(b.balance || '0')
       if (balanceA !== balanceB) return balanceB - balanceA
