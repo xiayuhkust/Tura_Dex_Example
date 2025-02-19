@@ -1,5 +1,4 @@
-import React from 'react'
-import { Box, VStack } from '@chakra-ui/react'
+import { Box } from '@chakra-ui/react'
 import { AddLiquidityModal } from '../components/AddLiquidityModal'
 
 export function LiquidityPage() {

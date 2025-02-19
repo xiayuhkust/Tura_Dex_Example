@@ -60,13 +60,19 @@ export function AddLiquidityModal() {
         duration: 5000,
         isClosable: true,
       })
-      onClose()
+      toast({
+        title: 'Pool Created',
+        description: 'Liquidity pool has been created successfully',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      })
     } catch (error) {
       handleError(error)
     } finally {
       setIsLoading(false)
     }
-  }, [active, token0, token1, amount0, amount1, library, account, handleError, toast, onClose])
+  }, [active, token0, token1, amount0, amount1, library, account, handleError, toast])
 
   if (!library || !account) {
     return (
