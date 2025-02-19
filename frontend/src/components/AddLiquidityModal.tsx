@@ -79,7 +79,20 @@ export function AddLiquidityModal() {
 
       const existingPool = await factoryContract.getPool(token0.address, token1.address, fee)
       if (existingPool !== ethers.constants.AddressZero) {
-        handleError(new Error('Pool already exists'))
+        // Check if pool is already initialized
+        const poolContract = new ethers.Contract(
+          existingPool,
+          [
+            'function slot0() external view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)'
+          ],
+          library
+        )
+        const slot0 = await poolContract.slot0()
+        if (!slot0.sqrtPriceX96.eq(0)) {
+          handleError(new Error('Pool already exists and is initialized'))
+          return
+        }
+        handleError(new Error('Pool already exists but needs initialization'))
         return
       }
       
@@ -102,6 +115,13 @@ export function AddLiquidityModal() {
         ],
         library.getSigner()
       )
+
+      // Check if pool is already initialized
+      const slot0 = await poolContract.slot0()
+      if (!slot0.sqrtPriceX96.eq(0)) {
+        handleError(new Error('Pool already initialized'))
+        return
+      }
 
       // Initialize with price of 1
       const sqrtPriceX96 = ethers.BigNumber.from('1').shl(96)
