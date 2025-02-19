@@ -1,12 +1,10 @@
-import { ethers } from "hardhat";
-import { HardhatEthersProvider } from "@nomicfoundation/hardhat-ethers/internal/hardhat-ethers-provider";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import hre from "hardhat";
 
 async function main() {
   console.log("Deploying TuraWETH contract...");
 
-  const [deployer] = await ethers.getSigners() as HardhatEthersSigner[];
-  const TuraWETH = await ethers.getContractFactory("TuraWETH", deployer);
+  const [deployer] = await hre.ethers.getSigners();
+  const TuraWETH = await hre.ethers.getContractFactory("TuraWETH");
   const weth = await TuraWETH.deploy();
   await weth.waitForDeployment();
 
