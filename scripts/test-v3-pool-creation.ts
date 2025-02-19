@@ -11,11 +11,11 @@ async function main() {
   };
 
   // Get factory contract
-  const factory = await ethers.getContractAt("contracts/UniswapV3Factory.sol:UniswapV3Factory", ADDRESSES.FACTORY);
+  const factory = await ethers.getContractAt("IUniswapV3Factory", ADDRESSES.FACTORY);
   
   // Get token contracts
-  const tt1 = await ethers.getContractAt("TestToken", ADDRESSES.TT1);
-  const tt2 = await ethers.getContractAt("TestToken", ADDRESSES.TT2);
+  const tt1 = await ethers.getContractAt("IERC20Minimal", ADDRESSES.TT1);
+  const tt2 = await ethers.getContractAt("IERC20Minimal", ADDRESSES.TT2);
 
   // Check initial balances
   const [owner] = await ethers.getSigners();
