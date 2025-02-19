@@ -6,6 +6,7 @@ import { theme } from './theme'
 import { ErrorBoundary, NavigationBar } from './components'
 import { SwapPage } from './pages/SwapPage'
 import { LiquidityPage } from './pages/LiquidityPage'
+import PoolsPage from './pages/pools'
 
 function getLibrary(provider: any) {
   return new ethers.providers.Web3Provider(provider)
@@ -21,6 +22,7 @@ function App() {
             <Routes>
               <Route path="/" element={<SwapPage />} />
               <Route path="/liquidity" element={<LiquidityPage />} />
+              <Route path="/pools" element={<PoolsPage />} />
             </Routes>
           </ErrorBoundary>
         </BrowserRouter>

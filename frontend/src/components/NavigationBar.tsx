@@ -26,6 +26,15 @@ export function NavigationBar() {
         >
           Liquidity
         </Button>
+        <Button
+          as={Link}
+          to="/pools"
+          variant={location.pathname === '/pools' ? 'solid' : 'ghost'}
+          color="brand.primary"
+          size="sm"
+        >
+          Pools
+        </Button>
       </HStack>
     </Box>
   )
