@@ -1,28 +1,18 @@
 import { useState, useCallback } from 'react'
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
   VStack,
   Button,
   Text,
   Divider,
-  useToast
+  useToast,
+  Box
 } from '@chakra-ui/react'
 import { TokenSelect } from './TokenSelect'
 import { useWeb3 } from '../hooks/useWeb3'
 import { useError } from '../hooks/useError'
 import type { Token } from '../hooks'
 
-interface AddLiquidityModalProps {
-  isOpen: boolean
-  onClose: () => void
-}
-
-export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
+export function AddLiquidityModal() {
   const { active, library, account } = useWeb3()
   const [isLoading, setIsLoading] = useState(false)
   const [token0, setToken0] = useState<Token>()
@@ -80,32 +70,21 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
 
   if (!library || !account) {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
-        <ModalOverlay backdropFilter="blur(4px)" />
-        <ModalContent bg="brand.surface" borderRadius="xl">
-          <ModalHeader color="white">Create Liquidity Pool</ModalHeader>
-          <ModalCloseButton color="white" />
-          <ModalBody pb={6}>
-            <Text color="whiteAlpha.700">Please connect your wallet to create a pool</Text>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+      <Box maxW={{ base: "95%", sm: "md" }} mx="auto" mt={{ base: "4", sm: "10" }} p={6} bg="brand.surface" borderRadius="xl">
+        <Text color="whiteAlpha.700">Please connect your wallet to create a pool</Text>
+      </Box>
     )
   }
 
 
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
-      <ModalOverlay backdropFilter="blur(4px)" />
-      <ModalContent bg="brand.surface" borderRadius="xl">
-        <ModalHeader color="white">Create Liquidity Pool</ModalHeader>
-        <ModalCloseButton color="white" />
-        <ModalBody pb={6}>
-          <VStack spacing={4}>
-            <Text color="whiteAlpha.700" fontSize="sm" w="full">
-              Select two tokens and enter the amounts to provide initial liquidity
-            </Text>
+    <Box maxW={{ base: "95%", sm: "md" }} mx="auto" mt={{ base: "4", sm: "10" }} p={6} bg="brand.surface" borderRadius="xl">
+      <VStack spacing={4}>
+        <Text fontSize="2xl" fontWeight="bold" color="white">Create Liquidity Pool</Text>
+        <Text color="whiteAlpha.700" fontSize="sm" w="full">
+          Select two tokens and enter the amounts to provide initial liquidity
+        </Text>
             
             <TokenSelect
               value={amount0}
@@ -139,8 +118,6 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
               Create Pool
             </Button>
           </VStack>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+    </Box>
   )
 }
