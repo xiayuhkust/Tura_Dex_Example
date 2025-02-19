@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   VStack,
   HStack,
@@ -21,8 +21,15 @@ export function WrapUnwrap() {
   const [isLoading, setIsLoading] = useState(false)
   const { active, library } = useWeb3()
   const balances = useTokenBalances([wethAddress])
+  const [isBalanceLoading, setIsBalanceLoading] = useState(true)
   const toast = useToast()
   const { handleError } = useError()
+
+  useEffect(() => {
+    if (balances) {
+      setIsBalanceLoading(false)
+    }
+  }, [balances])
 
   const handleAction = async () => {
     if (!amount || !active) return
@@ -55,9 +62,10 @@ export function WrapUnwrap() {
 To see WTURA in MetaMask:
 1. Click "Import Tokens"
 2. Enter address: ${wethAddress}
-3. Click "Add Custom Token"`,
+3. Click "Add Custom Token"
+4. Wait a few seconds for balance to update`,
         status: 'success',
-        duration: 10000,
+        duration: 15000,
         isClosable: true,
       })
       setAmount('')
@@ -88,6 +96,12 @@ To see WTURA in MetaMask:
         <Divider borderColor="whiteAlpha.200" />
         
         <VStack w="full" spacing={2}>
+          <HStack w="full" justify="space-between">
+            <Text color="whiteAlpha.700" fontSize="sm">Balance:</Text>
+            <Text color="whiteAlpha.700" fontSize="sm">
+              {isWrapping ? 'TURA' : 'WTURA'}: {balances[0] ? ethers.utils.formatEther(balances[0]) : '0.0'}
+            </Text>
+          </HStack>
           <Text color="whiteAlpha.700" fontSize="sm" alignSelf="start">
             Amount
           </Text>
