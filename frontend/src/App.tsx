@@ -6,6 +6,7 @@ import { theme } from './theme'
 import { ErrorBoundary, NavigationBar } from './components'
 import { SwapPage } from './pages/SwapPage'
 import { LiquidityPage } from './pages/LiquidityPage'
+import PoolDetailPage from './pages/pool/[address]'
 import PoolsPage from './pages/pools'
 
 function getLibrary(provider: any) {
@@ -23,6 +24,7 @@ function App() {
               <Route path="/" element={<SwapPage />} />
               <Route path="/liquidity" element={<LiquidityPage />} />
               <Route path="/pools" element={<PoolsPage />} />
+              <Route path="/pool/:address" element={<PoolDetailPage />} />
             </Routes>
           </ErrorBoundary>
         </BrowserRouter>
