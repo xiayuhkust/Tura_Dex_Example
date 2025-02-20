@@ -42,22 +42,51 @@ async function main() {
   }
 
   // Verify Factory
-  const factory = await ethers.getContractAt("IUniswapV3Factory", contracts.factory);
+  const factoryAbi = [
+    "function owner() view returns (address)",
+    "function feeAmountTickSpacing(uint24) view returns (int24)",
+    "function getPool(address,address,uint24) view returns (address)"
+  ];
+  const factory = await ethers.getContractAt(factoryAbi, contracts.factory);
   console.log("\nVerifying Factory:");
-  console.log("Owner:", await factory.owner());
+  try {
+    console.log("Owner:", await factory.owner());
+    console.log("Fee tier 500 tick spacing:", await factory.feeAmountTickSpacing(500));
+    console.log("Fee tier 3000 tick spacing:", await factory.feeAmountTickSpacing(3000));
+    console.log("Fee tier 10000 tick spacing:", await factory.feeAmountTickSpacing(10000));
+  } catch (error) {
+    console.log("Error reading Factory details:", error.message);
+  }
   
   // Verify SwapRouter dependencies
-  const swapRouter = await ethers.getContractAt("SwapRouter", contracts.swapRouter);
+  const swapRouterAbi = [
+    "function factory() view returns (address)",
+    "function WETH9() view returns (address)"
+  ];
+  const swapRouter = await ethers.getContractAt(swapRouterAbi, contracts.swapRouter);
   console.log("\nVerifying SwapRouter dependencies:");
-  console.log("Factory:", await swapRouter.factory());
-  console.log("WETH9:", await swapRouter.WETH9());
+  try {
+    console.log("Factory:", await swapRouter.factory());
+    console.log("WETH9:", await swapRouter.WETH9());
+  } catch (error) {
+    console.log("Error reading SwapRouter details:", error.message);
+  }
 
   // Verify PositionManager dependencies
-  const positionManager = await ethers.getContractAt("NonfungiblePositionManager", contracts.positionManager);
+  const positionManagerAbi = [
+    "function factory() view returns (address)",
+    "function WETH9() view returns (address)",
+    "function tokenDescriptor() view returns (address)"
+  ];
+  const positionManager = await ethers.getContractAt(positionManagerAbi, contracts.positionManager);
   console.log("\nVerifying PositionManager dependencies:");
-  console.log("Factory:", await positionManager.factory());
-  console.log("WETH9:", await positionManager.WETH9());
-  console.log("Token Descriptor:", await positionManager.tokenDescriptor());
+  try {
+    console.log("Factory:", await positionManager.factory());
+    console.log("WETH9:", await positionManager.WETH9());
+    console.log("Token Descriptor:", await positionManager.tokenDescriptor());
+  } catch (error) {
+    console.log("Error reading PositionManager details:", error.message);
+  }
 }
 
 main()
