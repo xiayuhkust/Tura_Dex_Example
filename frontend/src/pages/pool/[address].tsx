@@ -107,13 +107,18 @@ export default function PoolDetailPage() {
         const token1Contract = new ethers.Contract(token1, erc20Interface, library)
 
         const [token0Symbol, token1Symbol] = await Promise.all([
-          token0Contract.symbol(),
-          token1Contract.symbol()
+          token0Contract.symbol().catch(() => 'Unknown'),
+          token1Contract.symbol().catch(() => 'Unknown')
         ])
 
         let userLiquidity
         if (account) {
-          userLiquidity = await poolContract.positions(account)
+          try {
+            userLiquidity = await newPoolContract.positions(account)
+          } catch (error) {
+            console.error('Error fetching user liquidity:', error)
+            userLiquidity = ethers.BigNumber.from(0)
+          }
         }
 
         setPool({
