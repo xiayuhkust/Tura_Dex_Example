@@ -27,14 +27,36 @@ export default function PoolDetailPage() {
   const { library, account } = useWeb3()
   const [pool, setPool] = useState<PoolDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [poolContract, setPoolContract] = useState<ethers.Contract | null>(null)
   const toast = useToast()
+
+  // Cleanup contract listeners
+  useEffect(() => {
+    return () => {
+      if (poolContract) {
+        poolContract.removeAllListeners()
+      }
+    }
+  }, [poolContract])
 
   useEffect(() => {
     const fetchPoolDetails = async () => {
-      if (!library || !address) return
+      setIsLoading(true)
+      setError(null)
+      
+      if (!library || !address) {
+        setIsLoading(false)
+        return
+      }
 
       try {
-        const poolContract = new ethers.Contract(
+        // Verify pool address format
+        if (!address || !address.match(/^0x[a-fA-F0-9]{40}$/)) {
+          throw new Error('invalid pool address format')
+        }
+
+        const newPoolContract = new ethers.Contract(
           address,
           [
             'function liquidity() external view returns (uint128)',
@@ -45,18 +67,41 @@ export default function PoolDetailPage() {
           ],
           library
         )
+        setPoolContract(newPoolContract)
 
         const erc20Interface = [
           'function symbol() view returns (string)',
           'function name() view returns (string)'
         ]
 
-        const [token0, token1, fee, liquidity] = await Promise.all([
-          poolContract.token0(),
-          poolContract.token1(),
-          poolContract.fee(),
-          poolContract.liquidity()
+        // Get token addresses and fee first with error handling
+        const [token0, token1, fee] = await Promise.all([
+          newPoolContract.token0().catch(() => null),
+          newPoolContract.token1().catch(() => null),
+          newPoolContract.fee().catch(() => null)
         ])
+
+        // Verify this is a valid pool
+        if (!token0 || !token1 || fee === null) {
+          throw new Error('invalid pool contract')
+        }
+
+        // Verify pool exists in factory
+        const factoryContract = new ethers.Contract(
+          CONTRACT_ADDRESSES.FACTORY,
+          [
+            'function getPool(address,address,uint24) external view returns (address)'
+          ],
+          library
+        )
+
+        const poolAddress = await factoryContract.getPool(token0, token1, fee)
+        if (poolAddress.toLowerCase() !== address.toLowerCase()) {
+          throw new Error('pool not found in factory')
+        }
+
+        // Get remaining pool data
+        const liquidity = await newPoolContract.liquidity()
 
         const token0Contract = new ethers.Contract(token0, erc20Interface, library)
         const token1Contract = new ethers.Contract(token1, erc20Interface, library)
@@ -83,9 +128,21 @@ export default function PoolDetailPage() {
         })
       } catch (error) {
         console.error('Error fetching pool details:', error)
+        const errorMessage = error.message?.toLowerCase() || ''
+        let userMessage = 'Failed to load pool details. Please try again.'
+        
+        if (errorMessage.includes('invalid pool address format')) {
+          userMessage = 'Invalid pool address format'
+        } else if (errorMessage.includes('invalid pool contract')) {
+          userMessage = 'This pool does not exist'
+        } else if (errorMessage.includes('pool not found in factory')) {
+          userMessage = 'Pool not found in factory'
+        }
+
+        setError(userMessage)
         toast({
           title: 'Error',
-          description: 'Failed to fetch pool details',
+          description: userMessage,
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -109,7 +166,7 @@ export default function PoolDetailPage() {
   if (!pool) {
     return (
       <Box maxW="6xl" mx="auto" mt={8} p={6} bg="brand.surface" borderRadius="xl">
-        <Text color="whiteAlpha.700">Pool not found</Text>
+        <Text color="whiteAlpha.700">{error || 'Pool not found'}</Text>
       </Box>
     )
   }
