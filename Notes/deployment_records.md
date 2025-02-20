@@ -40,10 +40,14 @@
   * Pool creation and management
   * Fee tier configuration
   * Owner management
+  * NoDelegateCall protection (verified)
 - Fee Tiers:
   * 0.05% (500) - Tick Spacing: 10
   * 0.3% (3000) - Tick Spacing: 60
   * 1.0% (10000) - Tick Spacing: 200
+- Core Dependencies:
+  * UniswapV3PoolDeployer (integrated)
+  * NoDelegateCall (integrated)
 
 ## Peripheral Contracts
 
