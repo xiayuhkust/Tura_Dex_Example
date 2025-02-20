@@ -94,3 +94,9 @@
    - Created WETH/TestToken1 pool with 0.3% fee
    - Initialized with 1:1 price ratio
    - Added initial liquidity across multiple ranges
+5. V3 Periphery Redeployment (2025-02-20)
+   - Deployed NFTDescriptor library at 0x0297b528164dE6eeB0543DED5CBC8048eaf7c1D2
+   - Deployed NonfungibleTokenPositionDescriptor at 0xF6F59FF948F589bcA48295Be1Df1fD202FE5EeD8
+   - Deployed NonfungiblePositionManager at 0x90B834B3027Cd62c76FdAF1c22B21D1D8a2Cc965
+   - Deployed SwapRouter at 0xAC15BD2b9CfC37AA3a2aC78CD41a7abF33476F19
+   - Verified all contract deployments and dependencies
