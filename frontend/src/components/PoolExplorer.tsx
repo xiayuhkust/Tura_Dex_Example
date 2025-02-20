@@ -14,7 +14,18 @@ import {
 import { useWeb3 } from '../hooks/useWeb3'
 import { ethers } from 'ethers'
 import { CONTRACT_ADDRESSES } from '../config'
-import { formatFeeAmount } from '../utils/numbers'
+import { formatFeeAmount, formatTokenAmount } from '../utils/numbers'
+
+interface PoolCreatedEventArgs {
+  token0: string;
+  token1: string;
+  fee: number;
+  pool: string;
+}
+
+interface PoolCreatedEvent {
+  args: PoolCreatedEventArgs;
+}
 
 interface Pool {
   address: string
@@ -23,7 +34,7 @@ interface Pool {
   fee: number
   token0Symbol: string
   token1Symbol: string
-  liquidity: string
+  liquidity: ethers.BigNumber
 }
 
 export function PoolExplorer() {
@@ -64,9 +75,10 @@ export function PoolExplorer() {
         ]
 
         const poolsData = await Promise.all(events.map(async (event) => {
-          const token0Contract = new ethers.Contract(event.args.token0, erc20Interface, library)
-          const token1Contract = new ethers.Contract(event.args.token1, erc20Interface, library)
-          const poolContract = new ethers.Contract(event.args.pool, poolInterface, library)
+          const eventData = event as unknown as PoolCreatedEvent;
+          const token0Contract = new ethers.Contract(eventData.args.token0, erc20Interface, library)
+          const token1Contract = new ethers.Contract(eventData.args.token1, erc20Interface, library)
+          const poolContract = new ethers.Contract(eventData.args.pool, poolInterface, library)
 
           const [token0Symbol, token1Symbol, liquidity] = await Promise.all([
             token0Contract.symbol(),
@@ -75,13 +87,13 @@ export function PoolExplorer() {
           ])
 
           return {
-            address: event.args.pool,
-            token0: event.args.token0,
-            token1: event.args.token1,
-            fee: event.args.fee,
+            address: eventData.args.pool,
+            token0: eventData.args.token0,
+            token1: eventData.args.token1,
+            fee: eventData.args.fee,
             token0Symbol,
             token1Symbol,
-            liquidity: liquidity.toString()
+            liquidity  // Keep as BigNumber
           }
         }))
 
@@ -128,7 +140,7 @@ export function PoolExplorer() {
             </Tr>
           </Thead>
           <Tbody>
-            {pools.map((pool) => (
+            {pools.map((pool: Pool) => (
               <Tr key={pool.address} _hover={{ bg: 'whiteAlpha.100' }}>
                 <Td color="whiteAlpha.900">
                   <Text>{`${pool.address.slice(0, 6)}...${pool.address.slice(-4)}`}</Text>
@@ -140,7 +152,14 @@ export function PoolExplorer() {
                   <Text>{formatFeeAmount(pool.fee)}</Text>
                 </Td>
                 <Td color="whiteAlpha.900">
-                  <Text>{pool.liquidity}</Text>
+                  <Text>
+                    {formatTokenAmount(pool.liquidity, {
+                      decimals: 18,
+                      symbol: 'LP',
+                      address: pool.address,
+                      name: `${pool.token0Symbol}/${pool.token1Symbol} LP`
+                    })}
+                  </Text>
                 </Td>
               </Tr>
             ))}
