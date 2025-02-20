@@ -104,3 +104,8 @@
    - Deployed NonfungiblePositionManager at 0x90B834B3027Cd62c76FdAF1c22B21D1D8a2Cc965
    - Deployed SwapRouter at 0xAC15BD2b9CfC37AA3a2aC78CD41a7abF33476F19
    - Verified all contract deployments and dependencies
+
+6. Architectural Decisions (2025-02-20)
+   - Decided not to deploy V3Migrator contract as this is a fresh V3-only deployment
+   - No V2 infrastructure required
+   - Focus on direct V3 liquidity provision without migration path
