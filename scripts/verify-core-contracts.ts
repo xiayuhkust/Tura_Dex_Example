@@ -8,7 +8,7 @@ async function main() {
   // Contract addresses from deployment records
   const contracts = {
     factory: "0xC2EdBdd3394dA769De72986d06b0C28Ba991341d",
-    pool: "0x47cC776b736B5898de24011909dDe0E91e41f88E", // WETH/TestToken1 pool
+    pool: "0xdFc9AFF6A74f7678A84312c875184B4ed7e8E596", // WETH/TestToken1 pool
     weth: "0xc8F7d7989a409472945b00177396f4e9b8601DF3",
     testToken1: "0x3F26F01Fa9A5506c9109B5Ad15343363909fc0b9"
   };
