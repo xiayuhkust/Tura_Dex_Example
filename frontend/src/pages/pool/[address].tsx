@@ -111,13 +111,12 @@ export default function PoolDetailPage() {
           token1Contract.symbol().catch(() => 'Unknown')
         ])
 
-        let userLiquidity
-        if (account) {
+        let userLiquidity = ethers.BigNumber.from(0)
+        if (account && newPoolContract) {
           try {
             userLiquidity = await newPoolContract.positions(account)
           } catch (error) {
             console.error('Error fetching user liquidity:', error)
-            userLiquidity = ethers.BigNumber.from(0)
           }
         }
 
