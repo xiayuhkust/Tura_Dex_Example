@@ -29,6 +29,7 @@ export default function PoolDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [poolContract, setPoolContract] = useState<ethers.Contract | null>(null)
+  const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false)
   const toast = useToast()
 
   // Cleanup contract listeners
@@ -226,12 +227,35 @@ export default function PoolDetailPage() {
             </TabPanel>
 
             <TabPanel>
-              <RemoveLiquidityModal
-                isOpen={true}
-                onClose={() => {}}
-                poolAddress={pool.address}
-                userLiquidity={pool.userLiquidity || ethers.BigNumber.from(0)}
-              />
+              <VStack spacing={4} align="stretch">
+                {pool.userLiquidity && pool.userLiquidity.gt(0) ? (
+                  <>
+                    <Text color="whiteAlpha.900">Your Liquidity Position</Text>
+                    <Text fontSize="xl" color="white">
+                      {formatTokenAmount(pool.userLiquidity, {
+                        decimals: 18,
+                        symbol: 'LP',
+                        address: pool.address,
+                        name: `${pool.token0Symbol}/${pool.token1Symbol} LP`
+                      })}
+                    </Text>
+                    <Button
+                      colorScheme="brand"
+                      onClick={() => setIsRemoveModalOpen(true)}
+                    >
+                      Remove Liquidity
+                    </Button>
+                    <RemoveLiquidityModal
+                      isOpen={isRemoveModalOpen}
+                      onClose={() => setIsRemoveModalOpen(false)}
+                      poolAddress={pool.address}
+                      userLiquidity={pool.userLiquidity}
+                    />
+                  </>
+                ) : (
+                  <Text color="whiteAlpha.700">You have no liquidity in this pool</Text>
+                )}
+              </VStack>
             </TabPanel>
           </TabPanels>
         </Tabs>
