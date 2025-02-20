@@ -40,28 +40,48 @@
   * Pool creation and management
   * Fee tier configuration
   * Owner management
+  * NoDelegateCall protection (verified)
 - Fee Tiers:
   * 0.05% (500) - Tick Spacing: 10
   * 0.3% (3000) - Tick Spacing: 60
   * 1.0% (10000) - Tick Spacing: 200
+- Core Dependencies:
+  * UniswapV3PoolDeployer (integrated)
+  * NoDelegateCall (integrated)
 
 ## Peripheral Contracts
 
 ### SwapRouter
-- Address: 0xB492Bf5FBfA79364149CC76B77b8bd78BecD1416
+- Address: 0xAC15BD2b9CfC37AA3a2aC78CD41a7abF33476F19
+- Deployment Date: February 20, 2025
 - Features:
   * Single hop swaps
   * Multi-hop swaps
   * ETH/WETH handling
+- Dependencies:
+  * Factory: 0xC2EdBdd3394dA769De72986d06b0C28Ba991341d
+  * WETH: 0xc8F7d7989a409472945b00177396f4e9b8601DF3
+
+### NonfungibleTokenPositionDescriptor
+- Address: 0xF6F59FF948F589bcA48295Be1Df1fD202FE5EeD8
+- Deployment Date: February 20, 2025
+- Dependencies:
+  * NFTDescriptor Library: 0x0297b528164dE6eeB0543DED5CBC8048eaf7c1D2
+  * WETH: 0xc8F7d7989a409472945b00177396f4e9b8601DF3
 
 ### NonfungiblePositionManager
-- Address: 0x6Ba55510435288424053d8924450Bb1269fD3BD2
+- Address: 0x90B834B3027Cd62c76FdAF1c22B21D1D8a2Cc965
+- Deployment Date: February 20, 2025
 - Features:
   * ERC721 compliant
   * Liquidity position management
   * Fee collection
 - Token Name: "Tura Liquidity"
 - Token Symbol: "TURA-LP"
+- Dependencies:
+  * Factory: 0xC2EdBdd3394dA769De72986d06b0C28Ba991341d
+  * WETH: 0xc8F7d7989a409472945b00177396f4e9b8601DF3
+  * Position Descriptor: 0xF6F59FF948F589bcA48295Be1Df1fD202FE5EeD8
 
 ## Test Pools
 - WETH/TestToken1 Pool (0.3%): 0x47cC776b736B5898de24011909dDe0E91e41f88E
@@ -78,3 +98,14 @@
    - Created WETH/TestToken1 pool with 0.3% fee
    - Initialized with 1:1 price ratio
    - Added initial liquidity across multiple ranges
+5. V3 Periphery Redeployment (2025-02-20)
+   - Deployed NFTDescriptor library at 0x0297b528164dE6eeB0543DED5CBC8048eaf7c1D2
+   - Deployed NonfungibleTokenPositionDescriptor at 0xF6F59FF948F589bcA48295Be1Df1fD202FE5EeD8
+   - Deployed NonfungiblePositionManager at 0x90B834B3027Cd62c76FdAF1c22B21D1D8a2Cc965
+   - Deployed SwapRouter at 0xAC15BD2b9CfC37AA3a2aC78CD41a7abF33476F19
+   - Verified all contract deployments and dependencies
+
+6. Architectural Decisions (2025-02-20)
+   - Decided not to deploy V3Migrator contract as this is a fresh V3-only deployment
+   - No V2 infrastructure required
+   - Focus on direct V3 liquidity provision without migration path
