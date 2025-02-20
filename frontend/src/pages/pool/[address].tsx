@@ -34,6 +34,15 @@ export default function PoolDetailPage() {
       if (!library || !address) return
 
       try {
+        // Verify pool exists first
+        const factoryContract = new ethers.Contract(
+          CONTRACT_ADDRESSES.FACTORY,
+          [
+            'function getPool(address,address,uint24) external view returns (address)'
+          ],
+          library
+        )
+
         const poolContract = new ethers.Contract(
           address,
           [
@@ -46,15 +55,33 @@ export default function PoolDetailPage() {
           library
         )
 
+        // Get token addresses and fee first
+        const [token0, token1, fee] = await Promise.all([
+          poolContract.token0().catch(() => null),
+          poolContract.token1().catch(() => null),
+          poolContract.fee().catch(() => null)
+        ])
+
+        // Verify this is a valid pool
+        if (!token0 || !token1 || fee === null) {
+          throw new Error('Invalid pool address')
+        }
+
+        // Verify pool exists in factory
+        const poolAddress = await factoryContract.getPool(token0, token1, fee)
+        if (poolAddress.toLowerCase() !== address.toLowerCase()) {
+          throw new Error('Pool not found in factory')
+        }
+
         const erc20Interface = [
           'function symbol() view returns (string)',
           'function name() view returns (string)'
         ]
 
-        const [token0, token1, fee, liquidity] = await Promise.all([
-          poolContract.token0(),
-          poolContract.token1(),
-          poolContract.fee(),
+        // Get remaining pool data
+        const [token0Symbol, token1Symbol, liquidity] = await Promise.all([
+          new ethers.Contract(token0, erc20Interface, library).symbol(),
+          new ethers.Contract(token1, erc20Interface, library).symbol(),
           poolContract.liquidity()
         ])
 
@@ -85,7 +112,7 @@ export default function PoolDetailPage() {
         console.error('Error fetching pool details:', error)
         toast({
           title: 'Error',
-          description: 'Failed to fetch pool details',
+          description: error.message || 'Failed to fetch pool details',
           status: 'error',
           duration: 5000,
           isClosable: true,
