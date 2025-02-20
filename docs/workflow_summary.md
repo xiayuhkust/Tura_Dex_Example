@@ -66,17 +66,71 @@
 ## 2. Liquidity Page Pool Creation Flow
 ### Components
 - LiquidityPage.tsx: Main liquidity management page
+  - Location: `frontend/src/pages/LiquidityPage.tsx`
+  - Handles pool listing and creation
+  - Manages token selection interface
+  - Displays pool creation status
+
 - AddLiquidityModal.tsx: Pool creation interface
-- Location: `frontend/src/pages/LiquidityPage.tsx`
+  - Location: `frontend/src/components/AddLiquidityModal.tsx`
+  - Token pair selection
+  - Fee tier configuration
+  - Initial price setting
+  - Position range selection
 
 ### Contract Interactions
 - Factory Contract: 0x0344B0e5Db28bbFD066EDC3a9CbEca244Aa7e347
-- Functions: createPool(), setFeeProtocol()
+- Key Functions:
+  - createPool(): Deploy new pool contract
+  - setFeeProtocol(): Configure fee settings
+  - getPool(): Get existing pool address
+  - fee(): Get current fee tier
 
 ### Scripts
 - check-factory.ts: Factory contract verification
+  - Verifies factory deployment
+  - Checks fee tier configuration
+  - Tests pool creation
+
 - check-fee-tier.ts: Pool fee tier verification
+  - Validates fee settings
+  - Checks tier compatibility
+  - Tests fee calculations
+
 - get-pool.ts: Pool state inspection
+  - Retrieves pool details
+  - Checks token addresses
+  - Verifies liquidity state
+
+### Usage Flow
+1. Initialize Pool Creation:
+   ```javascript
+   // In AddLiquidityModal.tsx
+   const createPool = async () => {
+     const factory = new Contract(factoryAddress, factoryABI, signer)
+     await factory.createPool(token0, token1, feeTier)
+   }
+   ```
+
+2. Configure Pool Settings:
+   ```javascript
+   // Set initial price
+   const sqrtPriceX96 = encodePriceSqrt(token0Amount, token1Amount)
+   await pool.initialize(sqrtPriceX96)
+   ```
+
+3. Verify Pool Creation:
+   ```javascript
+   const poolAddress = await factory.getPool(token0, token1, feeTier)
+   const pool = new Contract(poolAddress, poolABI, signer)
+   ```
+
+### Error Handling
+- Token order validation
+- Fee tier verification
+- Price range checks
+- Duplicate pool detection
+- Failed transaction recovery
 
 ## 3. Position Management and Liquidity Addition Flow
 ### Components
