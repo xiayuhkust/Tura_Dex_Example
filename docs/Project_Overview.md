@@ -3,7 +3,7 @@
 ## Project Structure
 
 ### Smart Contracts
-Located in `contracts/backup`:
+Located in `contracts/`:
 
 #### Core Contracts
 - **TuraWETH.sol**: Wrapped Tura implementation
@@ -16,11 +16,25 @@ Located in `contracts/backup`:
   - TT2 Address: 0x8FDCE0D41f0A99B5f9FbcFAfd481ffcA61d01122
   - Location: `contracts/backup/core/TestToken.sol`
 
+- **PositionManager.sol**: Liquidity position management
+  - Address: 0x7f94440f5CB70c496C054DB50c3f0f5414AD8216
+  - Features: Position tracking, liquidity addition
+  - Location: `contracts/PositionManager.sol`
+
+#### Pool Contracts
+- **TT1/TT2 Pool**: Main test pool
+  - Address: 0x0344B0e5Db28bbFD066EDC3a9CbEca244Aa7e347
+  - Fee Tier: 3000
+  - Initial Price: 1:1
+  - Current Liquidity: 100500000000000000000
+
 #### V3 Contracts
-Located in `contracts/backup/v3`:
-- Factory and Pool contracts
-- Interfaces and libraries
-- Test contracts
+Located in `contracts/`:
+- **UniswapV3Factory.sol**: Pool factory implementation
+- **UniswapV3Pool.sol**: Core pool logic
+- **UniswapV3MintCallback.sol**: Liquidity addition callback
+- **PositionManager.sol**: Position tracking and management
+- Supporting libraries and interfaces
 
 ### Frontend Structure
 Located in `frontend/`:
@@ -84,9 +98,24 @@ Located in `scripts/`:
    - Use Hardhat for local testing
    - Verify on Tura testnet
    - Test basic functionality (e.g., wrap/unwrap for WETH)
+   - Test liquidity addition with position tracking
 
 2. Frontend Testing:
    - Local development with `npm run dev`
    - Connect MetaMask wallet
    - Test token interactions
-   - Verify pool creation and swaps
+   - Verify pool creation and liquidity addition
+   - Test position management interface
+
+## Recent Updates
+1. Position Management:
+   - Implemented PositionManager contract
+   - Added secure position tracking
+   - Enhanced token transfer security
+   - Successful liquidity addition testing
+
+2. Pool Management:
+   - TT1/TT2 pool deployed and initialized
+   - Added initial liquidity with position tracking
+   - Verified pool state and token balances
+   - Implemented proper callback handling
