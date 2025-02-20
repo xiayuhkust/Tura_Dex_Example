@@ -47,7 +47,7 @@ export function AddLiquidityModal() {
   // Disable create button if pool is invalid
   const isCreateDisabled = !active || !isValidPool;
 
-  const handleCreatePool = useCallback(async () => {
+  const handleAddLiquidity = useCallback(async () => {
     if (!active || !library || !token0 || !token1 || !amount0 || !amount1) {
       handleError(new Error('Please connect wallet and select tokens'))
       return
@@ -58,84 +58,58 @@ export function AddLiquidityModal() {
       return
     }
 
-    if (token0.address.toLowerCase() === token1.address.toLowerCase()) {
-      handleError(new Error('Cannot create pool with the same token'))
-      return
-    }
-
     setIsLoading(true)
 
     try {
-      // Check if pool exists
+      // Convert amounts to BigNumber safely
+      const amount0Decimal = parseTokenAmount(amount0, token0)
+      const amount1Decimal = parseTokenAmount(amount1, token1)
+      
+      // Get pool address
       const factoryContract = new ethers.Contract(
         CONTRACT_ADDRESSES.FACTORY,
         [
-          'function getPool(address,address,uint24) external view returns (address)',
-          'function createPool(address,address,uint24) external returns (address)',
-          'event PoolCreated(address indexed token0, address indexed token1, uint24 indexed fee, int24 tickSpacing, address pool)'
+          'function getPool(address,address,uint24) external view returns (address)'
         ],
         library.getSigner()
       )
 
-      const existingPool = await factoryContract.getPool(token0.address, token1.address, fee)
-      if (existingPool !== ethers.constants.AddressZero) {
-        // Check if pool is already initialized
-        const poolContract = new ethers.Contract(
-          existingPool,
-          [
-            'function slot0() external view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)'
-          ],
-          library
-        )
-        const slot0 = await poolContract.slot0()
-        if (!slot0.sqrtPriceX96.eq(0)) {
-          handleError(new Error('Pool already exists and is initialized'))
-          return
-        }
-        handleError(new Error('Pool already exists but needs initialization'))
+      const poolAddress = await factoryContract.getPool(token0.address, token1.address, fee)
+      if (poolAddress === ethers.constants.AddressZero) {
+        handleError(new Error('Pool does not exist'))
         return
       }
-      
-      // Create pool
-      const tx = await factoryContract.createPool(token0.address, token1.address, fee)
-      const receipt = await tx.wait()
-      const poolCreatedEvent = receipt.events?.find((e: { event: string }) => e.event === 'PoolCreated')
-      const poolAddress = poolCreatedEvent?.args?.pool
-      console.log('Pool created at:', poolAddress)
-      
-      // Initialize pool with sqrt price
+
+      // Get pool contract
       const poolContract = new ethers.Contract(
         poolAddress,
         [
-          'function initialize(uint160) external',
-          'function mint(address,int24,int24,uint128,bytes) external returns (uint256,uint256)',
-          'function token0() external view returns (address)',
-          'function token1() external view returns (address)',
           'function slot0() external view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)'
         ],
         library.getSigner()
       )
 
-      // Check if pool is already initialized
-      const slot0 = await poolContract.slot0()
-      if (!slot0.sqrtPriceX96.eq(0)) {
-        handleError(new Error('Pool already initialized'))
-        return
-      }
+      // Get current price from pool to verify pool exists
+      await poolContract.slot0()
 
-      // Calculate initial sqrt price based on token amounts
-      const price = parseFloat(amount1) / parseFloat(amount0)
-      const sqrtPriceX96 = ethers.BigNumber.from(
-        Math.floor(Math.sqrt(price) * 2 ** 96)
+      // Calculate tick range for concentrated liquidity
+      const tickSpacing = fee === FEE_TIERS.LOWEST ? 10 : fee === FEE_TIERS.MEDIUM ? 60 : 200
+      const tickLower = -tickSpacing
+      const tickUpper = tickSpacing
+
+      // Calculate liquidity amount based on token amounts
+      const liquidity = amount0Decimal.div(2)
+
+      // Get position manager contract
+      const positionManagerContract = new ethers.Contract(
+        CONTRACT_ADDRESSES.POSITION_MANAGER,
+        [
+          'function addLiquidity(address pool, address recipient, int24 tickLower, int24 tickUpper, uint128 liquidity, bytes calldata data) external returns (uint256 amount0, uint256 amount1)'
+        ],
+        library.getSigner()
       )
-      await poolContract.initialize(sqrtPriceX96)
-      console.log('Pool initialized with sqrt price:', sqrtPriceX96.toString())
-      
-      // Convert amounts to BigNumber safely
-      const amount0Decimal = parseTokenAmount(amount0, token0)
-      const amount1Decimal = parseTokenAmount(amount1, token1)
-      
-      // Approve tokens with exact amounts
+
+      // Approve tokens
       const token0Contract = new ethers.Contract(
         token0.address,
         ['function approve(address,uint256) external returns (bool)'],
@@ -146,68 +120,48 @@ export function AddLiquidityModal() {
         ['function approve(address,uint256) external returns (bool)'],
         library.getSigner()
       )
-      
-      const approve0Tx = await token0Contract.approve(poolAddress, amount0Decimal)
+
+      const approve0Tx = await token0Contract.approve(CONTRACT_ADDRESSES.POSITION_MANAGER, amount0Decimal)
       await approve0Tx.wait()
       console.log('Token0 approved:', amount0Decimal.toString())
 
-      const approve1Tx = await token1Contract.approve(poolAddress, amount1Decimal)
+      const approve1Tx = await token1Contract.approve(CONTRACT_ADDRESSES.POSITION_MANAGER, amount1Decimal)
       await approve1Tx.wait()
       console.log('Token1 approved:', amount1Decimal.toString())
-      
-      // Calculate tick range based on current price
-      const tickSpacing = fee === FEE_TIERS.LOWEST ? 10 : fee === FEE_TIERS.MEDIUM ? 60 : 200
-      const currentTick = Math.floor(Math.log(price) / Math.log(1.0001))
-      const tickLower = Math.floor(currentTick / tickSpacing) * tickSpacing
-      const tickUpper = tickLower + tickSpacing
-      
-      // Calculate liquidity amount based on token amounts and price
-      const amount0WithPrice = amount0Decimal.mul(ethers.BigNumber.from(2).pow(96)).div(sqrtPriceX96)
-      const amount1WithPrice = amount1Decimal.mul(sqrtPriceX96).div(ethers.BigNumber.from(2).pow(96))
-      const liquidity = amount0WithPrice.lt(amount1WithPrice) ? amount0WithPrice : amount1WithPrice
-      
-      try {
-        const mintTx = await poolContract.mint(
-          account,
-          tickLower,
-          tickUpper,
-          liquidity,
-          '0x'
-        )
-        await mintTx.wait()
-        console.log('Liquidity added successfully')
-        
-        toast({
-          title: 'Success',
-          description: 'Pool created and liquidity added successfully',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        })
-      } catch (error: unknown) {
-        if (typeof error === 'object' && error !== null && 'code' in error) {
-          const txError = error as { code: string; message?: string }
-          if (txError.code === 'UNPREDICTABLE_GAS_LIMIT') {
-            handleError(new Error('Failed to add liquidity. Please check token amounts and approvals.'))
-          } else if (txError.code === 'CALL_EXCEPTION') {
-            handleError(new Error('Failed to add liquidity. The pool may be at capacity or the tick range is invalid.'))
-          } else {
-            handleError(error)
-          }
-        } else {
-          handleError(error)
-        }
-      }
+
+      // Encode mint callback data
+      const encodedData = ethers.utils.defaultAbiCoder.encode(
+        ['address', 'address', 'address'],
+        [token0.address, token1.address, account]
+      )
+
+      // Add liquidity through position manager
+      const tx = await positionManagerContract.addLiquidity(
+        poolAddress,
+        account!,  // Non-null assertion is safe because we check for account in the guard above
+        tickLower,
+        tickUpper,
+        liquidity,
+        encodedData,
+        { gasLimit: 5000000 }
+      )
+      const receipt = await tx.wait()
+      console.log('Liquidity added successfully:', receipt.transactionHash)
+
+      toast({
+        title: 'Success',
+        description: 'Liquidity added successfully',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      })
     } catch (error: unknown) {
       if (typeof error === 'object' && error !== null && 'code' in error) {
-        // Handle specific contract errors
-        const txError = error as { code: string; message?: string; reason?: string }
-        if (txError.code === 'CALL_EXCEPTION') {
-          handleError(new Error('Pool creation failed. The pool may already exist or the tokens/fee are invalid.'))
-        } else if (txError.code === 'UNPREDICTABLE_GAS_LIMIT') {
-          handleError(new Error('Failed to estimate gas. The pool may already exist.'))
-        } else if (txError.code === 'NUMERIC_FAULT') {
-          handleError(new Error('Numeric error occurred. Please check token amounts.'))
+        const txError = error as { code: string; message?: string }
+        if (txError.code === 'UNPREDICTABLE_GAS_LIMIT') {
+          handleError(new Error('Failed to add liquidity. Please check token amounts and approvals.'))
+        } else if (txError.code === 'CALL_EXCEPTION') {
+          handleError(new Error('Failed to add liquidity. The pool may be at capacity or the tick range is invalid.'))
         } else {
           handleError(error)
         }
@@ -278,19 +232,19 @@ export function AddLiquidityModal() {
                   <option value={FEE_TIERS.HIGHEST}>{formatFeeAmount(FEE_TIERS.HIGHEST)}</option>
                 </Select>
               </Box>
-            </VStack>
-          </Box>
+          </VStack>
+        </Box>
 
-          <Button
+        <Button
             w="full"
             size="lg"
             bg="brand.primary"
             _hover={{ opacity: 0.9 }}
             isDisabled={isCreateDisabled}
-            onClick={handleCreatePool}
+            onClick={handleAddLiquidity}
             isLoading={isLoading}
           >
-            Create Pool
+            Add Liquidity
           </Button>
         </VStack>
       </Box>
