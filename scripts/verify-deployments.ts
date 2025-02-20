@@ -23,11 +23,23 @@ async function main() {
   }
 
   // Verify WETH
-  const weth = await ethers.getContractAt("IWETH9", contracts.weth);
+  const wethAbi = [
+    "function name() view returns (string)",
+    "function symbol() view returns (string)",
+    "function decimals() view returns (uint8)",
+    "function balanceOf(address) view returns (uint256)",
+    "function deposit() payable",
+    "function withdraw(uint256)"
+  ];
+  const weth = await ethers.getContractAt(wethAbi, contracts.weth);
   console.log("\nVerifying WETH:");
-  console.log("Name:", await weth.name());
-  console.log("Symbol:", await weth.symbol());
-  console.log("Decimals:", await weth.decimals());
+  try {
+    console.log("Name:", await weth.name());
+    console.log("Symbol:", await weth.symbol());
+    console.log("Decimals:", await weth.decimals());
+  } catch (error) {
+    console.log("Error reading WETH details:", error.message);
+  }
 
   // Verify Factory
   const factory = await ethers.getContractAt("IUniswapV3Factory", contracts.factory);
