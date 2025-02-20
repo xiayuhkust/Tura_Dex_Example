@@ -76,14 +76,14 @@ async function main() {
   const positionManagerAbi = [
     "function factory() view returns (address)",
     "function WETH9() view returns (address)",
-    "function tokenUri() view returns (address)"
+    "function positionDescriptor() view returns (address)"
   ];
   const positionManager = await ethers.getContractAt(positionManagerAbi, contracts.positionManager);
   console.log("\nVerifying PositionManager dependencies:");
   try {
     console.log("Factory:", await positionManager.factory());
     console.log("WETH9:", await positionManager.WETH9());
-    console.log("Token Descriptor:", await positionManager.tokenDescriptor());
+    console.log("Position Descriptor:", await positionManager.positionDescriptor());
   } catch (error) {
     console.log("Error reading PositionManager details:", error.message);
   }
