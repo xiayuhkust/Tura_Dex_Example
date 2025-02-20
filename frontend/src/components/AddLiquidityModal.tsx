@@ -13,7 +13,7 @@ import { useError } from '../hooks/useError'
 import type { Token } from '../types/Token'
 import { ethers } from 'ethers'
 import { CONTRACT_ADDRESSES, FEE_TIERS, type FeeTier } from '../config'
-import { parseTokenAmount, formatTokenAmount, formatFeeAmount } from '../utils/numbers'
+import { parseTokenAmount, formatFeeAmount } from '../utils/numbers'
 
 export function AddLiquidityModal() {
   const { active, library, account, connect } = useWeb3()
@@ -162,10 +162,9 @@ export function AddLiquidityModal() {
       const tickUpper = tickLower + tickSpacing
       
       // Calculate liquidity amount based on token amounts and price
-      const liquidity = Math.min(
-        amount0Decimal.mul(ethers.BigNumber.from(2).pow(96)).div(sqrtPriceX96),
-        amount1Decimal.mul(sqrtPriceX96).div(ethers.BigNumber.from(2).pow(96))
-      )
+      const amount0WithPrice = amount0Decimal.mul(ethers.BigNumber.from(2).pow(96)).div(sqrtPriceX96)
+      const amount1WithPrice = amount1Decimal.mul(sqrtPriceX96).div(ethers.BigNumber.from(2).pow(96))
+      const liquidity = amount0WithPrice.lt(amount1WithPrice) ? amount0WithPrice : amount1WithPrice
       
       try {
         const mintTx = await poolContract.mint(
@@ -275,8 +274,8 @@ export function AddLiquidityModal() {
                   _hover={{ bg: 'whiteAlpha.200' }}
                 >
                   <option value={FEE_TIERS.LOWEST}>{formatFeeAmount(FEE_TIERS.LOWEST)}</option>
-                  <option value={FEE_TIERS.LOW}>{formatFeeAmount(FEE_TIERS.LOW)}</option>
                   <option value={FEE_TIERS.MEDIUM}>{formatFeeAmount(FEE_TIERS.MEDIUM)}</option>
+                  <option value={FEE_TIERS.HIGHEST}>{formatFeeAmount(FEE_TIERS.HIGHEST)}</option>
                 </Select>
               </Box>
             </VStack>
