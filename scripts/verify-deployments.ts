@@ -76,7 +76,7 @@ async function main() {
   const positionManagerAbi = [
     "function factory() view returns (address)",
     "function WETH9() view returns (address)",
-    "function tokenDescriptor() view returns (address)"
+    "function tokenUri() view returns (address)"
   ];
   const positionManager = await ethers.getContractAt(positionManagerAbi, contracts.positionManager);
   console.log("\nVerifying PositionManager dependencies:");
