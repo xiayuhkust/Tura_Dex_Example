@@ -232,10 +232,10 @@ export function AddLiquidityModal() {
                   <option value={FEE_TIERS.HIGHEST}>{formatFeeAmount(FEE_TIERS.HIGHEST)}</option>
                 </Select>
               </Box>
-            </VStack>
-          </Box>
+          </VStack>
+        </Box>
 
-          <Button
+        <Button
             w="full"
             size="lg"
             bg="brand.primary"
