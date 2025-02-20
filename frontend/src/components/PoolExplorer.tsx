@@ -13,10 +13,8 @@ import {
 } from '@chakra-ui/react'
 import { useWeb3 } from '../hooks/useWeb3'
 import { ethers } from 'ethers'
-import type { Event } from '@ethersproject/contracts'
 import { CONTRACT_ADDRESSES } from '../config'
 import { formatFeeAmount, formatTokenAmount } from '../utils/numbers'
-import type { Token } from '../types/Token'
 
 interface PoolCreatedEventArgs {
   token0: string;
