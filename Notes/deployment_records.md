@@ -48,7 +48,7 @@
 ## Peripheral Contracts
 
 ### SwapRouter
-- Address: 0xfE84D3C357a535f710F4b985F05Bf6454661254F
+- Address: 0xAC15BD2b9CfC37AA3a2aC78CD41a7abF33476F19
 - Deployment Date: February 20, 2025
 - Features:
   * Single hop swaps
@@ -56,7 +56,7 @@
   * ETH/WETH handling
 - Dependencies:
   * Factory: 0xC2EdBdd3394dA769De72986d06b0C28Ba991341d
-  * WETH: 0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be
+  * WETH: 0xc8F7d7989a409472945b00177396f4e9b8601DF3
 
 ### NonfungibleTokenPositionDescriptor
 - Address: 0xF6F59FF948F589bcA48295Be1Df1fD202FE5EeD8
