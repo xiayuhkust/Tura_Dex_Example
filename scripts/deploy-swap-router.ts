@@ -5,7 +5,10 @@ import { ethers } from "ethers";
 
 async function main() {
   const hre = require("hardhat");
-  const [deployer] = await hre.ethers.getSigners();
+  if (!process.env.PRIVATE_KEY) {
+    throw new Error("Please set PRIVATE_KEY in environment");
+  }
+  const deployer = new hre.ethers.Wallet(process.env.PRIVATE_KEY, hre.ethers.provider);
   console.log("Deploying SwapRouter with account:", deployer.address);
 
   const factoryAddress = "0xC2EdBdd3394dA769De72986d06b0C28Ba991341d";
