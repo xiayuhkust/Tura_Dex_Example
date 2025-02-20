@@ -2,6 +2,7 @@
  * Contract addresses and constants for the Tura DEX.
  * All addresses are verified against deployment_records.md
  */
+import type { BigNumber } from 'ethers'
 
 const addressRegex = /^0x[a-fA-F0-9]{40}$/
 
@@ -22,6 +23,7 @@ export const CONTRACT_ADDRESSES = {
   WETH: '0xc8F7d7989a409472945b00177396f4e9b8601DF3',  // Updated and verified TuraWETH
   FACTORY: '0xC2EdBdd3394dA769De72986d06b0C28Ba991341d',  // Updated V3 Factory with proper event emission
   ROUTER: '0xB492Bf5FBfA79364149CC76B77b8bd78BecD1416',
+  POSITION_MANAGER: '0x6Ba55510435288424053d8924450Bb1269fD3BD2',  // NonfungiblePositionManager for LP token management
   
   // Test tokens
   TEST_TOKEN_1: '0x3F26F01Fa9A5506c9109B5Ad15343363909fc0b9',
@@ -36,3 +38,17 @@ Object.entries(CONTRACT_ADDRESSES).forEach(([key, value]) => {
 })
 
 export type ContractAddresses = typeof CONTRACT_ADDRESSES
+
+export interface PositionManagerParams {
+  token0: string
+  token1: string
+  fee: number
+  tickLower: number
+  tickUpper: number
+  amount0Desired: BigNumber
+  amount1Desired: BigNumber
+  amount0Min: number
+  amount1Min: number
+  recipient: string
+  deadline: number
+}
