@@ -141,7 +141,11 @@ export function PoolExplorer() {
           </Thead>
           <Tbody>
             {pools.map((pool: Pool) => (
-              <Tr key={pool.address} _hover={{ bg: 'whiteAlpha.100' }}>
+              <Tr 
+                key={pool.address} 
+                _hover={{ bg: 'whiteAlpha.100', cursor: 'pointer' }}
+                onClick={() => window.location.pathname = `/pool/${pool.address}`}
+              >
                 <Td color="whiteAlpha.900">
                   <Text>{`${pool.address.slice(0, 6)}...${pool.address.slice(-4)}`}</Text>
                 </Td>
