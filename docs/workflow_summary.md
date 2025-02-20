@@ -134,37 +134,110 @@
 
 ## 3. Position Management and Liquidity Addition Flow
 ### Components
-- PositionManager Contract: 0x7f94440f5CB70c496C054DB50c3f0f5414AD8216
-- TT1/TT2 Pool: 0x0344B0e5Db28bbFD066EDC3a9CbEca244Aa7e347
+1. PositionManager Contract:
+   - Address: 0x7f94440f5CB70c496C054DB50c3f0f5414AD8216
+   - Features:
+     - Position tracking with unique keys
+     - Secure token transfers
+     - Liquidity management
+     - Callback handling
+
+2. TT1/TT2 Pool:
+   - Address: 0x0344B0e5Db28bbFD066EDC3a9CbEca244Aa7e347
+   - Token0 (TT1): 0x3F26F01Fa9A5506c9109B5Ad15343363909fc0b9
+   - Token1 (TT2): 0x8FDCE0D41f0A99B5f9FbcFAfd481ffcA61d01122
 
 ### Implementation Details
 1. Position Management:
-   - Secure position tracking using keccak256 keys
-   - Token approval through PositionManager
-   - Enhanced callback handling
+   - Position Key Generation:
+     ```javascript
+     const positionKey = ethers.utils.keccak256(
+       ethers.utils.defaultAbiCoder.encode(
+         ['address', 'address', 'int24', 'int24'],
+         [owner.address, poolAddress, tickLower, tickUpper]
+       )
+     )
+     ```
+   - Token Approval Flow:
+     ```javascript
+     await token0.approve(positionManager, amount0)
+     await token1.approve(positionManager, amount1)
+     ```
+   - Position Tracking:
+     - Unique keys per position
+     - Tick range tracking
+     - Liquidity amount tracking
 
-2. Pool State:
+2. Liquidity Addition:
+   - Initial Setup:
+     ```javascript
+     const tickSpacing = 60
+     const tickLower = -tickSpacing
+     const tickUpper = tickSpacing
+     const liquidity = amount0.div(2)
+     ```
+   - Token Transfer:
+     - Secure transfer through TransferHelper
+     - Proper approval verification
+     - Balance checks before/after
+
+3. Pool State:
    - Initial Price: 1:1 (sqrtPriceX96: 79228162514264337593543950336)
    - Current Liquidity: 100500000000000000000
    - Token Balances:
      - TT1: 0.301033173069033485
      - TT2: 0.301033173069033485
+   - Current Tick: 0
 
 ### Scripts
 1. Core Scripts:
-   - add-liquidity.js: Main liquidity addition script
-   - verify-pool-state.js: Pool state verification
-   - deploy-position-manager.js: PositionManager deployment
+   - add-liquidity.js:
+     - Main liquidity addition implementation
+     - Position management
+     - Token approval handling
+     - Transaction execution
+
+   - verify-pool-state.js:
+     - Pool state verification
+     - Token balance checks
+     - Position state validation
+     - Liquidity verification
+
+   - deploy-position-manager.js:
+     - Contract deployment
+     - Initial setup
+     - Environment configuration
 
 2. Utility Scripts:
-   - shared/utilities.ts: Common utilities
-   - test-token-transfers.ts: Token transfer testing
+   - shared/utilities.ts:
+     - Price calculation utilities
+     - Position key generation
+     - Common helper functions
+
+   - test-token-transfers.ts:
+     - Token transfer testing
+     - Approval verification
+     - Balance tracking
 
 3. Verification Scripts:
-   - verify-liquidity.ts: Liquidity verification
-   - check-factory.ts: Factory verification
-   - check-fee-tier.ts: Fee tier verification
-   - get-pool.ts: Pool state inspection
+   - verify-liquidity.ts:
+     - Liquidity verification
+     - Position validation
+     - Token balance checks
+
+   - check-factory.ts:
+     - Factory verification
+     - Pool creation checks
+     - Fee tier validation
+
+   - check-fee-tier.ts:
+     - Fee tier verification
+     - Pool configuration checks
+
+   - get-pool.ts:
+     - Pool state inspection
+     - Token configuration checks
+     - Liquidity validation
 
 ### Usage Flow
 1. Deploy PositionManager:
