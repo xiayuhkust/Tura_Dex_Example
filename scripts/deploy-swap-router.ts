@@ -9,7 +9,7 @@ async function main() {
   console.log("Deploying SwapRouter with account:", deployer.address);
 
   const factoryAddress = "0xC2EdBdd3394dA769De72986d06b0C28Ba991341d";
-  const wethAddress = "0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be";
+  const wethAddress = "0xc8F7d7989a409472945b00177396f4e9b8601DF3";
 
   const SwapRouter = await ethers.getContractFactory("SwapRouter");
   const swapRouter = await SwapRouter.deploy(factoryAddress, wethAddress);

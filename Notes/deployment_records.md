@@ -66,13 +66,18 @@
   * WETH: 0xc8F7d7989a409472945b00177396f4e9b8601DF3
 
 ### NonfungiblePositionManager
-- Address: 0x6Ba55510435288424053d8924450Bb1269fD3BD2
+- Address: 0x90B834B3027Cd62c76FdAF1c22B21D1D8a2Cc965
+- Deployment Date: February 20, 2025
 - Features:
   * ERC721 compliant
   * Liquidity position management
   * Fee collection
 - Token Name: "Tura Liquidity"
 - Token Symbol: "TURA-LP"
+- Dependencies:
+  * Factory: 0xC2EdBdd3394dA769De72986d06b0C28Ba991341d
+  * WETH: 0xc8F7d7989a409472945b00177396f4e9b8601DF3
+  * Position Descriptor: 0xF6F59FF948F589bcA48295Be1Df1fD202FE5EeD8
 
 ## Test Pools
 - WETH/TestToken1 Pool (0.3%): 0x47cC776b736B5898de24011909dDe0E91e41f88E
