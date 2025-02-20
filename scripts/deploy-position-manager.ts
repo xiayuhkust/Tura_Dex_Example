@@ -10,8 +10,7 @@ async function main() {
 
   const factory = "0xC2EdBdd3394dA769De72986d06b0C28Ba991341d";
   const weth9 = "0xc8F7d7989a409472945b00177396f4e9b8601DF3";
-  // Replace with actual descriptor address after deployment
-  const descriptor = "DESCRIPTOR_ADDRESS";
+  const descriptor = "0xF6F59FF948F589bcA48295Be1Df1fD202FE5EeD8";
 
   const PositionManager = await ethers.getContractFactory("NonfungiblePositionManager");
   const positionManager = await PositionManager.deploy(factory, weth9, descriptor);

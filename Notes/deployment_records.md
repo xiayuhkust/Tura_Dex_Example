@@ -58,6 +58,13 @@
   * Factory: 0xC2EdBdd3394dA769De72986d06b0C28Ba991341d
   * WETH: 0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be
 
+### NonfungibleTokenPositionDescriptor
+- Address: 0xF6F59FF948F589bcA48295Be1Df1fD202FE5EeD8
+- Deployment Date: February 20, 2025
+- Dependencies:
+  * NFTDescriptor Library: 0x0297b528164dE6eeB0543DED5CBC8048eaf7c1D2
+  * WETH: 0xc8F7d7989a409472945b00177396f4e9b8601DF3
+
 ### NonfungiblePositionManager
 - Address: 0x6Ba55510435288424053d8924450Bb1269fD3BD2
 - Features:
