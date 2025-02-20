@@ -10,7 +10,7 @@ import {
   VStack,
   Button,
 } from '@chakra-ui/react'
-import { useWeb3 } from '../hooks/useWeb3'
+import { ethers } from 'ethers'
 
 interface RemoveLiquidityModalProps {
   isOpen: boolean
@@ -20,13 +20,13 @@ interface RemoveLiquidityModalProps {
 }
 
 export function RemoveLiquidityModal({ isOpen, onClose, poolAddress, userLiquidity }: RemoveLiquidityModalProps) {
-  const { library, account } = useWeb3()
   const [isRemoving, setIsRemoving] = useState(false)
 
   const handleRemoveLiquidity = async () => {
     // TODO: Implement remove liquidity functionality
     setIsRemoving(true)
     try {
+      console.log(`Removing ${userLiquidity.toString()} liquidity from pool ${poolAddress}`)
       // Implementation coming soon
     } catch (error) {
       console.error('Error removing liquidity:', error)
