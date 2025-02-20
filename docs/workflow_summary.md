@@ -3,16 +3,65 @@
 ## 1. Frontend WETH Wrap/Unwrap Flow
 ### Components
 - WrapUnwrap.tsx: Main component for WETH conversion
-- Location: `frontend/src/components/WrapUnwrap.tsx`
+  - Location: `frontend/src/components/WrapUnwrap.tsx`
+  - Handles native Tura to WETH conversion
+  - Manages user balance display
+  - Provides wrap/unwrap interface
 
 ### Contract Interactions
 - TuraWETH Contract: 0x981Ad9e1565bb8325c9C9bBf80758529E7C50994
-- Functions: deposit(), withdraw()
+- Key Functions:
+  - deposit(): Convert native Tura to WETH
+  - withdraw(): Convert WETH back to native Tura
+  - balanceOf(): Check WETH balance
+  - approve(): Approve spending for DEX
 
 ### Scripts
 - deploy-turaweth.ts: Deploy WETH contract
+  - Sets up initial contract state
+  - Verifies deployment
+  - Updates environment variables
+
 - test-weth.ts: Test WETH functionality
+  - Tests deposit/withdraw functions
+  - Verifies balance tracking
+  - Tests approval mechanism
+
 - verify-weth.ts: Verify contract deployment
+  - Checks contract bytecode
+  - Verifies contract parameters
+  - Confirms owner settings
+
+### Usage Flow
+1. Connect Wallet:
+   ```javascript
+   // In WrapUnwrap.tsx
+   const { account } = useWeb3React()
+   ```
+
+2. Check Balances:
+   ```javascript
+   // Get native balance
+   const balance = await provider.getBalance(account)
+   // Get WETH balance
+   const wethBalance = await wethContract.balanceOf(account)
+   ```
+
+3. Wrap Tura:
+   ```javascript
+   await wethContract.deposit({ value: amount })
+   ```
+
+4. Unwrap WETH:
+   ```javascript
+   await wethContract.withdraw(amount)
+   ```
+
+### Error Handling
+- Insufficient balance checks
+- Failed transaction handling
+- Network state validation
+- User feedback mechanisms
 
 ## 2. Liquidity Page Pool Creation Flow
 ### Components
