@@ -73,30 +73,16 @@ async function main() {
     wallet
   );
   
-  // Create pool if it doesn't exist
-  const poolAddress = await factory.getPool(CONTRACT_ADDRESSES.TEST_TOKEN_1, CONTRACT_ADDRESSES.TEST_TOKEN_2, 3000);
-  console.log('Checking pool address:', poolAddress);
-  
-  if (poolAddress === '0x0000000000000000000000000000000000000000') {
-    console.log('Creating new pool...');
-    await factory.createPool(CONTRACT_ADDRESSES.TEST_TOKEN_1, CONTRACT_ADDRESSES.TEST_TOKEN_2, 3000);
-    const newPoolAddress = await factory.getPool(CONTRACT_ADDRESSES.TEST_TOKEN_1, CONTRACT_ADDRESSES.TEST_TOKEN_2, 3000);
-    console.log('Pool created at:', newPoolAddress);
-  }
-
-  // Initialize pool if needed
-  const pool = new ethers.Contract(
-    poolAddress,
-    ['function initialize(uint160 sqrtPriceX96) external'],
-    wallet
+  // Create and initialize pool if needed
+  console.log('Creating and initializing pool if needed...');
+  const sqrtPriceX96 = ethers.BigNumber.from('79228162514264337593543950336');  // 1:1 price ratio
+  const poolAddress = await positionManager.createAndInitializePoolIfNecessary(
+    CONTRACT_ADDRESSES.TEST_TOKEN_1,
+    CONTRACT_ADDRESSES.TEST_TOKEN_2,
+    3000,
+    sqrtPriceX96
   );
-  try {
-    const sqrtPriceX96 = ethers.BigNumber.from('79228162514264337593543950336');  // 1:1 price ratio
-    await pool.initialize(sqrtPriceX96);
-    console.log('Pool initialized');
-  } catch (error) {
-    console.log('Pool already initialized');
-  }
+  console.log('Pool address:', poolAddress);
   
   // Calculate tick range for concentrated liquidity
   const tickSpacing = 60; // Medium fee tier
@@ -107,26 +93,31 @@ async function main() {
   console.log('Adding liquidity...');
   const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from now
 
-  const mintParams = {
-    token0: CONTRACT_ADDRESSES.TEST_TOKEN_1,
-    token1: CONTRACT_ADDRESSES.TEST_TOKEN_2,
-    fee: 3000,
-    tickLower: tickLower,
-    tickUpper: tickUpper,
-    amount0Desired: AMOUNT_WITH_DECIMALS,
-    amount1Desired: AMOUNT_WITH_DECIMALS,
-    amount0Min: 0,
-    amount1Min: 0,
-    recipient: wallet.address,
-    deadline: deadline
-  };
-
-  const tx = await positionManager.mint(
-    mintParams,
-    { gasLimit: 5000000 }
-  );
-  await tx.wait();
-  console.log('Liquidity added');
+  try {
+    const tx = await positionManager.mint(
+      [
+        CONTRACT_ADDRESSES.TEST_TOKEN_1,
+        CONTRACT_ADDRESSES.TEST_TOKEN_2,
+        3000,
+        tickLower,
+        tickUpper,
+        AMOUNT_WITH_DECIMALS,
+        AMOUNT_WITH_DECIMALS,
+        0,  // amount0Min
+        0,  // amount1Min
+        wallet.address,
+        deadline
+      ],
+      { gasLimit: 5000000 }
+    );
+    console.log('Waiting for transaction...');
+    const receipt = await tx.wait();
+    console.log('Transaction confirmed:', receipt.transactionHash);
+    console.log('Liquidity added');
+  } catch (error: any) {
+    console.error('Error adding liquidity:', error.message);
+    throw error;
+  }
 
   // Get final balances
   const finalBalance0 = await token0.balanceOf(wallet.address);
