@@ -1,5 +1,12 @@
 import { ethers } from 'ethers';
-import { CONTRACT_ADDRESSES } from '../frontend/src/config/contracts';
+const CONTRACT_ADDRESSES = {
+  WETH: '0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be',
+  FACTORY: '0xC2EdBdd3394dA769De72986d06b0C28Ba991341d',
+  ROUTER: '0xAC15BD2b9CfC37AA3a2aC78CD41a7abF33476F19',
+  POSITION_MANAGER: '0x90B834B3027Cd62c76FdAF1c22B21D1D8a2Cc965',
+  TEST_TOKEN_1: '0x3F26F01Fa9A5506c9109B5Ad15343363909fc0b9',
+  TEST_TOKEN_2: '0x8FDCE0D41f0A99B5f9FbcFAfd481ffcA61d01122'
+};
 
 // Token amounts with 18 decimals (1.0 tokens)
 const AMOUNT_WITH_DECIMALS = ethers.utils.parseUnits('1.0', 18);
