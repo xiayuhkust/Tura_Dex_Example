@@ -20,14 +20,14 @@ export type FeeTier = typeof FEE_TIERS[keyof typeof FEE_TIERS]
 
 export const CONTRACT_ADDRESSES = {
   // Core contracts
-  WETH: '0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be',  // Updated and verified TuraWETH
-  FACTORY: '0xC2EdBdd3394dA769De72986d06b0C28Ba991341d',  // Updated V3 Factory with proper event emission
-  ROUTER: '0xAC15BD2b9CfC37AA3a2aC78CD41a7abF33476F19',  // Updated SwapRouter
-  POSITION_MANAGER: '0x90B834B3027Cd62c76FdAF1c22B21D1D8a2Cc965',  // NonfungiblePositionManager for LP token management
+  WETH: process.env.REACT_APP_WETH_ADDRESS,
+  FACTORY: process.env.REACT_APP_FACTORY_ADDRESS,
+  ROUTER: process.env.REACT_APP_ROUTER_ADDRESS,
+  POSITION_MANAGER: process.env.REACT_APP_POSITION_MANAGER_ADDRESS,
   
   // Test tokens
-  TEST_TOKEN_1: '0x3F26F01Fa9A5506c9109B5Ad15343363909fc0b9',
-  TEST_TOKEN_2: '0x8FDCE0D41f0A99B5f9FbcFAfd481ffcA61d01122',
+  TEST_TOKEN_1: process.env.REACT_APP_TEST_TOKEN_1_ADDRESS,
+  TEST_TOKEN_2: process.env.REACT_APP_TEST_TOKEN_2_ADDRESS,
 } as const
 
 // Validate all addresses at runtime
