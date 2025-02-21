@@ -4,7 +4,7 @@ import type { Token } from '../types/Token'
 /**
  * Safely parse a token amount string to BigNumber
  */
-export function parseTokenAmount(amount: string, token: Token): ethers.BigNumber {
+export function parseTokenAmount(amount: string): ethers.BigNumber {
   try {
     // Ensure amount is a valid number
     if (!isValidNumber(amount)) {

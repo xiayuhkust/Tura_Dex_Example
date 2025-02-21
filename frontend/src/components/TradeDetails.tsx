@@ -12,7 +12,7 @@ import {
 } from '@chakra-ui/react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
-import { Token } from '../hooks/usePriceImpact'
+import type { Token } from '../types/Token'
 
 interface TradeDetailsProps {
   inputToken?: Token

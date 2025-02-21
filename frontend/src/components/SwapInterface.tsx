@@ -1,8 +1,17 @@
 import { useState, useCallback } from 'react'
-import { Box, VStack, Text, Button, HStack, Divider, IconButton, useToast } from '@chakra-ui/react'
+import {
+  Box,
+  VStack,
+  Text,
+  Button,
+  HStack,
+  Divider,
+  IconButton,
+  useToast
+} from '@chakra-ui/react'
 import { useWeb3 } from '../hooks/useWeb3'
 import { usePriceImpact } from '../hooks/usePriceImpact'
-import type { Token } from '../hooks'
+import type { Token } from '../types/Token'
 import { TokenSelect, TradeDetails, Settings, LoadingSpinner, WrapUnwrap } from './index'
 import { useError } from '../hooks'
 

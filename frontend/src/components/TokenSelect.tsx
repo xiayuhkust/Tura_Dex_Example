@@ -1,4 +1,14 @@
-import { Box, Button, Input, Text, HStack, VStack, useDisclosure, Image } from '@chakra-ui/react'
+import {
+  Box,
+  Button,
+  Input,
+  Text,
+  HStack,
+  VStack,
+  useDisclosure,
+  Image
+} from '@chakra-ui/react'
+import type { ChangeEvent } from 'react'
 import { TokenListModal } from './TokenListModal'
 
 import type { Token } from '../types/Token'
@@ -36,7 +46,7 @@ export function TokenSelect({
           <HStack>
             <Input
               value={value}
-              onChange={(e) => onChange(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
               placeholder="0.0"
               border="none"
               fontSize={{ base: "lg", sm: "xl" }}

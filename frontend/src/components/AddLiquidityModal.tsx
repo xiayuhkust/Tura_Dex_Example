@@ -6,14 +6,9 @@ import {
   Text,
   Select,
   useToast,
-  StackProps,
-  ButtonProps,
-  SelectProps,
-  TextProps,
-  BoxProps,
-  ToastProps,
+  type UseToastOptions,
+  type StackProps
 } from '@chakra-ui/react'
-import type { SystemProps } from '@chakra-ui/system'
 import { TokenSelect } from './TokenSelect'
 import { useWeb3 } from '../hooks/useWeb3'
 import { useError } from '../hooks/useError'
@@ -21,8 +16,16 @@ import type { Token } from '../types/Token'
 import { ethers } from 'ethers'
 import { CONTRACT_ADDRESSES, FEE_TIERS, type FeeTier } from '../config'
 import { parseTokenAmount, formatFeeAmount } from '../utils/numbers'
+import { TickMath } from '../utils/TickMath'
+import { LiquidityAmounts } from '../utils/LiquidityAmounts'
+import IUniswapV3PoolABI from '../abis/IUniswapV3Pool.json'
 
-export function AddLiquidityModal() {
+interface AddLiquidityModalProps extends StackProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function AddLiquidityModal({ isOpen, onClose, ...stackProps }: AddLiquidityModalProps) {
   const { active, library, account, connect } = useWeb3()
   const [isLoading, setIsLoading] = useState(false)
   const [token0, setToken0] = useState<Token | undefined>()
@@ -69,8 +72,8 @@ export function AddLiquidityModal() {
 
     try {
       // Convert amounts to BigNumber safely
-      const amount0Decimal = parseTokenAmount(amount0, token0)
-      const amount1Decimal = parseTokenAmount(amount1, token1)
+      const amount0Decimal = parseTokenAmount(amount0)
+      const amount1Decimal = parseTokenAmount(amount1)
       
       // Get pool address
       const factoryContract = new ethers.Contract(
@@ -90,19 +93,25 @@ export function AddLiquidityModal() {
       // Get pool contract with complete interface
       const poolContract = new ethers.Contract(
         poolAddress,
-        [
-          'function mint(address recipient, int24 tickLower, int24 tickUpper, uint128 amount, bytes calldata data) external returns (uint256 amount0, uint256 amount1)',
-          'function slot0() external view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)'
-        ],
+        IUniswapV3PoolABI.abi,
         library.getSigner()
       )
 
-      // Get current price from pool to verify pool exists
+      // Get current price and token order from pool
       try {
         const { sqrtPriceX96 } = await poolContract.slot0()
         // Verify pool price is valid
         if (sqrtPriceX96.eq(0)) {
           handleError(new Error('Pool price is invalid'))
+          return
+        }
+
+        // Verify token order matches pool
+        const poolToken0 = await poolContract.token0()
+        const poolToken1 = await poolContract.token1()
+        if (token0.address.toLowerCase() !== poolToken0.toLowerCase() || 
+            token1.address.toLowerCase() !== poolToken1.toLowerCase()) {
+          handleError(new Error('Token order does not match pool. Please swap token positions.'))
           return
         }
       } catch (error) {
@@ -115,8 +124,17 @@ export function AddLiquidityModal() {
       const tickLower = -tickSpacing;
       const tickUpper = tickSpacing;
 
-      // Calculate amount based on minimum of both token amounts
-      const amount = ethers.BigNumber.from(amount0Decimal).lt(amount1Decimal) ? amount0Decimal : amount1Decimal
+      // Get current price and calculate liquidity amount
+      const { sqrtPriceX96 } = await poolContract.slot0();
+      const sqrtRatioAX96 = TickMath.getSqrtRatioAtTick(tickLower);
+      const sqrtRatioBX96 = TickMath.getSqrtRatioAtTick(tickUpper);
+      const liquidity = LiquidityAmounts.getLiquidityForAmounts(
+        ethers.BigNumber.from(sqrtPriceX96.toString()),
+        ethers.BigNumber.from(sqrtRatioAX96.toString()),
+        ethers.BigNumber.from(sqrtRatioBX96.toString()),
+        amount0Decimal,
+        amount1Decimal
+      );
 
       // Approve tokens
       const token0Contract = new ethers.Contract(
@@ -138,10 +156,15 @@ export function AddLiquidityModal() {
       await approve1Tx.wait()
       console.log('Token1 approved:', amount1Decimal.toString())
 
-      // Encode mint callback data
+      // Encode mint callback data with pool key
+      const poolKey = {
+        token0: token0.address,
+        token1: token1.address,
+        fee: fee
+      }
       const encodedData = ethers.utils.defaultAbiCoder.encode(
-        ['address', 'address'],
-        [token0.address, token1.address]
+        ['(address token0, address token1, uint24 fee)', 'address'],
+        [poolKey, account]
       )
 
       // Check initial balances
@@ -157,7 +180,7 @@ export function AddLiquidityModal() {
         account!,  // Non-null assertion is safe because we check for account in the guard above
         tickLower,
         tickUpper,
-        amount,
+        liquidity,
         encodedData,
         { gasLimit: 5000000 }
       )
@@ -184,13 +207,14 @@ export function AddLiquidityModal() {
         token1Deducted: ethers.utils.formatUnits(token1Deducted, token1.decimals)
       })
 
-      toast({
+      const toastOptions: UseToastOptions = {
         title: 'Success',
         description: 'Liquidity added successfully',
         status: 'success',
         duration: 5000,
         isClosable: true,
-      })
+      };
+      toast(toastOptions)
     } catch (error: unknown) {
       if (typeof error === 'object' && error !== null && 'code' in error) {
         const txError = error as { code: string; message?: string }
@@ -215,9 +239,9 @@ export function AddLiquidityModal() {
 
   if (!library || !account) {
     return (
-      <Box maxW={{ base: "95%", sm: "md" }} mx="auto" mt={{ base: "4", sm: "10" }} p={6} bg="brand.surface" borderRadius="xl" as="div">
-        <VStack spacing={4} as="div">
-          <Text color="whiteAlpha.700" as="p">Please connect your wallet to create a pool</Text>
+      <Box maxW={{ base: "95%", sm: "md" }} mx="auto" mt={{ base: "4", sm: "10" }} p={6} bg="brand.surface" borderRadius="xl">
+        <VStack spacing={4}>
+          <Text color="whiteAlpha.700">Please connect your wallet to create a pool</Text>
           <Button
             w="full"
             size="lg"
@@ -233,10 +257,10 @@ export function AddLiquidityModal() {
   }
 
   return (
-    <Box maxW={{ base: "95%", sm: "md" }} mx="auto" mt={{ base: "4", sm: "10" }} p={6} bg="brand.surface" borderRadius="xl" as="div">
-      <VStack spacing={6} as="div">
-        <Box w="full" as="div">
-          <VStack spacing={4} align="stretch" as="div">
+    <Box maxW={{ base: "95%", sm: "md" }} mx="auto" mt={{ base: "4", sm: "10" }} p={6} bg="brand.surface" borderRadius="xl">
+      <VStack spacing={6} {...stackProps}>
+        <Box w="full">
+          <VStack spacing={4} align="stretch">
               <TokenSelect
                 value={amount0}
                 onChange={setAmount0}
@@ -259,10 +283,10 @@ export function AddLiquidityModal() {
                 <Text color="whiteAlpha.600" mb={2}>
                   Fee Tier
                 </Text>
-                <Select<FeeTier>
-                  as="select"
+                <Select
+                  data-testid="fee-tier-select"
                   value={fee}
-                  onChange={(e: { target: { value: string } }) => setFee(parseInt(e.target.value) as FeeTier)}
+                  onChange={(e) => setFee(parseInt(e.target.value) as FeeTier)}
                   bg="whiteAlpha.100"
                   border="none"
                   _focus={{ ring: 1, ringColor: 'brand.primary' }}
