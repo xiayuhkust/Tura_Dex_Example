@@ -6,7 +6,14 @@ import {
   Text,
   Select,
   useToast,
+  StackProps,
+  ButtonProps,
+  SelectProps,
+  TextProps,
+  BoxProps,
+  ToastProps,
 } from '@chakra-ui/react'
+import type { SystemProps } from '@chakra-ui/system'
 import { TokenSelect } from './TokenSelect'
 import { useWeb3 } from '../hooks/useWeb3'
 import { useError } from '../hooks/useError'
@@ -80,36 +87,36 @@ export function AddLiquidityModal() {
         return
       }
 
-      // Get pool contract
+      // Get pool contract with complete interface
       const poolContract = new ethers.Contract(
         poolAddress,
         [
+          'function mint(address recipient, int24 tickLower, int24 tickUpper, uint128 amount, bytes calldata data) external returns (uint256 amount0, uint256 amount1)',
           'function slot0() external view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)'
         ],
         library.getSigner()
       )
 
       // Get current price from pool to verify pool exists
-      await poolContract.slot0()
+      try {
+        const { sqrtPriceX96 } = await poolContract.slot0()
+        // Verify pool price is valid
+        if (sqrtPriceX96.eq(0)) {
+          handleError(new Error('Pool price is invalid'))
+          return
+        }
+      } catch (error) {
+        handleError(new Error('Failed to get pool price. Please check if the pool exists.'))
+        return
+      }
 
       // Calculate tick range for concentrated liquidity
-      const tickSpacing = fee === FEE_TIERS.LOWEST ? 10 : fee === FEE_TIERS.MEDIUM ? 60 : 200
-      const tickLower = -tickSpacing
-      const tickUpper = tickSpacing
+      const tickSpacing = fee === FEE_TIERS.LOWEST ? 10 : fee === FEE_TIERS.MEDIUM ? 60 : 200;
+      const tickLower = -tickSpacing;
+      const tickUpper = tickSpacing;
 
-      // Calculate liquidity amount based on both token amounts
-      const liquidity = ethers.BigNumber.min(amount0Decimal, amount1Decimal)
-
-      // Get position manager contract with complete interface
-      const positionManagerContract = new ethers.Contract(
-        CONTRACT_ADDRESSES.POSITION_MANAGER,
-        [
-          'function addLiquidity(address pool, address recipient, int24 tickLower, int24 tickUpper, uint128 liquidity, bytes calldata data) external returns (uint256 amount0, uint256 amount1)',
-          'function positions(uint256 tokenId) external view returns (uint96 nonce, address operator, address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint128 tokensOwed0, uint128 tokensOwed1)',
-          'function collect(uint256 tokenId, address recipient, uint128 amount0Max, uint128 amount1Max) external returns (uint256 amount0, uint256 amount1)'
-        ],
-        library.getSigner()
-      )
+      // Calculate amount based on minimum of both token amounts
+      const amount = ethers.BigNumber.from(amount0Decimal).lt(amount1Decimal) ? amount0Decimal : amount1Decimal
 
       // Approve tokens
       const token0Contract = new ethers.Contract(
@@ -123,18 +130,18 @@ export function AddLiquidityModal() {
         library.getSigner()
       )
 
-      const approve0Tx = await token0Contract.approve(CONTRACT_ADDRESSES.POSITION_MANAGER, amount0Decimal)
+      const approve0Tx = await token0Contract.approve(poolAddress, amount0Decimal)
       await approve0Tx.wait()
       console.log('Token0 approved:', amount0Decimal.toString())
 
-      const approve1Tx = await token1Contract.approve(CONTRACT_ADDRESSES.POSITION_MANAGER, amount1Decimal)
+      const approve1Tx = await token1Contract.approve(poolAddress, amount1Decimal)
       await approve1Tx.wait()
       console.log('Token1 approved:', amount1Decimal.toString())
 
       // Encode mint callback data
       const encodedData = ethers.utils.defaultAbiCoder.encode(
-        ['address', 'address', 'address'],
-        [token0.address, token1.address, account]
+        ['address', 'address'],
+        [token0.address, token1.address]
       )
 
       // Check initial balances
@@ -145,13 +152,12 @@ export function AddLiquidityModal() {
         token1: ethers.utils.formatUnits(token1Balance, token1.decimals)
       })
 
-      // Add liquidity through position manager
-      const tx = await positionManagerContract.addLiquidity(
-        poolAddress,
+      // Add liquidity through pool contract
+      const tx = await poolContract.mint(
         account!,  // Non-null assertion is safe because we check for account in the guard above
         tickLower,
         tickUpper,
-        liquidity,
+        amount,
         encodedData,
         { gasLimit: 5000000 }
       )
@@ -209,9 +215,9 @@ export function AddLiquidityModal() {
 
   if (!library || !account) {
     return (
-      <Box maxW={{ base: "95%", sm: "md" }} mx="auto" mt={{ base: "4", sm: "10" }} p={6} bg="brand.surface" borderRadius="xl">
-        <VStack spacing={4}>
-          <Text color="whiteAlpha.700">Please connect your wallet to create a pool</Text>
+      <Box maxW={{ base: "95%", sm: "md" }} mx="auto" mt={{ base: "4", sm: "10" }} p={6} bg="brand.surface" borderRadius="xl" as="div">
+        <VStack spacing={4} as="div">
+          <Text color="whiteAlpha.700" as="p">Please connect your wallet to create a pool</Text>
           <Button
             w="full"
             size="lg"
@@ -227,10 +233,10 @@ export function AddLiquidityModal() {
   }
 
   return (
-    <Box maxW={{ base: "95%", sm: "md" }} mx="auto" mt={{ base: "4", sm: "10" }} p={6} bg="brand.surface" borderRadius="xl">
-      <VStack spacing={6}>
-        <Box w="full">
-          <VStack spacing={4} align="stretch">
+    <Box maxW={{ base: "95%", sm: "md" }} mx="auto" mt={{ base: "4", sm: "10" }} p={6} bg="brand.surface" borderRadius="xl" as="div">
+      <VStack spacing={6} as="div">
+        <Box w="full" as="div">
+          <VStack spacing={4} align="stretch" as="div">
               <TokenSelect
                 value={amount0}
                 onChange={setAmount0}
@@ -253,7 +259,8 @@ export function AddLiquidityModal() {
                 <Text color="whiteAlpha.600" mb={2}>
                   Fee Tier
                 </Text>
-                <Select
+                <Select<FeeTier>
+                  as="select"
                   value={fee}
                   onChange={(e: { target: { value: string } }) => setFee(parseInt(e.target.value) as FeeTier)}
                   bg="whiteAlpha.100"
