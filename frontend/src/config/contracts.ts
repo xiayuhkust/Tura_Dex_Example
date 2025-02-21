@@ -18,16 +18,24 @@ export const FEE_TIERS = {
 
 export type FeeTier = typeof FEE_TIERS[keyof typeof FEE_TIERS]
 
+function getRequiredEnvVar(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
 export const CONTRACT_ADDRESSES = {
   // Core contracts
-  WETH: '0xc8F7d7989a409472945b00177396f4e9b8601DF3',  // Updated and verified TuraWETH
-  FACTORY: '0xC2EdBdd3394dA769De72986d06b0C28Ba991341d',  // Updated V3 Factory with proper event emission
-  ROUTER: '0xB492Bf5FBfA79364149CC76B77b8bd78BecD1416',
-  POSITION_MANAGER: '0x6Ba55510435288424053d8924450Bb1269fD3BD2',  // NonfungiblePositionManager for LP token management
+  WETH: getRequiredEnvVar('REACT_APP_WETH_ADDRESS'),
+  FACTORY: getRequiredEnvVar('REACT_APP_FACTORY_ADDRESS'),
+  ROUTER: getRequiredEnvVar('REACT_APP_ROUTER_ADDRESS'),
+  POSITION_MANAGER: getRequiredEnvVar('REACT_APP_POSITION_MANAGER_ADDRESS'),
   
   // Test tokens
-  TEST_TOKEN_1: '0x3F26F01Fa9A5506c9109B5Ad15343363909fc0b9',
-  TEST_TOKEN_2: '0x8FDCE0D41f0A99B5f9FbcFAfd481ffcA61d01122',
+  TEST_TOKEN_1: getRequiredEnvVar('REACT_APP_TEST_TOKEN_1_ADDRESS'),
+  TEST_TOKEN_2: getRequiredEnvVar('REACT_APP_TEST_TOKEN_2_ADDRESS'),
 } as const
 
 // Validate all addresses at runtime

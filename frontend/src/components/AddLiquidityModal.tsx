@@ -6,6 +6,8 @@ import {
   Text,
   Select,
   useToast,
+  type UseToastOptions,
+  type StackProps
 } from '@chakra-ui/react'
 import { TokenSelect } from './TokenSelect'
 import { useWeb3 } from '../hooks/useWeb3'
@@ -14,8 +16,16 @@ import type { Token } from '../types/Token'
 import { ethers } from 'ethers'
 import { CONTRACT_ADDRESSES, FEE_TIERS, type FeeTier } from '../config'
 import { parseTokenAmount, formatFeeAmount } from '../utils/numbers'
+import { TickMath } from '../utils/TickMath'
+import { LiquidityAmounts } from '../utils/LiquidityAmounts'
+import IUniswapV3PoolABI from '../abis/IUniswapV3Pool.json'
 
-export function AddLiquidityModal() {
+interface AddLiquidityModalProps extends StackProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function AddLiquidityModal({ isOpen, onClose, ...stackProps }: AddLiquidityModalProps) {
   const { active, library, account, connect } = useWeb3()
   const [isLoading, setIsLoading] = useState(false)
   const [token0, setToken0] = useState<Token | undefined>()
@@ -62,8 +72,8 @@ export function AddLiquidityModal() {
 
     try {
       // Convert amounts to BigNumber safely
-      const amount0Decimal = parseTokenAmount(amount0, token0)
-      const amount1Decimal = parseTokenAmount(amount1, token1)
+      const amount0Decimal = parseTokenAmount(amount0)
+      const amount1Decimal = parseTokenAmount(amount1)
       
       // Get pool address
       const factoryContract = new ethers.Contract(
@@ -80,34 +90,51 @@ export function AddLiquidityModal() {
         return
       }
 
-      // Get pool contract
+      // Get pool contract with complete interface
       const poolContract = new ethers.Contract(
         poolAddress,
-        [
-          'function slot0() external view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)'
-        ],
+        IUniswapV3PoolABI.abi,
         library.getSigner()
       )
 
-      // Get current price from pool to verify pool exists
-      await poolContract.slot0()
+      // Get current price and token order from pool
+      try {
+        const { sqrtPriceX96 } = await poolContract.slot0()
+        // Verify pool price is valid
+        if (sqrtPriceX96.eq(0)) {
+          handleError(new Error('Pool price is invalid'))
+          return
+        }
+
+        // Verify token order matches pool
+        const poolToken0 = await poolContract.token0()
+        const poolToken1 = await poolContract.token1()
+        if (token0.address.toLowerCase() !== poolToken0.toLowerCase() || 
+            token1.address.toLowerCase() !== poolToken1.toLowerCase()) {
+          handleError(new Error('Token order does not match pool. Please swap token positions.'))
+          return
+        }
+      } catch (error) {
+        handleError(new Error('Failed to get pool price. Please check if the pool exists.'))
+        return
+      }
 
       // Calculate tick range for concentrated liquidity
-      const tickSpacing = fee === FEE_TIERS.LOWEST ? 10 : fee === FEE_TIERS.MEDIUM ? 60 : 200
-      const tickLower = -tickSpacing
-      const tickUpper = tickSpacing
+      const tickSpacing = fee === FEE_TIERS.LOWEST ? 10 : fee === FEE_TIERS.MEDIUM ? 60 : 200;
+      const tickLower = -tickSpacing;
+      const tickUpper = tickSpacing;
 
-      // Calculate liquidity amount based on token amounts
-      const liquidity = amount0Decimal.div(2)
-
-      // Get position manager contract
-      const positionManagerContract = new ethers.Contract(
-        CONTRACT_ADDRESSES.POSITION_MANAGER,
-        [
-          'function addLiquidity(address pool, address recipient, int24 tickLower, int24 tickUpper, uint128 liquidity, bytes calldata data) external returns (uint256 amount0, uint256 amount1)'
-        ],
-        library.getSigner()
-      )
+      // Get current price and calculate liquidity amount
+      const { sqrtPriceX96 } = await poolContract.slot0();
+      const sqrtRatioAX96 = TickMath.getSqrtRatioAtTick(tickLower);
+      const sqrtRatioBX96 = TickMath.getSqrtRatioAtTick(tickUpper);
+      const liquidity = LiquidityAmounts.getLiquidityForAmounts(
+        ethers.BigNumber.from(sqrtPriceX96.toString()),
+        ethers.BigNumber.from(sqrtRatioAX96.toString()),
+        ethers.BigNumber.from(sqrtRatioBX96.toString()),
+        amount0Decimal,
+        amount1Decimal
+      );
 
       // Approve tokens
       const token0Contract = new ethers.Contract(
@@ -121,23 +148,35 @@ export function AddLiquidityModal() {
         library.getSigner()
       )
 
-      const approve0Tx = await token0Contract.approve(CONTRACT_ADDRESSES.POSITION_MANAGER, amount0Decimal)
+      const approve0Tx = await token0Contract.approve(poolAddress, amount0Decimal)
       await approve0Tx.wait()
       console.log('Token0 approved:', amount0Decimal.toString())
 
-      const approve1Tx = await token1Contract.approve(CONTRACT_ADDRESSES.POSITION_MANAGER, amount1Decimal)
+      const approve1Tx = await token1Contract.approve(poolAddress, amount1Decimal)
       await approve1Tx.wait()
       console.log('Token1 approved:', amount1Decimal.toString())
 
-      // Encode mint callback data
+      // Encode mint callback data with pool key
+      const poolKey = {
+        token0: token0.address,
+        token1: token1.address,
+        fee: fee
+      }
       const encodedData = ethers.utils.defaultAbiCoder.encode(
-        ['address', 'address', 'address'],
-        [token0.address, token1.address, account]
+        ['(address token0, address token1, uint24 fee)', 'address'],
+        [poolKey, account]
       )
 
-      // Add liquidity through position manager
-      const tx = await positionManagerContract.addLiquidity(
-        poolAddress,
+      // Check initial balances
+      const token0Balance = await token0Contract.balanceOf(account)
+      const token1Balance = await token1Contract.balanceOf(account)
+      console.log('Initial balances:', {
+        token0: ethers.utils.formatUnits(token0Balance, token0.decimals),
+        token1: ethers.utils.formatUnits(token1Balance, token1.decimals)
+      })
+
+      // Add liquidity through pool contract
+      const tx = await poolContract.mint(
         account!,  // Non-null assertion is safe because we check for account in the guard above
         tickLower,
         tickUpper,
@@ -146,15 +185,36 @@ export function AddLiquidityModal() {
         { gasLimit: 5000000 }
       )
       const receipt = await tx.wait()
-      console.log('Liquidity added successfully:', receipt.transactionHash)
+      
+      // Verify final balances
+      const finalToken0Balance = await token0Contract.balanceOf(account)
+      const finalToken1Balance = await token1Contract.balanceOf(account)
+      console.log('Final balances:', {
+        token0: ethers.utils.formatUnits(finalToken0Balance, token0.decimals),
+        token1: ethers.utils.formatUnits(finalToken1Balance, token1.decimals)
+      })
+      
+      // Verify tokens were deducted
+      const token0Deducted = token0Balance.sub(finalToken0Balance)
+      const token1Deducted = token1Balance.sub(finalToken1Balance)
+      if (token0Deducted.isZero() || token1Deducted.isZero()) {
+        throw new Error('Token deduction failed - no tokens were transferred')
+      }
+      
+      console.log('Liquidity added successfully:', {
+        transactionHash: receipt.transactionHash,
+        token0Deducted: ethers.utils.formatUnits(token0Deducted, token0.decimals),
+        token1Deducted: ethers.utils.formatUnits(token1Deducted, token1.decimals)
+      })
 
-      toast({
+      const toastOptions: UseToastOptions = {
         title: 'Success',
         description: 'Liquidity added successfully',
         status: 'success',
         duration: 5000,
         isClosable: true,
-      })
+      };
+      toast(toastOptions)
     } catch (error: unknown) {
       if (typeof error === 'object' && error !== null && 'code' in error) {
         const txError = error as { code: string; message?: string }
@@ -162,6 +222,10 @@ export function AddLiquidityModal() {
           handleError(new Error('Failed to add liquidity. Please check token amounts and approvals.'))
         } else if (txError.code === 'CALL_EXCEPTION') {
           handleError(new Error('Failed to add liquidity. The pool may be at capacity or the tick range is invalid.'))
+        } else if (txError.message?.includes('ERC20: insufficient allowance')) {
+          handleError(new Error('Token approval required. Please approve spending of tokens first.'))
+        } else if (txError.message?.includes('ERC20: transfer amount exceeds balance')) {
+          handleError(new Error('Insufficient token balance. Please check your wallet balance.'))
         } else {
           handleError(error)
         }
@@ -194,7 +258,7 @@ export function AddLiquidityModal() {
 
   return (
     <Box maxW={{ base: "95%", sm: "md" }} mx="auto" mt={{ base: "4", sm: "10" }} p={6} bg="brand.surface" borderRadius="xl">
-      <VStack spacing={6}>
+      <VStack spacing={6} {...stackProps}>
         <Box w="full">
           <VStack spacing={4} align="stretch">
               <TokenSelect
@@ -220,8 +284,9 @@ export function AddLiquidityModal() {
                   Fee Tier
                 </Text>
                 <Select
+                  data-testid="fee-tier-select"
                   value={fee}
-                  onChange={(e: { target: { value: string } }) => setFee(parseInt(e.target.value) as FeeTier)}
+                  onChange={(e) => setFee(parseInt(e.target.value) as FeeTier)}
                   bg="whiteAlpha.100"
                   border="none"
                   _focus={{ ring: 1, ringColor: 'brand.primary' }}

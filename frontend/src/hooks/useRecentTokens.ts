@@ -1,15 +1,6 @@
 import { useState, useEffect } from 'react'
 
-interface Token {
-  address: string
-  symbol: string
-  name: string
-  balance?: string
-  logoURI?: string
-  lastUsed?: number
-  price?: string
-  priceChange24h?: string
-}
+import type { Token } from '../types/Token'
 
 const RECENT_TOKENS_KEY = 'agentswap:recent_tokens'
 const MAX_RECENT_TOKENS = 5

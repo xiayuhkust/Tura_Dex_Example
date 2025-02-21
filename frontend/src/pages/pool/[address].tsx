@@ -11,6 +11,7 @@ import {
   Tab,
   TabPanel,
   useToast,
+  Button
 } from '@chakra-ui/react'
 import { useWeb3 } from '../../hooks/useWeb3'
 import { ethers } from 'ethers'
@@ -18,9 +19,9 @@ import { CONTRACT_ADDRESSES } from '../../config'
 import { formatFeeAmount, formatTokenAmount } from '../../utils/numbers'
 import { AddLiquidityModal } from '../../components/AddLiquidityModal'
 
-interface PoolDetails extends Pool {
-  userLiquidity?: ethers.BigNumber
-}
+import type { PoolDetails } from '../../types/Pool'
+
+// Interface moved to types/Pool.ts
 
 export default function PoolDetailPage() {
   const { address } = useParams<{ address: string }>()
@@ -133,7 +134,7 @@ export default function PoolDetailPage() {
         })
       } catch (error) {
         console.error('Error fetching pool details:', error)
-        const errorMessage = error.message?.toLowerCase() || ''
+        const errorMessage = (error as Error).message?.toLowerCase() || ''
         let userMessage = 'Failed to load pool details. Please try again.'
         
         if (errorMessage.includes('invalid pool address format')) {
@@ -198,7 +199,7 @@ export default function PoolDetailPage() {
               <VStack spacing={4} align="stretch">
                 <Text color="whiteAlpha.900">Total Liquidity</Text>
                 <Text fontSize="xl" color="white">
-                  {formatTokenAmount(pool.liquidity, {
+                  {formatTokenAmount(pool.liquidity ? ethers.BigNumber.from(pool.liquidity) : ethers.BigNumber.from(0), {
                     decimals: 18,
                     symbol: 'LP',
                     address: pool.address,
@@ -210,7 +211,7 @@ export default function PoolDetailPage() {
                   <>
                     <Text color="whiteAlpha.900" mt={4}>Your Liquidity</Text>
                     <Text fontSize="xl" color="white">
-                      {formatTokenAmount(pool.userLiquidity, {
+                      {formatTokenAmount(pool.userLiquidity || ethers.BigNumber.from(0), {
                         decimals: 18,
                         symbol: 'LP',
                         address: pool.address,
@@ -232,7 +233,7 @@ export default function PoolDetailPage() {
                   <>
                     <Text color="whiteAlpha.900">Your Liquidity Position</Text>
                     <Text fontSize="xl" color="white">
-                      {formatTokenAmount(pool.userLiquidity, {
+                      {formatTokenAmount(pool.userLiquidity || ethers.BigNumber.from(0), {
                         decimals: 18,
                         symbol: 'LP',
                         address: pool.address,

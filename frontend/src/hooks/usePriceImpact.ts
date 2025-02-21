@@ -1,11 +1,5 @@
 import { useMemo } from 'react'
-export interface Token {
-  address: string
-  symbol: string
-  name: string
-  balance?: string
-  price?: string
-}
+import type { Token } from '../types/Token'
 
 interface Warning {
   level: 'error' | 'warning' | 'info'
