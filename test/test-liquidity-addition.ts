@@ -105,18 +105,24 @@ async function main() {
 
   // Add liquidity
   console.log('Adding liquidity...');
-  const encodedData = ethers.utils.defaultAbiCoder.encode(
-    ['address', 'address', 'address'],
-    [token0.address, token1.address, wallet.address]
-  );
+  const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from now
 
-  const tx = await positionManager.addLiquidity(
-    poolAddress,
-    wallet.address,
-    tickLower,
-    tickUpper,
-    AMOUNT_WITH_DECIMALS,
-    encodedData,
+  const mintParams = {
+    token0: CONTRACT_ADDRESSES.TEST_TOKEN_1,
+    token1: CONTRACT_ADDRESSES.TEST_TOKEN_2,
+    fee: 3000,
+    tickLower: tickLower,
+    tickUpper: tickUpper,
+    amount0Desired: AMOUNT_WITH_DECIMALS,
+    amount1Desired: AMOUNT_WITH_DECIMALS,
+    amount0Min: 0,
+    amount1Min: 0,
+    recipient: wallet.address,
+    deadline: deadline
+  };
+
+  const tx = await positionManager.mint(
+    mintParams,
     { gasLimit: 5000000 }
   );
   await tx.wait();
