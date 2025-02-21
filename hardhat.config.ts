@@ -19,7 +19,7 @@ export default {
     tura: {
       url: process.env.TURA_RPC_URL || "https://rpc-beta1.turablockchain.com",
       chainId: Number(process.env.TURA_CHAIN_ID || "1337"),
-      accounts: [process.env.PRIVATE_KEY || ""],
+      accounts: [process.env.PRIVATE_KEYS || ""],
       timeout: 60000,
       gasPrice: "auto"
     }
