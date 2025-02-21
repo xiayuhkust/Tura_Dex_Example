@@ -46,13 +46,15 @@ async function main() {
   });
 
   // Approve tokens for position manager
+  const positionManagerAbi = [
+    'function createAndInitializePoolIfNecessary(address token0, address token1, uint24 fee, uint160 sqrtPriceX96) external returns (address pool)',
+    'function mint((address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper, uint256 amount0Desired, uint256 amount1Desired, uint256 amount0Min, uint256 amount1Min, address recipient, uint256 deadline)) external payable returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)',
+    'function positions(uint256 tokenId) external view returns (uint96 nonce, address operator, address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint128 tokensOwed0, uint128 tokensOwed1)'
+  ];
+  
   const positionManager = new ethers.Contract(
     CONTRACT_ADDRESSES.POSITION_MANAGER,
-    [
-      'function createAndInitializePoolIfNecessary(address token0, address token1, uint24 fee, uint160 sqrtPriceX96) external returns (address pool)',
-      'function mint(tuple(address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper, uint256 amount0Desired, uint256 amount1Desired, uint256 amount0Min, uint256 amount1Min, address recipient, uint256 deadline) params) external returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)',
-      'function positions(uint256 tokenId) external view returns (uint96 nonce, address operator, address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint128 tokensOwed0, uint128 tokensOwed1)'
-    ],
+    positionManagerAbi,
     wallet
   );
 
@@ -145,22 +147,22 @@ async function main() {
       ? [CONTRACT_ADDRESSES.TEST_TOKEN_1, CONTRACT_ADDRESSES.TEST_TOKEN_2]
       : [CONTRACT_ADDRESSES.TEST_TOKEN_2, CONTRACT_ADDRESSES.TEST_TOKEN_1];
 
-    const params = [
+    const params = {
       token0,
       token1,
-      3000,
+      fee: 3000,
       tickLower,
       tickUpper,
-      AMOUNT_WITH_DECIMALS,
-      AMOUNT_WITH_DECIMALS,
-      0,  // amount0Min
-      0,  // amount1Min
-      wallet.address,
+      amount0Desired: AMOUNT_WITH_DECIMALS,
+      amount1Desired: AMOUNT_WITH_DECIMALS,
+      amount0Min: 0,
+      amount1Min: 0,
+      recipient: wallet.address,
       deadline
-    ];
+    };
     console.log('Mint params:', JSON.stringify(params, null, 2));
     
-    const tx = await positionManager.mint(params, { gasLimit: 5000000 });
+    const tx = await positionManager.mint([params], { gasLimit: 5000000 });
     console.log('Waiting for transaction...');
     const receipt = await tx.wait();
     console.log('Transaction confirmed:', receipt.transactionHash);
