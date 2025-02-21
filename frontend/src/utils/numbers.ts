@@ -6,10 +6,16 @@ import type { Token } from '../types/Token'
  */
 export function parseTokenAmount(amount: string, token: Token): ethers.BigNumber {
   try {
-    return ethers.utils.parseUnits(amount, token.decimals)
+    // Ensure amount is a valid number
+    if (!isValidNumber(amount)) {
+      throw new Error('Invalid amount')
+    }
+    // Always use 18 decimals for ERC20 tokens
+    const decimals = 18
+    return ethers.utils.parseUnits(amount, decimals)
   } catch (error) {
     console.error('Error parsing token amount:', error)
-    return ethers.BigNumber.from(0)
+    throw new Error('Failed to parse token amount. Please enter a valid number.')
   }
 }
 

@@ -20,10 +20,10 @@ export type FeeTier = typeof FEE_TIERS[keyof typeof FEE_TIERS]
 
 export const CONTRACT_ADDRESSES = {
   // Core contracts
-  WETH: '0xc8F7d7989a409472945b00177396f4e9b8601DF3',  // Updated and verified TuraWETH
+  WETH: '0xF0e8a104Cc6ecC7bBa4Dc89473d1C64593eA69be',  // Updated and verified TuraWETH
   FACTORY: '0xC2EdBdd3394dA769De72986d06b0C28Ba991341d',  // Updated V3 Factory with proper event emission
-  ROUTER: '0xB492Bf5FBfA79364149CC76B77b8bd78BecD1416',
-  POSITION_MANAGER: '0x6Ba55510435288424053d8924450Bb1269fD3BD2',  // NonfungiblePositionManager for LP token management
+  ROUTER: '0xAC15BD2b9CfC37AA3a2aC78CD41a7abF33476F19',  // Updated SwapRouter
+  POSITION_MANAGER: '0x90B834B3027Cd62c76FdAF1c22B21D1D8a2Cc965',  // NonfungiblePositionManager for LP token management
   
   // Test tokens
   TEST_TOKEN_1: '0x3F26F01Fa9A5506c9109B5Ad15343363909fc0b9',

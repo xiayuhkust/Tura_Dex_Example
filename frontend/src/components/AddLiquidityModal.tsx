@@ -97,14 +97,16 @@ export function AddLiquidityModal() {
       const tickLower = -tickSpacing
       const tickUpper = tickSpacing
 
-      // Calculate liquidity amount based on token amounts
-      const liquidity = amount0Decimal.div(2)
+      // Calculate liquidity amount based on both token amounts
+      const liquidity = ethers.BigNumber.min(amount0Decimal, amount1Decimal)
 
-      // Get position manager contract
+      // Get position manager contract with complete interface
       const positionManagerContract = new ethers.Contract(
         CONTRACT_ADDRESSES.POSITION_MANAGER,
         [
-          'function addLiquidity(address pool, address recipient, int24 tickLower, int24 tickUpper, uint128 liquidity, bytes calldata data) external returns (uint256 amount0, uint256 amount1)'
+          'function addLiquidity(address pool, address recipient, int24 tickLower, int24 tickUpper, uint128 liquidity, bytes calldata data) external returns (uint256 amount0, uint256 amount1)',
+          'function positions(uint256 tokenId) external view returns (uint96 nonce, address operator, address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint128 tokensOwed0, uint128 tokensOwed1)',
+          'function collect(uint256 tokenId, address recipient, uint128 amount0Max, uint128 amount1Max) external returns (uint256 amount0, uint256 amount1)'
         ],
         library.getSigner()
       )
@@ -135,6 +137,14 @@ export function AddLiquidityModal() {
         [token0.address, token1.address, account]
       )
 
+      // Check initial balances
+      const token0Balance = await token0Contract.balanceOf(account)
+      const token1Balance = await token1Contract.balanceOf(account)
+      console.log('Initial balances:', {
+        token0: ethers.utils.formatUnits(token0Balance, token0.decimals),
+        token1: ethers.utils.formatUnits(token1Balance, token1.decimals)
+      })
+
       // Add liquidity through position manager
       const tx = await positionManagerContract.addLiquidity(
         poolAddress,
@@ -146,7 +156,27 @@ export function AddLiquidityModal() {
         { gasLimit: 5000000 }
       )
       const receipt = await tx.wait()
-      console.log('Liquidity added successfully:', receipt.transactionHash)
+      
+      // Verify final balances
+      const finalToken0Balance = await token0Contract.balanceOf(account)
+      const finalToken1Balance = await token1Contract.balanceOf(account)
+      console.log('Final balances:', {
+        token0: ethers.utils.formatUnits(finalToken0Balance, token0.decimals),
+        token1: ethers.utils.formatUnits(finalToken1Balance, token1.decimals)
+      })
+      
+      // Verify tokens were deducted
+      const token0Deducted = token0Balance.sub(finalToken0Balance)
+      const token1Deducted = token1Balance.sub(finalToken1Balance)
+      if (token0Deducted.isZero() || token1Deducted.isZero()) {
+        throw new Error('Token deduction failed - no tokens were transferred')
+      }
+      
+      console.log('Liquidity added successfully:', {
+        transactionHash: receipt.transactionHash,
+        token0Deducted: ethers.utils.formatUnits(token0Deducted, token0.decimals),
+        token1Deducted: ethers.utils.formatUnits(token1Deducted, token1.decimals)
+      })
 
       toast({
         title: 'Success',
@@ -162,6 +192,10 @@ export function AddLiquidityModal() {
           handleError(new Error('Failed to add liquidity. Please check token amounts and approvals.'))
         } else if (txError.code === 'CALL_EXCEPTION') {
           handleError(new Error('Failed to add liquidity. The pool may be at capacity or the tick range is invalid.'))
+        } else if (txError.message?.includes('ERC20: insufficient allowance')) {
+          handleError(new Error('Token approval required. Please approve spending of tokens first.'))
+        } else if (txError.message?.includes('ERC20: transfer amount exceeds balance')) {
+          handleError(new Error('Insufficient token balance. Please check your wallet balance.'))
         } else {
           handleError(error)
         }
