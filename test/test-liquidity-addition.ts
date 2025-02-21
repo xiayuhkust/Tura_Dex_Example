@@ -117,27 +117,50 @@ async function main() {
   const tickLower = -tickSpacing;
   const tickUpper = tickSpacing;
 
+  // Check pool state
+  const pool = new ethers.Contract(
+    poolAddress,
+    [
+      'function slot0() external view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)',
+      'function liquidity() external view returns (uint128)'
+    ],
+    wallet
+  );
+  
+  const [sqrtPrice, tick] = await pool.slot0();
+  const liquidity = await pool.liquidity();
+  console.log('Pool state:', {
+    sqrtPrice: sqrtPrice.toString(),
+    tick: tick.toString(),
+    liquidity: liquidity.toString()
+  });
+
   // Add liquidity
   console.log('Adding liquidity...');
   const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from now
 
   try {
-    const tx = await positionManager.mint(
-      [
-        CONTRACT_ADDRESSES.TEST_TOKEN_1,
-        CONTRACT_ADDRESSES.TEST_TOKEN_2,
-        3000,
-        tickLower,
-        tickUpper,
-        AMOUNT_WITH_DECIMALS,
-        AMOUNT_WITH_DECIMALS,
-        0,  // amount0Min
-        0,  // amount1Min
-        wallet.address,
-        deadline
-      ],
-      { gasLimit: 5000000 }
-    );
+    // Ensure token order matches pool order
+    const [token0, token1] = CONTRACT_ADDRESSES.TEST_TOKEN_1.toLowerCase() < CONTRACT_ADDRESSES.TEST_TOKEN_2.toLowerCase()
+      ? [CONTRACT_ADDRESSES.TEST_TOKEN_1, CONTRACT_ADDRESSES.TEST_TOKEN_2]
+      : [CONTRACT_ADDRESSES.TEST_TOKEN_2, CONTRACT_ADDRESSES.TEST_TOKEN_1];
+
+    const params = [
+      token0,
+      token1,
+      3000,
+      tickLower,
+      tickUpper,
+      AMOUNT_WITH_DECIMALS,
+      AMOUNT_WITH_DECIMALS,
+      0,  // amount0Min
+      0,  // amount1Min
+      wallet.address,
+      deadline
+    ];
+    console.log('Mint params:', JSON.stringify(params, null, 2));
+    
+    const tx = await positionManager.mint(params, { gasLimit: 5000000 });
     console.log('Waiting for transaction...');
     const receipt = await tx.wait();
     console.log('Transaction confirmed:', receipt.transactionHash);
