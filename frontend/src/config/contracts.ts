@@ -18,16 +18,24 @@ export const FEE_TIERS = {
 
 export type FeeTier = typeof FEE_TIERS[keyof typeof FEE_TIERS]
 
+function getRequiredEnvVar(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
 export const CONTRACT_ADDRESSES = {
   // Core contracts
-  WETH: process.env.REACT_APP_WETH_ADDRESS,
-  FACTORY: process.env.REACT_APP_FACTORY_ADDRESS,
-  ROUTER: process.env.REACT_APP_ROUTER_ADDRESS,
-  POSITION_MANAGER: process.env.REACT_APP_POSITION_MANAGER_ADDRESS,
+  WETH: getRequiredEnvVar('REACT_APP_WETH_ADDRESS'),
+  FACTORY: getRequiredEnvVar('REACT_APP_FACTORY_ADDRESS'),
+  ROUTER: getRequiredEnvVar('REACT_APP_ROUTER_ADDRESS'),
+  POSITION_MANAGER: getRequiredEnvVar('REACT_APP_POSITION_MANAGER_ADDRESS'),
   
   // Test tokens
-  TEST_TOKEN_1: process.env.REACT_APP_TEST_TOKEN_1_ADDRESS,
-  TEST_TOKEN_2: process.env.REACT_APP_TEST_TOKEN_2_ADDRESS,
+  TEST_TOKEN_1: getRequiredEnvVar('REACT_APP_TEST_TOKEN_1_ADDRESS'),
+  TEST_TOKEN_2: getRequiredEnvVar('REACT_APP_TEST_TOKEN_2_ADDRESS'),
 } as const
 
 // Validate all addresses at runtime
