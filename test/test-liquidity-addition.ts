@@ -76,13 +76,41 @@ async function main() {
   // Create and initialize pool if needed
   console.log('Creating and initializing pool if needed...');
   const sqrtPriceX96 = ethers.BigNumber.from('79228162514264337593543950336');  // 1:1 price ratio
-  const poolAddress = await positionManager.createAndInitializePoolIfNecessary(
+  
+  // Get pool address from factory
+  let poolAddress = await factory.getPool(
     CONTRACT_ADDRESSES.TEST_TOKEN_1,
     CONTRACT_ADDRESSES.TEST_TOKEN_2,
-    3000,
-    sqrtPriceX96
+    3000
   );
-  console.log('Pool address:', poolAddress);
+  console.log('Initial pool address:', poolAddress);
+
+  if (poolAddress === '0x0000000000000000000000000000000000000000') {
+    console.log('Creating new pool...');
+    try {
+      const tx = await positionManager.createAndInitializePoolIfNecessary(
+        CONTRACT_ADDRESSES.TEST_TOKEN_1,
+        CONTRACT_ADDRESSES.TEST_TOKEN_2,
+        3000,
+        sqrtPriceX96,
+        { gasLimit: 5000000 }
+      );
+      const receipt = await tx.wait();
+      console.log('Pool initialization transaction:', receipt.transactionHash);
+      
+      poolAddress = await factory.getPool(
+        CONTRACT_ADDRESSES.TEST_TOKEN_1,
+        CONTRACT_ADDRESSES.TEST_TOKEN_2,
+        3000
+      );
+      console.log('New pool created at:', poolAddress);
+    } catch (err) {
+      console.error('Error creating pool:', err);
+      throw err;
+    }
+  } else {
+    console.log('Pool already exists');
+  }
   
   // Calculate tick range for concentrated liquidity
   const tickSpacing = 60; // Medium fee tier
@@ -114,9 +142,9 @@ async function main() {
     const receipt = await tx.wait();
     console.log('Transaction confirmed:', receipt.transactionHash);
     console.log('Liquidity added');
-  } catch (error) {
-    console.error('Error adding liquidity:', error.message);
-    throw error;
+  } catch (err) {
+    console.error('Error adding liquidity:', err);
+    throw err;
   }
 
   // Get final balances
