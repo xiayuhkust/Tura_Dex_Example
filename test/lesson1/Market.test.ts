@@ -1,15 +1,16 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import { Contract } from "ethers";
+import { ethers, waffle } from "hardhat";
+import { Contract, ContractFactory } from "ethers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("Market", function() {
     let market: Contract;
-    let owner: any;
-    let addr1: any;
+    let owner: SignerWithAddress;
+    let addr1: SignerWithAddress;
 
     beforeEach(async function() {
         [owner, addr1] = await ethers.getSigners();
-        const Market = await ethers.getContractFactory("Market");
+        const Market: ContractFactory = await ethers.getContractFactory("Market");
         market = await Market.deploy();
         await market.deployed();
     });
