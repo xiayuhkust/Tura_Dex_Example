@@ -114,7 +114,7 @@ async function main() {
     const receipt = await tx.wait();
     console.log('Transaction confirmed:', receipt.transactionHash);
     console.log('Liquidity added');
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error adding liquidity:', error.message);
     throw error;
   }
