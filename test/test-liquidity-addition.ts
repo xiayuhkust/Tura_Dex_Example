@@ -22,14 +22,21 @@ async function main() {
   // Get contract instances
   const token0 = new ethers.Contract(
     CONTRACT_ADDRESSES.TEST_TOKEN_1,
-    ['function balanceOf(address) view returns (uint256)', 'function decimals() view returns (uint8)'],
+    ['function balanceOf(address) view returns (uint256)', 'function decimals() view returns (uint8)', 'function mint(address to, uint256 amount) public'],
     wallet
   );
   const token1 = new ethers.Contract(
     CONTRACT_ADDRESSES.TEST_TOKEN_2,
-    ['function balanceOf(address) view returns (uint256)', 'function decimals() view returns (uint8)'],
+    ['function balanceOf(address) view returns (uint256)', 'function decimals() view returns (uint8)', 'function mint(address to, uint256 amount) public'],
     wallet
   );
+
+  // Mint test tokens
+  const mintAmount = ethers.utils.parseUnits('1000', 18);
+  console.log('Minting test tokens...');
+  await token0.mint(wallet.address, mintAmount);
+  await token1.mint(wallet.address, mintAmount);
+  console.log('Minted test tokens');
   
   // Get initial balances
   const initialBalance0 = await token0.balanceOf(wallet.address);
