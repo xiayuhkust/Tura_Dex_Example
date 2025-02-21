@@ -20,16 +20,15 @@ async function main() {
   const wallet = new ethers.Wallet(process.env.PRIVATE_KEYS, provider);
   
   // Get contract instances
-  const token0 = new ethers.Contract(
-    CONTRACT_ADDRESSES.TEST_TOKEN_1,
-    ['function balanceOf(address) view returns (uint256)', 'function decimals() view returns (uint8)', 'function mint(address to, uint256 amount) public'],
-    wallet
-  );
-  const token1 = new ethers.Contract(
-    CONTRACT_ADDRESSES.TEST_TOKEN_2,
-    ['function balanceOf(address) view returns (uint256)', 'function decimals() view returns (uint8)', 'function mint(address to, uint256 amount) public'],
-    wallet
-  );
+  const tokenAbi = [
+    'function balanceOf(address) view returns (uint256)',
+    'function decimals() view returns (uint8)',
+    'function mint(address to, uint256 amount) public',
+    'function approve(address spender, uint256 amount) external returns (bool)'
+  ];
+  
+  const token0 = new ethers.Contract(CONTRACT_ADDRESSES.TEST_TOKEN_1, tokenAbi, wallet);
+  const token1 = new ethers.Contract(CONTRACT_ADDRESSES.TEST_TOKEN_2, tokenAbi, wallet);
 
   // Mint test tokens
   const mintAmount = ethers.utils.parseUnits('1000', 18);
