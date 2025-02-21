@@ -13,8 +13,11 @@ const AMOUNT_WITH_DECIMALS = ethers.utils.parseUnits('1.0', 18);
 
 async function main() {
   // Connect to Tura network
-  const provider = new ethers.providers.JsonRpcProvider('https://rpc-beta1.turablockchain.com');
-  const wallet = new ethers.Wallet('ad6fb1ceb0b9dc598641ac1cef545a7882b52f5a12d7204d6074762d96a8a474', provider);
+  const provider = new ethers.providers.JsonRpcProvider(process.env.TURA_RPC_URL || 'https://rpc-beta1.turablockchain.com');
+  if (!process.env.PRIVATE_KEYS) {
+    throw new Error('PRIVATE_KEYS environment variable is required');
+  }
+  const wallet = new ethers.Wallet(process.env.PRIVATE_KEYS, provider);
   
   // Get contract instances
   const token0 = new ethers.Contract(
@@ -57,11 +60,37 @@ async function main() {
   // Get pool contract
   const factory = new ethers.Contract(
     CONTRACT_ADDRESSES.FACTORY,
-    ['function getPool(address,address,uint24) view returns (address)'],
+    [
+      'function getPool(address,address,uint24) view returns (address)',
+      'function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool)'
+    ],
     wallet
   );
+  
+  // Create pool if it doesn't exist
   const poolAddress = await factory.getPool(CONTRACT_ADDRESSES.TEST_TOKEN_1, CONTRACT_ADDRESSES.TEST_TOKEN_2, 3000);
-  console.log('Pool address:', poolAddress);
+  console.log('Checking pool address:', poolAddress);
+  
+  if (poolAddress === '0x0000000000000000000000000000000000000000') {
+    console.log('Creating new pool...');
+    await factory.createPool(CONTRACT_ADDRESSES.TEST_TOKEN_1, CONTRACT_ADDRESSES.TEST_TOKEN_2, 3000);
+    const newPoolAddress = await factory.getPool(CONTRACT_ADDRESSES.TEST_TOKEN_1, CONTRACT_ADDRESSES.TEST_TOKEN_2, 3000);
+    console.log('Pool created at:', newPoolAddress);
+  }
+
+  // Initialize pool if needed
+  const pool = new ethers.Contract(
+    poolAddress,
+    ['function initialize(uint160 sqrtPriceX96) external'],
+    wallet
+  );
+  try {
+    const sqrtPriceX96 = ethers.BigNumber.from('79228162514264337593543950336');  // 1:1 price ratio
+    await pool.initialize(sqrtPriceX96);
+    console.log('Pool initialized');
+  } catch (error) {
+    console.log('Pool already initialized');
+  }
   
   // Calculate tick range for concentrated liquidity
   const tickSpacing = 60; // Medium fee tier
