@@ -237,12 +237,10 @@ contract UniswapV3Pool is IUniswapV3Pool {
             int256 amount0Int,
             int256 amount1Int
         ) = _modifyPosition(
-                PositionHandler.ModifyPositionParams({
-                    owner: msg.sender,
-                    lowerTick: lowerTick,
-                    upperTick: upperTick,
-                    liquidityDelta: -(int128(amount))
-                })
+                msg.sender,
+                lowerTick,
+                upperTick,
+                -(int128(amount))
             );
 
         amount0 = uint256(-amount0Int);
