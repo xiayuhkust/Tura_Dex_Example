@@ -150,7 +150,7 @@ contract UniswapV3Pool is IUniswapV3Pool {
         int256 amount1
     ) {
         uint128 newLiquidity;
-        (position, amount0, amount1, newLiquidity) = positions.modifyPosition(
+        (position, amount0, amount1, newLiquidity) = PositionHandler.modifyPosition(
             PositionHandler.ModifyPositionParams({
                 owner: owner,
                 lowerTick: lowerTick,
