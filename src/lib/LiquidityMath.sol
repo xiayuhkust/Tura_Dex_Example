@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.14;
 
-import "prb-math/ud60x18/Math.sol" as PRBMath;
+import "prb-math/Common.sol" as Common;
 import "./FixedPoint96.sol";
 
 library LiquidityMath {
@@ -14,7 +14,7 @@ library LiquidityMath {
         if (sqrtPriceAX96 > sqrtPriceBX96)
             (sqrtPriceAX96, sqrtPriceBX96) = (sqrtPriceBX96, sqrtPriceAX96);
 
-        uint256 intermediate = PRBMath.mulDiv(
+        uint256 intermediate = Common.mulDiv18(
             sqrtPriceAX96,
             sqrtPriceBX96,
             FixedPoint96.Q96
