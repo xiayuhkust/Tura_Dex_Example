@@ -305,14 +305,19 @@ contract UniswapV3Pool is IUniswapV3Pool {
     ) public returns (int256 amount0, int256 amount1) {
         Slot0 memory slot0_ = slot0;
         
+        uint160 newSqrtPriceX96;
+        int24 newTick;
+        uint128 newLiquidity;
+        uint256 newFeeGrowthGlobal0X128;
+        uint256 newFeeGrowthGlobal1X128;
         (
             amount0,
             amount1,
-            uint160 newSqrtPriceX96,
-            int24 newTick,
-            uint128 newLiquidity,
-            uint256 newFeeGrowthGlobal0X128,
-            uint256 newFeeGrowthGlobal1X128
+            newSqrtPriceX96,
+            newTick,
+            newLiquidity,
+            newFeeGrowthGlobal0X128,
+            newFeeGrowthGlobal1X128
         ) = address(this).handleSwap(
             token0,
             token1,
