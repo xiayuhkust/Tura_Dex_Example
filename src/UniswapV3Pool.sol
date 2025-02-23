@@ -10,10 +10,10 @@ import "./interfaces/IUniswapV3SwapCallback.sol";
 import "./libraries/SwapHandler.sol";
 import "./libraries/FlashLoanHandler.sol";
 import "./libraries/PositionHandler.sol";
-import "./lib/Oracle.sol";
-import "./lib/Position.sol";
-import "./lib/Tick.sol";
-import "./lib/TickBitmap.sol";
+import {Oracle} from "./lib/Oracle.sol";
+import {Position} from "./lib/Position.sol";
+import {Tick} from "./lib/Tick.sol";
+import {TickBitmap} from "./lib/TickBitmap.sol";
 
 contract UniswapV3Pool is IUniswapV3Pool {
     using Oracle for Oracle.Observation[65535];
