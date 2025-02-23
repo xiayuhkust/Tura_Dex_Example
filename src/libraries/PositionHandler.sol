@@ -77,8 +77,8 @@ library PositionHandler {
                 feeGrowthGlobal1X128
             );
 
-        Position.Info storage info = position;
-        info.update(
+        Position.update(
+            position,
             params.liquidityDelta,
             feeGrowthInside0X128,
             feeGrowthInside1X128
