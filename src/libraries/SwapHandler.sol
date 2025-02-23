@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.19;
 
-import {PRBMath_Common} from "prb-math/Common.sol";
+import {mulDiv} from "prb-math/Common.sol";
 import "../interfaces/IUniswapV3SwapCallback.sol";
 import "../interfaces/IERC20.sol";
 import {FixedPoint128} from "../lib/FixedPoint128.sol";
@@ -117,7 +117,7 @@ library SwapHandler {
             state.amountCalculated += step.amountOut;
 
             if (state.liquidity > 0) {
-                state.feeGrowthGlobalX128 += PRBMath_Common.mulDiv(
+                state.feeGrowthGlobalX128 += mulDiv(
                     step.feeAmount,
                     FixedPoint128.Q128,
                     state.liquidity
