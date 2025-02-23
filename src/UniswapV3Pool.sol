@@ -224,19 +224,19 @@ contract UniswapV3Pool is IUniswapV3Pool {
         );
 
         if (slot0_.tick < params.lowerTick) {
-            amount0 = Math.calcAmount0Delta(
+            amount0 = LocalMath.calcAmount0Delta(
                 TickMath.getSqrtRatioAtTick(params.lowerTick),
                 TickMath.getSqrtRatioAtTick(params.upperTick),
                 params.liquidityDelta
             );
         } else if (slot0_.tick < params.upperTick) {
-            amount0 = Math.calcAmount0Delta(
+            amount0 = LocalMath.calcAmount0Delta(
                 slot0_.sqrtPriceX96,
                 TickMath.getSqrtRatioAtTick(params.upperTick),
                 params.liquidityDelta
             );
 
-            amount1 = Math.calcAmount1Delta(
+            amount1 = LocalMath.calcAmount1Delta(
                 TickMath.getSqrtRatioAtTick(params.lowerTick),
                 slot0_.sqrtPriceX96,
                 params.liquidityDelta
@@ -247,7 +247,7 @@ contract UniswapV3Pool is IUniswapV3Pool {
                 params.liquidityDelta
             );
         } else {
-            amount1 = Math.calcAmount1Delta(
+            amount1 = LocalMath.calcAmount1Delta(
                 TickMath.getSqrtRatioAtTick(params.lowerTick),
                 TickMath.getSqrtRatioAtTick(params.upperTick),
                 params.liquidityDelta
@@ -575,8 +575,8 @@ contract UniswapV3Pool is IUniswapV3Pool {
         uint256 amount1,
         bytes calldata data
     ) public {
-        uint256 fee0 = Math.mulDivRoundingUp(amount0, fee, 1e6);
-        uint256 fee1 = Math.mulDivRoundingUp(amount1, fee, 1e6);
+        uint256 fee0 = LocalMath.mulDivRoundingUp(amount0, fee, 1e6);
+        uint256 fee1 = LocalMath.mulDivRoundingUp(amount1, fee, 1e6);
 
         uint256 balance0Before = IERC20(token0).balanceOf(address(this));
         uint256 balance1Before = IERC20(token1).balanceOf(address(this));
