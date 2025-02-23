@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.14;
 
-import "prb-math/ud60x18/Math.sol" as PRBMath;
+import "prb-math/Common.sol" as PRBCommon;
 
 import "./interfaces/IERC20.sol";
 import "./interfaces/IUniswapV3FlashCallback.sol";
@@ -451,7 +451,7 @@ contract UniswapV3Pool is IUniswapV3Pool {
             state.amountCalculated += step.amountOut;
 
             if (state.liquidity > 0) {
-                state.feeGrowthGlobalX128 += PRBMath.mulDiv(
+                state.feeGrowthGlobalX128 += PRBCommon.mulDiv(
                     step.feeAmount,
                     FixedPoint128.Q128,
                     state.liquidity
