@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.14;
+pragma solidity =0.8.19;
 
 import {Math} from "./Math.sol";
 import "prb-math/Common.sol" as PRBCommon;

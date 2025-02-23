@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.14;
+pragma solidity =0.8.19;
 
 import "openzeppelin/utils/Base64.sol";
 import "openzeppelin/utils/Strings.sol";
