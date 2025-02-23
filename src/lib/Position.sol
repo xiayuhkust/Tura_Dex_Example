@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.14;
 
-import "prb-math/PRBMath.sol";
+import "prb-math/ud60x18/Math.sol" as PRBMath;
 
 import "./FixedPoint128.sol";
 import "./LiquidityMath.sol";

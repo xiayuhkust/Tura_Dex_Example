@@ -2,7 +2,7 @@
 pragma solidity ^0.8.14;
 
 import "./FixedPoint96.sol";
-import "prb-math/PRBMath.sol";
+import "prb-math/ud60x18/Math.sol" as PRBMath;
 
 library Math {
     /// @notice Calculates amount0 delta between two prices
