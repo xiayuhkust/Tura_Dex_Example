@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.19;
 
-import "./Position.sol";
-import "./Tick.sol";
-import "./TickBitmap.sol";
-import "./TickMath.sol";
-import "./LiquidityMath.sol";
-import "./Math.sol";
+import {Position} from "../lib/Position.sol";
+import {Tick} from "../lib/Tick.sol";
+import {TickBitmap} from "../lib/TickBitmap.sol";
+import {TickMath} from "../lib/TickMath.sol";
+import {LiquidityMath} from "../lib/LiquidityMath.sol";
+import {Math} from "../lib/Math.sol";
 
 library PositionHandler {
     struct ModifyPositionParams {

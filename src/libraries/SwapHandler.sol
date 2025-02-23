@@ -4,11 +4,11 @@ pragma solidity =0.8.19;
 import "prb-math/Common.sol" as PRBCommon;
 import "../interfaces/IUniswapV3SwapCallback.sol";
 import "../interfaces/IERC20.sol";
-import "./FixedPoint128.sol";
-import "./SwapMath.sol";
-import "./TickBitmap.sol";
-import "./TickMath.sol";
-import "./LiquidityMath.sol";
+import {FixedPoint128} from "../lib/FixedPoint128.sol";
+import {SwapMath} from "../lib/SwapMath.sol";
+import {TickBitmap} from "../lib/TickBitmap.sol";
+import {TickMath} from "../lib/TickMath.sol";
+import {LiquidityMath} from "../lib/LiquidityMath.sol";
 
 library SwapHandler {
     struct SwapState {

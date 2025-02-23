@@ -3,7 +3,7 @@ pragma solidity =0.8.19;
 
 import "../interfaces/IERC20.sol";
 import "../interfaces/IUniswapV3FlashCallback.sol";
-import "./Math.sol";
+import "../lib/Math.sol";
 
 library FlashLoanHandler {
     error FlashLoanNotPaid();
