@@ -4,7 +4,7 @@ out = 'out'
 libs = ['lib']
 fs_permissions = [{access='read',path='.'}]
 eth_rpc_url = '${ETH_RPC_URL}'
-chain_id = '${CHAIN_ID}'
+chain_id = 1337
 
 [rpc_endpoints]
 tura = '${ETH_RPC_URL}'
