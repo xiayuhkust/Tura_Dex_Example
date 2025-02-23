@@ -2,7 +2,7 @@
 pragma solidity ^0.8.14;
 
 import "./Math.sol" as LocalMath;
-import "prb-math/ud60x18/Math.sol" as PRBMath;
+import "prb-math/Common.sol" as PRBCommon;
 
 library SwapMath {
     function computeSwapStep(
@@ -22,7 +22,7 @@ library SwapMath {
         )
     {
         bool zeroForOne = sqrtPriceCurrentX96 >= sqrtPriceTargetX96;
-        uint256 amountRemainingLessFee = PRBMath.mulDiv(
+        uint256 amountRemainingLessFee = PRBCommon.mulDiv(
             amountRemaining,
             1e6 - fee,
             1e6
