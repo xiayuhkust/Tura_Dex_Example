@@ -93,8 +93,7 @@ library SwapHandler {
             (step.nextTick, step.initialized) = tickBitmap.nextInitializedTickWithinOneWord(
                 state.tick,
                 int24(tickSpacing),
-                zeroForOne,
-                true
+                zeroForOne
             );
 
             step.sqrtPriceNextX96 = TickMath.getSqrtRatioAtTick(step.nextTick);

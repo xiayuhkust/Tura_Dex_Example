@@ -9,6 +9,8 @@ import {LiquidityMath} from "../lib/LiquidityMath.sol";
 import {Math} from "../lib/Math.sol";
 
 library PositionHandler {
+    using Position for mapping(bytes32 => Position.Info);
+    
     struct ModifyPositionParams {
         address owner;
         int24 lowerTick;
