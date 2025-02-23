@@ -87,7 +87,7 @@ library SwapHandler {
 
             step.sqrtPriceStartX96 = state.sqrtPriceX96;
 
-            (step.nextTick, step.initialized) = tickBitmap.nextInitializedTickWithinOneWord(
+            (step.nextTick, step.initialized) = TickBitmap.nextInitializedTickWithinOneWord(
                 state.tick,
                 int24(tickSpacing),
                 zeroForOne
