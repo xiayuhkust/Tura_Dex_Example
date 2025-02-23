@@ -16,22 +16,43 @@ contract DeployTura is Script {
     function run() public {
         vm.startBroadcast();
 
-        // Deploy core contracts
+        // Deploy Factory first
         UniswapV3Factory factory = new UniswapV3Factory();
-        UniswapV3Manager manager = new UniswapV3Manager(address(factory));
-        UniswapV3Quoter quoter = new UniswapV3Quoter(address(factory));
-
-        // Create initial pools
-        factory.createPool(WTURA, TT1, 3000); // 0.3% fee tier
-        factory.createPool(WTURA, TT2, 3000); // 0.3% fee tier
-        factory.createPool(TT1, TT2, 500);    // 0.05% fee tier
+        console.log("Factory deployed at:", address(factory));
 
         vm.stopBroadcast();
+        vm.startBroadcast();
 
-        // Log addresses for documentation
-        console.log("Deployed contracts:");
-        console.log("Factory:", address(factory));
-        console.log("Manager:", address(manager));
-        console.log("Quoter:", address(quoter));
+        // Deploy Manager
+        UniswapV3Manager manager = new UniswapV3Manager(address(factory));
+        console.log("Manager deployed at:", address(manager));
+
+        vm.stopBroadcast();
+        vm.startBroadcast();
+
+        // Deploy Quoter
+        UniswapV3Quoter quoter = new UniswapV3Quoter(address(factory));
+        console.log("Quoter deployed at:", address(quoter));
+
+        vm.stopBroadcast();
+        vm.startBroadcast();
+
+        // Create pools one by one
+        factory.createPool(WTURA, TT1, 3000); // 0.3% fee tier
+        console.log("Created WTURA/TT1 pool");
+
+        vm.stopBroadcast();
+        vm.startBroadcast();
+
+        factory.createPool(WTURA, TT2, 3000); // 0.3% fee tier
+        console.log("Created WTURA/TT2 pool");
+
+        vm.stopBroadcast();
+        vm.startBroadcast();
+
+        factory.createPool(TT1, TT2, 500);    // 0.05% fee tier
+        console.log("Created TT1/TT2 pool");
+
+        vm.stopBroadcast();
     }
 }
