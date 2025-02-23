@@ -10,6 +10,7 @@ import {Math} from "../lib/Math.sol";
 
 library PositionHandler {
     using Position for mapping(bytes32 => Position.Info);
+    using Tick for mapping(int24 => Tick.Info);
     
     struct ModifyPositionParams {
         address owner;
