@@ -5,10 +5,10 @@ import "solmate/tokens/ERC721.sol";
 
 import "./interfaces/IERC20.sol";
 import "./interfaces/IUniswapV3Pool.sol";
-import "./lib/LiquidityMath.sol";
-import "./lib/NFTRenderer.sol";
-import "./lib/PoolAddress.sol";
-import "./lib/TickMath.sol";
+import {LiquidityMath} from "./lib/LiquidityMath.sol";
+import {NFTRenderer} from "./lib/NFTRenderer.sol";
+import {PoolAddress} from "./lib/PoolAddress.sol";
+import {TickMath} from "./lib/TickMath.sol";
 
 contract UniswapV3NFTManager is ERC721 {
     error NotAuthorized();
