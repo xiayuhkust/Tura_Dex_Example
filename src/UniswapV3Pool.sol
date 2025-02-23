@@ -7,9 +7,9 @@ import "./interfaces/IUniswapV3Pool.sol";
 import "./interfaces/IUniswapV3PoolDeployer.sol";
 import "./interfaces/IUniswapV3SwapCallback.sol";
 
-import "./libraries/SwapHandler.sol";
-import "./libraries/FlashLoanHandler.sol";
-import "./libraries/PositionHandler.sol";
+import {SwapHandler} from "./libraries/SwapHandler.sol";
+import {FlashLoanHandler} from "./libraries/FlashLoanHandler.sol";
+import {PositionHandler} from "./libraries/PositionHandler.sol";
 import {Oracle} from "./lib/Oracle.sol";
 import {Position} from "./lib/Position.sol";
 import {Tick} from "./lib/Tick.sol";
@@ -235,7 +235,7 @@ contract UniswapV3Pool is IUniswapV3Pool {
             int256 amount0Int,
             int256 amount1Int
         ) = _modifyPosition(
-                ModifyPositionParams({
+                PositionHandler.ModifyPositionParams({
                     owner: msg.sender,
                     lowerTick: lowerTick,
                     upperTick: upperTick,
