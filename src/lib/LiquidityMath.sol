@@ -14,7 +14,7 @@ library LiquidityMath {
         if (sqrtPriceAX96 > sqrtPriceBX96)
             (sqrtPriceAX96, sqrtPriceBX96) = (sqrtPriceBX96, sqrtPriceAX96);
 
-        uint256 intermediate = Common.mulDiv18(
+        uint256 intermediate = Common.mulDiv(
             sqrtPriceAX96,
             sqrtPriceBX96,
             FixedPoint96.Q96
