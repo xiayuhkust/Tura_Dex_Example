@@ -5,4 +5,4 @@ openzeppelin/=lib/openzeppelin-contracts/contracts/
 prb-math/=lib/prb-math/src/
 solmate/=lib/solmate/src/
 bytes-utils/=lib/solidity-bytes-utils/contracts/
-abdk-math/=lib/abdk-libraries-solidity/src/
+abdk-math/=lib/abdk-libraries-solidity/
