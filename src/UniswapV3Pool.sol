@@ -22,6 +22,7 @@ contract UniswapV3Pool is IUniswapV3Pool {
     using Position for mapping(bytes32 => Position.Info);
     using Tick for mapping(int24 => Tick.Info);
     using TickBitmap for mapping(int16 => uint256);
+    using PositionHandler for mapping(bytes32 => Position.Info);
 
     error AlreadyInitialized();
     error FlashLoanNotPaid();
