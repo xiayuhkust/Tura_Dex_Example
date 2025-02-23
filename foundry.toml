@@ -5,6 +5,7 @@ libs = ['lib']
 fs_permissions = [{access='read',path='.'}]
 eth_rpc_url = '${ETH_RPC_URL}'
 chain_id = 1337
+solc = "0.8.19"
 
 [rpc_endpoints]
 tura = '${ETH_RPC_URL}'

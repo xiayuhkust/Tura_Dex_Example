@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.14;
+pragma solidity =0.8.19;
 
 import "./interfaces/IERC20.sol";
 import "./interfaces/IUniswapV3Pool.sol";
