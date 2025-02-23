@@ -87,10 +87,11 @@ library SwapHandler {
 
             step.sqrtPriceStartX96 = state.sqrtPriceX96;
 
-            (step.nextTick, step.initialized) = TickBitmap.nextInitializedTickWithinOneWord(
+            (step.nextTick, step.initialized) = tickBitmap.nextInitializedTickWithinOneWord(
                 state.tick,
                 int24(tickSpacing),
-                zeroForOne
+                zeroForOne,
+                true
             );
 
             step.sqrtPriceNextX96 = TickMath.getSqrtRatioAtTick(step.nextTick);
@@ -127,7 +128,8 @@ library SwapHandler {
 
             if (state.sqrtPriceX96 == step.sqrtPriceNextX96) {
                 if (step.initialized) {
-                    int128 liquidityDelta = ticks.cross(
+                    int128 liquidityDelta = Tick.cross(
+                        ticks,
                         step.nextTick,
                         (
                             zeroForOne
