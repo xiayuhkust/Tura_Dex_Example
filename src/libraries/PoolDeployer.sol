@@ -11,7 +11,6 @@ library PoolDeployer {
         uint24 fee
     ) internal returns (address pool) {
         pool = address(new UniswapV3Pool{salt: keccak256(abi.encode(token0, token1, fee))}());
-        UniswapV3Pool(pool).initialize(sqrt(token0, token1, fee));
     }
 
     function computeAddress(
