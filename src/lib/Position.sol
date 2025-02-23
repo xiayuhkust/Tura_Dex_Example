@@ -3,7 +3,7 @@ pragma solidity ^0.8.14;
 
 import "prb-math/Common.sol" as Common;
 import "./FixedPoint128.sol";
-import "./LiquidityMath.sol" as LiquidityMath;
+import "./LiquidityMath.sol";
 
 library Position {
     struct Info {
