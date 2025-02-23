@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.14;
 
-import "prb-math/sd59x18/Math.sol" as PRBMath;
+import "prb-math/ud60x18/Math.sol" as PRBMath;
 
 import "./interfaces/IERC20.sol";
 import "./interfaces/IUniswapV3FlashCallback.sol";
@@ -11,14 +11,14 @@ import "./interfaces/IUniswapV3PoolDeployer.sol";
 import "./interfaces/IUniswapV3SwapCallback.sol";
 
 import "./lib/FixedPoint128.sol";
-import "./lib/LiquidityMath.sol";
-import "./lib/Math.sol";
-import "./lib/Oracle.sol";
-import "./lib/Position.sol";
-import "./lib/SwapMath.sol";
-import "./lib/Tick.sol";
-import "./lib/TickBitmap.sol";
-import "./lib/TickMath.sol";
+import {LiquidityMath} from "./lib/LiquidityMath.sol";
+import {Math as LocalMath} from "./lib/Math.sol";
+import {Oracle} from "./lib/Oracle.sol";
+import {Position} from "./lib/Position.sol";
+import {SwapMath} from "./lib/SwapMath.sol";
+import {Tick} from "./lib/Tick.sol";
+import {TickBitmap} from "./lib/TickBitmap.sol";
+import {TickMath} from "./lib/TickMath.sol";
 
 contract UniswapV3Pool is IUniswapV3Pool {
     using Oracle for Oracle.Observation[65535];
