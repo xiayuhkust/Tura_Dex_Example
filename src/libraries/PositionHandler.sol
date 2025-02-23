@@ -11,6 +11,7 @@ import {Math} from "../lib/Math.sol";
 library PositionHandler {
     using Position for mapping(bytes32 => Position.Info);
     using Tick for mapping(int24 => Tick.Info);
+    using TickBitmap for mapping(int16 => uint256);
     
     struct ModifyPositionParams {
         address owner;
