@@ -12,6 +12,9 @@ import {LiquidityMath} from "../lib/LiquidityMath.sol";
 import {Tick} from "../lib/Tick.sol";
 
 library SwapHandler {
+    using TickBitmap for mapping(int16 => uint256);
+    using Tick for mapping(int24 => Tick.Info);
+
     struct SwapState {
         uint256 amountSpecifiedRemaining;
         uint256 amountCalculated;
@@ -128,8 +131,7 @@ library SwapHandler {
 
             if (state.sqrtPriceX96 == step.sqrtPriceNextX96) {
                 if (step.initialized) {
-                    int128 liquidityDelta = Tick.cross(
-                        ticks,
+                    int128 liquidityDelta = ticks.cross(
                         step.nextTick,
                         (
                             zeroForOne
