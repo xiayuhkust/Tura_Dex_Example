@@ -20,7 +20,7 @@ library LiquidityMath {
             FixedPoint96.Q96
         );
         liquidity = uint128(
-            PRBMath.mulDiv(amount0, intermediate, sqrtPriceBX96 - sqrtPriceAX96)
+            Common.mulDiv(amount0, intermediate, sqrtPriceBX96 - sqrtPriceAX96)
         );
     }
 
@@ -34,7 +34,7 @@ library LiquidityMath {
             (sqrtPriceAX96, sqrtPriceBX96) = (sqrtPriceBX96, sqrtPriceAX96);
 
         liquidity = uint128(
-            PRBMath.mulDiv(
+            Common.mulDiv(
                 amount1,
                 FixedPoint96.Q96,
                 sqrtPriceBX96 - sqrtPriceAX96
