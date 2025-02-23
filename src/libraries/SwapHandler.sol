@@ -9,6 +9,7 @@ import {SwapMath} from "../lib/SwapMath.sol";
 import {TickBitmap} from "../lib/TickBitmap.sol";
 import {TickMath} from "../lib/TickMath.sol";
 import {LiquidityMath} from "../lib/LiquidityMath.sol";
+import {Tick} from "../lib/Tick.sol";
 
 library SwapHandler {
     struct SwapState {
