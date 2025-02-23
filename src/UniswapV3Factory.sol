@@ -2,14 +2,10 @@
 pragma solidity =0.8.19;
 
 import "./interfaces/IUniswapV3PoolDeployer.sol";
-import "./UniswapV3Pool.sol";
+import "./libraries/PoolDeployer.sol";
+import "./libraries/PoolManager.sol";
 
 contract UniswapV3Factory is IUniswapV3PoolDeployer {
-    error PoolAlreadyExists();
-    error ZeroAddressNotAllowed();
-    error TokensMustBeDifferent();
-    error UnsupportedFee();
-
     event PoolCreated(
         address indexed token0,
         address indexed token1,
@@ -33,35 +29,27 @@ contract UniswapV3Factory is IUniswapV3PoolDeployer {
         address tokenY,
         uint24 fee
     ) public returns (address pool) {
-        if (tokenX == tokenY) revert TokensMustBeDifferent();
-        if (fees[fee] == 0) revert UnsupportedFee();
-
-        (tokenX, tokenY) = tokenX < tokenY
-            ? (tokenX, tokenY)
-            : (tokenY, tokenX);
-
-        if (tokenX == address(0)) revert ZeroAddressNotAllowed();
-        if (pools[tokenX][tokenY][fee] != address(0))
-            revert PoolAlreadyExists();
+        (address token0, address token1) = PoolManager.validatePoolCreation(
+            tokenX,
+            tokenY,
+            fee,
+            fees,
+            pools
+        );
 
         parameters = PoolParameters({
             factory: address(this),
-            token0: tokenX,
-            token1: tokenY,
+            token0: token0,
+            token1: token1,
             tickSpacing: fees[fee],
             fee: fee
         });
 
-        pool = address(
-            new UniswapV3Pool{
-                salt: keccak256(abi.encodePacked(tokenX, tokenY, fee))
-            }()
-        );
+        pool = PoolDeployer.deployPool(address(this), token0, token1, fee);
 
         delete parameters;
 
-        pools[tokenX][tokenY][fee] = pool;
-        pools[tokenY][tokenX][fee] = pool;
+        PoolManager.registerPool(token0, token1, fee, pool, pools);
 
         emit PoolCreated(tokenX, tokenY, fee, pool);
     }
