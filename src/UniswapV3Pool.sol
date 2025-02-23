@@ -318,7 +318,7 @@ contract UniswapV3Pool is IUniswapV3Pool {
             newLiquidity,
             newFeeGrowthGlobal0X128,
             newFeeGrowthGlobal1X128
-        ) = address(this).handleSwap(
+        ) = SwapHandler.handleSwap(
             token0,
             token1,
             recipient,
@@ -404,7 +404,7 @@ contract UniswapV3Pool is IUniswapV3Pool {
         uint256 amount1,
         bytes calldata data
     ) public {
-        address(this).handleFlashLoan(
+        FlashLoanHandler.handleFlashLoan(
             token0,
             token1,
             amount0,
